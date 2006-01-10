@@ -24,7 +24,7 @@ function setError(errorText) {
 function move() {
     // send move command
     log("webPosition" + queryString(getElement("theform")));
-    deferred = doSimpleXMLHttpRequest("webMove" + 
+    deferred = doSimpleXMLHttpRequest("webMove?" + 
                                       queryString(getElement("theform")));
     deferred.addCallback(function (res) {
         response = res.responseText;

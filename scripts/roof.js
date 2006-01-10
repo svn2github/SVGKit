@@ -7,6 +7,7 @@ function command(methodName) {
     deferred = doSimpleXMLHttpRequest(methodName);
     deferred.addCallback(function (res) {
         response = res.responseText;
+        // todo: explicitly check for python exception message
         if(response == "") {
             setStatus("Success");
         }
@@ -30,6 +31,10 @@ function updateProgress() {
     deferred = loadJSONDoc("webPosition");
     deferred.addCallback(function(progress) {
         log("Progress: " + progress);
+        // update roof position pct text
+        replaceChildNodes(getElement("roofpospct"), 
+                          SPAN(null, (progress * 100) + "%"));
+        
         // update progress bar
         bar = getElement("progress");
         bar.style.width = (progress * 300) + "px";
