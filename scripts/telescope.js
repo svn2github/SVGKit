@@ -4,7 +4,7 @@ function command(methodName) {
     deferred = doSimpleXMLHttpRequest(methodName);
     deferred.addCallback(function (res) {
         response = res.responseText;
-        if(response != "") {
+        if(response.indexOf("Traceback") != -1) {
             setError("Python error: \n" + response);
         }
     });
@@ -28,7 +28,7 @@ function move() {
                                       queryString(getElement("theform")));
     deferred.addCallback(function (res) {
         response = res.responseText;
-        if(response != "") {
+        if(response.indexOf("Traceback") != -1) {
             setError("Python error: \n" + response);
         }
     });

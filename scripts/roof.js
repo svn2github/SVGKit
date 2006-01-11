@@ -8,7 +8,7 @@ function command(methodName) {
     deferred.addCallback(function (res) {
         response = res.responseText;
         // todo: explicitly check for python exception message
-        if(response == "") {
+        if(response.indexOf("Traceback") == -1) {
             setStatus("Success");
         }
         else {
