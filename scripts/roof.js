@@ -2,7 +2,6 @@ var Roof = {
 
     base: '/roof/',
     idbase: 'roof_',
-    x: 123,
 
     command: function(methodName) {
         var error = getElement(this.idbase + "error");
@@ -39,8 +38,13 @@ var Roof = {
         deferred.addCallback(function(progress) {
             log("Progress: " + progress);
             // update roof position pct text
-            replaceChildNodes(getElement(Roof.idbase + "pospct"), 
-                              SPAN(null, (progress*100).toPrecision(3) + "%"));
+            percent_str = (progress*100).toPrecision(3) + "%"
+            replaceChildNodes(getElement(Roof.idbase + "pospct"),  
+                                SPAN(null, percent_str));
+            element = getElement("top_" + Roof.idbase + "pospct");
+            if (element) {
+                replaceChildNodes(element,  SPAN(null, percent_str));
+            }
             // update progress bar
             bar = getElement(Roof.idbase + "progress");
             bar.style.width = (progress * 300).toFixed(0) + "px";
