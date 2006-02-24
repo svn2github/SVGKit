@@ -1,14 +1,17 @@
 var Roof = {
 
-    'base' : '/roof/',
+    base: '/roof/',
+    idbase: 'roof_',
+    x: 123,
 
     command: function(methodName) {
-        var error = getElement("roof_error");
+        var error = getElement(this.idbase + "error");
+        log("This: " + this);
         
         replaceChildNodes(error);
         Roof.setStatus("Waiting for response...");
         
-        deferred = doSimpleXMLHttpRequest(Roof.base+methodName);
+        deferred = doSimpleXMLHttpRequest(this.base+methodName);
         deferred.addCallback(function (res) {
             response = res.responseText;
             // todo: explicitly check for python exception message
@@ -26,33 +29,39 @@ var Roof = {
     },
 
     setStatus: function(statusText) {
-        replaceChildNodes(getElement("roof_status"), SPAN(null, statusText));
+        replaceChildNodes(getElement(this.idbase + "status"), 
+                          SPAN(null, statusText));
     },
 
     updateProgress: function() {
-        log("Updating");
         // get status
-        deferred = loadJSONDoc(Roof.base+"webPosition");
+        deferred = loadJSONDoc(this.base+"webPosition");
         deferred.addCallback(function(progress) {
             log("Progress: " + progress);
             // update roof position pct text
-            replaceChildNodes(getElement("roofpospct"), 
-                              SPAN(null, (progress * 100).toPrecision(3) + "%"));
-            
+            replaceChildNodes(getElement(Roof.idbase + "pospct"), 
+                              SPAN(null, (progress*100).toPrecision(3) + "%"));
             // update progress bar
-            bar = getElement("roof_progress");
+            bar = getElement(Roof.idbase + "progress");
             bar.style.width = (progress * 300).toFixed(0) + "px";
-
             // do it again in 5 seconds
-            callLater(2, Roof.updateProgress);
+            callLater(2, function() {Roof.updateProgress();});
         });
         deferred.addErrback(function(err) {
             Roof.setStatus("Error updating position: " + repr(err));
             // wait longer
-            callLater(10, Roof.updateProgress);
+            callLater(10, function() {Roof.updateProgress();});
         });
     },
 
 };
 
-window.addEventListener('load', Roof.updateProgress, false);
+addLoadEvent(function() {Roof.updateProgress();});
+/* For some reason, you have to wrap the Roof.updateProgress() call in a 
+ * function, or within the call 'this' will be undefined.  My suspicion is that
+ * somehow when you directly pass Roof.updateProgress as a function object, it
+ * gets separated from its parent object.  Sucks, but I don't know what else to
+ * do.
+ * I think this may be caused by Javascript's weird closure handling.  I'll
+ * look into it more at some point.
+ */
