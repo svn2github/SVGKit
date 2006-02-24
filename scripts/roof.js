@@ -1,34 +1,36 @@
-function command(methodName) {
+var roof_base="/roof/"
+
+function roof_command(methodName) {
     var error = getElement("error");
     
     replaceChildNodes(error);
-    setStatus("Waiting for response...");
+    roof_setStatus("Waiting for response...");
     
-    deferred = doSimpleXMLHttpRequest(methodName);
+    deferred = doSimpleXMLHttpRequest(roof_base+methodName);
     deferred.addCallback(function (res) {
         response = res.responseText;
         // todo: explicitly check for python exception message
         if(response.indexOf("Traceback") == -1) {
-            setStatus("Success");
+            roof_setStatus("Success");
         }
         else {
-            setStatus("Python error");
+            roof_setStatus("Python error");
             replaceChildNodes(error, SPAN(null, response));
         }
     });
     deferred.addErrback(function (err) {
-        setStatus("Error: " + repr(err));
+        roof_setStatus("Error: " + repr(err));
     });
 }
 
-function setStatus(statusText) {
+function roof_setStatus(statusText) {
     replaceChildNodes(getElement("status"), SPAN(null, statusText));
 }
 
 function updateProgress() {
     log("Updating");
     // get status
-    deferred = loadJSONDoc("webPosition");
+    deferred = loadJSONDoc(roof_base+"webPosition");
     deferred.addCallback(function(progress) {
         log("Progress: " + progress);
         // update roof position pct text
@@ -43,7 +45,7 @@ function updateProgress() {
         callLater(2, updateProgress);
     });
     deferred.addErrback(function(err) {
-        setStatus("Error updating position: " + repr(err));
+        roof_setStatus("Error updating position: " + repr(err));
         // wait longer
         callLater(10, updateProgress);
     });

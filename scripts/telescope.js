@@ -1,7 +1,9 @@
-function command(methodName) {
+var telescope_base="/telescope/";
+
+function telescope_command(methodName) {
     setError("");
     
-    deferred = doSimpleXMLHttpRequest(methodName);
+    deferred = doSimpleXMLHttpRequest(telescope_base+methodName);
     deferred.addCallback(function (res) {
         response = res.responseText;
         if(response.indexOf("Traceback") != -1) {
@@ -13,7 +15,7 @@ function command(methodName) {
     });
 }
 
-function setStatus(statusText) {
+function telescope_setStatus(statusText) {
     replaceChildNodes(getElement("status"), SPAN(null, statusText));
 }
 
@@ -24,7 +26,7 @@ function setError(errorText) {
 function move() {
     // send move command
     log("webPosition" + queryString(getElement("theform")));
-    deferred = doSimpleXMLHttpRequest("webMove?" + 
+    deferred = doSimpleXMLHttpRequest(telescope_base+"webMove?" + 
                                       queryString(getElement("theform")));
     deferred.addCallback(function (res) {
         response = res.responseText;
@@ -38,17 +40,17 @@ function move() {
     // TODO: clean up this duplicate code
 }
 
-function updateStatus() {
+function telescope_updateStatus() {
     log("Updating status");
     // get status
-    deferred = doSimpleXMLHttpRequest("statusSummary");
+    deferred = doSimpleXMLHttpRequest(telescope_base+"statusSummary");
     deferred.addCallback(function(req) {
-        setStatus(req.responseText);
+        telescope_setStatus(req.responseText);
         // do it again in 5 seconds
         callLater(2, updateStatus);
     });
     deferred.addErrback(function(err) {
-        setStatus("Error updating status: " + repr(err));
+        telescope_setStatus("Error updating status: " + repr(err));
         // wait longer
         callLater(10, updateStatus);
     });
