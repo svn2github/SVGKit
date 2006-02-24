@@ -1,0 +1,119 @@
+body {
+    font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
+    font-weight: normal;
+    background-color: #555555}
+
+div#container_outer {
+    margin: 0 auto;
+    width: 1230px;
+    text-align: right;
+    background-color: #000000;
+    border: solid #AAAAAA 2px}
+
+div#toolbar_side {
+    position: absolute;
+    width: 150px;
+    margin-top: 55px;
+    padding: 7px;
+    background-color: #000000;
+    font-weight: bold;
+    color: #FFFFFF;
+    text-align: left}
+div#toolbar_side ul {
+    margin-left:   10px;
+    margin-top:     0px;
+    margin-bottom: 15px;
+    padding: 0px;
+    font-size: small;
+    color: #FFFFFF;
+    white-space: nowrap}
+div#toolbar_side li {
+    list-style-type: none}
+div#toolbar_side a {
+    text-decoration: none}
+
+div#toolbar_top {
+    position: absolute;
+    margin-left: 166px;
+    width: 1064px;
+    color: #FFFFFF;
+    background-color: #000000}
+div#toolbar_top table {
+    width: 100%;
+    margin:  0px;
+    padding-top: 0px;
+    font-size: small;
+    color: #FFFFFF}
+
+div#container_inner {
+    position: relative;
+    left: 166px;
+    width: 1062px;
+    min-height: 900px;
+    padding-bottom: 10px;
+    margin-top:     55px;
+    border-top:  solid #AAAAAA 2px;
+    border-left: solid #AAAAAA 2px;
+    background-color: #000000;
+    color:            #FFFFFF;
+    text-align: left}
+
+.topCategory {
+    font-size: medium;
+    font-variant: small-caps;
+    color: #FF3300;
+    font-weight: bold}
+.topItem {
+    padding: 3px;
+    color: #777777}
+.topEnabled {
+    font-weight: bold;
+    color: #FFFFFF}
+
+.menuCategory {
+    font-variant: small-caps;
+    color: #0033FF;
+    font-weight: bold}
+.menuItem a:link, 
+.menuItem a:visited, 
+.menuItem a:active, 
+.menuItem a:hover {
+    color: #777777;
+    font-weight: normal;
+    font-size: small;
+    text-decoration: none}
+.menuItem {
+    padding: 3px;
+    color: #777777;
+    font-weight: normal;
+    font-size: small}
+
+.panelShown a:link, 
+.panelShown a:visited, 
+.panelShown a:active, 
+.panelShown a:hover {
+    color: #FFFFFF;
+    font-weight: bold}
+
+div.panel {
+    background-color: #AAAAAA;
+    margin: 10px;
+    padding-top:    0px;
+    padding-bottom: 5px;
+    padding-left:   5px;
+    padding-right:  5px;
+    font-size: small}
+
+div.panelInvisible {
+    display: none}
+
+div.panelTitle {
+    width: 1019px;
+    font-weight: bold;
+    font-size: small;
+    color: #0033FF;
+    background-color: #888888;
+    padding: 3px;
+    padding-left: 10px;
+    margin-bottom: 5px}
+
