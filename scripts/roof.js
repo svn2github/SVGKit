@@ -36,7 +36,6 @@ var Roof = {
         // get status
         deferred = loadJSONDoc(this.base+"webPosition");
         deferred.addCallback(function(progress) {
-            log("Progress: " + progress);
             // update roof position pct text
             percent_str = (progress*100).toPrecision(3) + "%"
             replaceChildNodes(getElement(Roof.idbase + "pospct"),  
