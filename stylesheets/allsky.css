@@ -1,14 +1,16 @@
-/* COLORS -  backgrounds  */
+/* css file for The Harvard All-sky Optical SETI User Interface web page */
+
+/* begin COLORS -  backgrounds  */
 body {               background-color: #555555}
 div#container_outer { background-color: #000000}
 div#container_inner { background-color: #000000}
 div.panel {           background-color: #AAAAAA}
 div.panelTitle {      background-color: #888888}
-/* COLORS - borders  */
+/* begin COLORS - borders  */
 div#container_outer { border:      solid #AAAAAA 2px}
 div#container_inner { border-top:  solid #AAAAAA 2px;
                      border-left: solid #AAAAAA 2px}
-/* COLORS -  fonts */
+/* begin COLORS - fonts */
 div#body {            color: #FFFFFF}
 .topTitle {          color: #FF3300}
 .topTitleAccent {    color: #FF1100}
@@ -26,18 +28,20 @@ div#body {            color: #FFFFFF}
 .panelShown a:active, 
 .panelShown a:hover { color: #FFFFFF}
 div.panelTitle {      color: #0033FF}
+/* end COLORS */
 
-/* BODY -   */
+/* begin BODY */
 body {
     font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
     font-weight: normal}
-  
-/* CONTAINERS  */
+/* end BODY */
+    
+/* begin CONTAINERS  */
 div#container_outer {
     margin: 0 auto;
     width: 1230px;
     text-align: right}
-    
+
 div#container_inner {
     position: relative;
     left: 166px;
@@ -46,8 +50,9 @@ div#container_inner {
     padding-bottom: 10px;
     margin-top:     90px;
     text-align: left}
-
-/* TOOLBARS  */
+/* end CONTAINERS  */
+    
+/* begin SIDE TOOLBAR  */
 div#toolbar_side {
     position: absolute;
     width:     150px;
@@ -67,6 +72,28 @@ div#toolbar_side li {
 div#toolbar_side a {
     text-decoration: none}
 
+.menuCategory {
+    font-variant: small-caps;
+    font-weight: bold}
+.menuItem a:link, 
+.menuItem a:visited, 
+.menuItem a:active, 
+.menuItem a:hover {
+    font-weight: normal;
+    font-size: small;
+    text-decoration: none}
+.menuItem {
+    padding: 3px;
+    font-weight: normal;
+    font-size: small}
+.panelShown a:link, 
+.panelShown a:visited, 
+.panelShown a:active, 
+.panelShown a:hover {
+    font-weight: bold}
+/* end SIDE TOOLBAR  */
+
+/* begin TOP TOOLBAR  */
 div#toolbar_top {
     position: absolute;
     margin-left: 166px;
@@ -85,7 +112,6 @@ div#toolbar_top table {
     font-weight: normal;
     font-stretch: ultra-expanded;
     font-variant: small-caps}
-
 .topCategory {
     font-size: medium;
     font-variant: small-caps;
@@ -94,36 +120,14 @@ div#toolbar_top table {
     padding: 3px}
 .topEnabled {
     font-weight: bold}
+/* end TOP TOOLBAR  */
 
-.menuCategory {
-    font-variant: small-caps;
-    font-weight: bold}
-.menuItem a:link, 
-.menuItem a:visited, 
-.menuItem a:active, 
-.menuItem a:hover {
-    font-weight: normal;
-    font-size: small;
-    text-decoration: none}
-.menuItem {
-    padding: 3px;
-    font-weight: normal;
-    font-size: small}
-
-.panelShown a:link, 
-.panelShown a:visited, 
-.panelShown a:active, 
-.panelShown a:hover {
-    font-weight: bold}
-
-/* PANELS  */
+/* begin PANELS  */
 div.panel {
     margin: 10px;
     font-size: small}
-
 div.panelInvisible {
     display: none}
-
 div.panelTitle {
     width: 1029px;
     font-weight: bold;
@@ -131,5 +135,7 @@ div.panelTitle {
     padding: 3px;
     padding-left: 10px;
     margin-bottom: 5px}
+/* end PANELS  */
 
-.invisible {display: none; }
+.invisible {
+    display: none}
