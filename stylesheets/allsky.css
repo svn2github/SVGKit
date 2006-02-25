@@ -44,20 +44,20 @@ div#container_outer {
 
 div#container_inner {
     position: relative;
-    left: 166px;
-    width: 1062px;
-    min-height: 900px;
-    padding-bottom: 10px;
-    margin-top:     90px;
+    left:           166px;
+    width:         1062px;
+    min-height:     900px;
+    padding-bottom:  10px;
+    margin-top:     115px;
     text-align: left}
 /* end CONTAINERS  */
     
 /* begin SIDE TOOLBAR  */
 div#toolbar_side {
     position: absolute;
-    width:     150px;
-    margin-top: 90px;
-    padding:     7px;
+    width:      150px;
+    margin-top: 115px;
+    padding:      7px;
     font-weight: bold;
     text-align:  left}
 div#toolbar_side ul {
@@ -65,7 +65,7 @@ div#toolbar_side ul {
     margin-bottom: 15px;
     margin-top:     0px;
     padding:        0px;
-    font-size: small;
+    font-size:   small;
     white-space: nowrap}
 div#toolbar_side li {
     list-style-type: none}
@@ -79,13 +79,13 @@ div#toolbar_side a {
 .menuItem a:visited, 
 .menuItem a:active, 
 .menuItem a:hover {
-    font-weight: normal;
-    font-size: small;
+    font-weight:     normal;
+    font-size:       small;
     text-decoration: none}
 .menuItem {
     padding: 3px;
     font-weight: normal;
-    font-size: small}
+    font-size:   small}
 .panelShown a:link, 
 .panelShown a:visited, 
 .panelShown a:active, 
@@ -100,13 +100,13 @@ div#toolbar_top {
     width:      1064px}
 div#toolbar_top table {
     width: 100%;
-    margin:  0px;
+    margin:      0px;
     padding-top: 0px;
     font-size: small}
 
 .topTitle {
-    padding-bottom: 3px;
-    padding-top:    3px;
+    padding-bottom: 2px;
+    padding-top:    2px;
     font-family: Verdana;
     font-size: x-large;
     font-weight: normal;
@@ -117,7 +117,7 @@ div#toolbar_top table {
     font-variant: small-caps;
     font-weight: bold}
 .topItem {
-    padding: 3px}
+    padding: 2px}
 .topEnabled {
     font-weight: bold}
 /* end TOP TOOLBAR  */
