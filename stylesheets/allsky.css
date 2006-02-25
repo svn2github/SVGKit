@@ -135,6 +135,8 @@ div.panelTitle {
     padding: 3px;
     padding-left: 10px;
     margin-bottom: 5px}
+div.panelContent {
+    margin: 5px}
 /* end PANELS  */
 
 .invisible {
