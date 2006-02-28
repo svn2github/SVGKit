@@ -19,6 +19,12 @@ function makePanel(elem) {
 function roundPanelCorners() {
     roundClass("div", "panel", {bgColor: "#000000"})}
 
+function loadClearSkyClock() {
+    var dateToday = new Date();
+    var myImg = IMG( {'src':'http://cleardarksky.com/csk/getcsk.php?id=OkRdgObMA'} );
+    replaceChildNodes('img_skyclock', myImg);
+    $('timestamp_skyclock').innerHTML= toISOTimestamp(dateToday);}
+    
 function onLoadScripts() {
     addLoadEvent(roundPanelCorners());
     addLoadEvent(topTimeFunc());
