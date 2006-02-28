@@ -1,11 +1,14 @@
 /* css file for The Harvard All-sky Optical SETI User Interface web page */
 
 /* begin COLORS -  backgrounds  */
-body {               background-color: #555555}
-div#container_outer { background-color: #000000}
-div#container_inner { background-color: #000000}
-div.panel {           background-color: #AAAAAA}
-div.panelTitle {      background-color: #888888}
+body {                background-color: #555555}
+div#container_outer {  background-color: #000000}
+div#container_inner {  background-color: #000000}
+div#interpreter_area { background-color: #CCCCCC}
+
+div.panel {            background-color: #AAAAAA}
+div.panelTitle {       background-color: #888888}
+input.textbox:focus {   background-color: #FFFEE3}
 /* begin COLORS - borders  */
 div#container_outer { border:      solid #AAAAAA 2px}
 div#container_inner { border-top:  solid #AAAAAA 2px;
@@ -137,7 +140,30 @@ div.panelTitle {
     margin-bottom: 5px}
 div.panelContent {
     margin: 5px}
-/* end PANELS  */
-
+div#_MochiKit_LoggingPane {
+    position: static}
 .invisible {
     display: none}
+/* end PANELS  */
+
+/* start JavaScript Interpreter  */  
+input.textbox {
+    font-family: Monaco, "lucida console", Courier;
+    border: 1px solid #CCCCCC;
+    font-size: 0.8em; 
+    padding: 2px 4px;
+    margin-top: 0.3em;
+    width: 1000px}
+div#interpreter_area {
+    display: block;
+    border: 1px solid #CCCCCC;
+    padding: 2px 4px;
+    margin-top: .3em;
+    width: 1000px;
+    height: 200px;
+    overflow: auto}
+div#interpreter_output {
+    display: inline;
+    font-family: Monaco, "lucida console", Courier;
+    font-size: 0.8em}
+/* end JavaScript Interpreter  */  
