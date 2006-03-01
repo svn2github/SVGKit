@@ -150,6 +150,17 @@ div.panelContent {
     margin: 5px}
 div#_MochiKit_LoggingPane {
     position: static}
+table.program {
+    font-size: x-small}
+table.program td {
+    vertical-align: top}
+.smallbutton {
+    background: #CCCCCC;
+    padding: 1px 3px 1px 3px;
+    font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
+    font-size: x-small}
+input.smallinput {
+    font-size: x-small}
 .invisible {
     display: none}
 /* end PANELS  */
