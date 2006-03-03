@@ -12,8 +12,10 @@ var Power = {
         log("Updating power");
         deferred = loadJSONDoc(this.base + "webGetSwitches");
         deferred.addCallback(function(result) {
-            controlStatus = result["status"];
-            switches = result["switches"];
+            //controlStatus = result["status"];
+            //switches = result["switches"];
+            controlStatus = result.status;
+            switches = result.switches;
             auto = (controlStatus == "automatic");
             
             // set control status stuff
@@ -75,7 +77,7 @@ var Power = {
     
     updateLoop: function() {
         Power.update();
-        callLater(2, Power.updateLoop);
+        callLater(60, Power.updateLoop);
     },
 };
 

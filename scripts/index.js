@@ -28,5 +28,11 @@ function loadClearSkyClock() {
 function onLoadScripts() {
     addLoadEvent(roundPanelCorners());
     addLoadEvent(topTimeFunc());
-    addLoadEvent(jsInterpreterManager.initialize());
+    addLoadEvent(jsInterpreterManager.initialize()); 
+    addLoadEvent(State.updateLoop());
     }
+/*
+addLoadEvent(roundPanelCorners());
+addLoadEvent(topTimeFunc());
+addLoadEvent(jsInterpreterManager.initialize());
+*/
