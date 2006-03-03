@@ -103,8 +103,8 @@ div#toolbar_side a {
 /* begin TOP TOOLBAR  */
 div#toolbar_top {
     position: absolute;
-    margin-left: 166px;
-    width:      1064px}
+    margin-left: 0px;
+    width:      1230px}
 div#toolbar_top table {
     width: 100%;
     margin:      0px;
@@ -118,7 +118,8 @@ div#toolbar_top table {
     font-size: x-large;
     font-weight: normal;
     font-stretch: ultra-expanded;
-    font-variant: small-caps}
+    font-variant: small-caps;
+    text-align: center}
 .topCategory {
     font-size: medium;
     font-variant: small-caps;
