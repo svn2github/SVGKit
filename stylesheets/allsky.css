@@ -152,9 +152,15 @@ div.panelContent {
 div#_MochiKit_LoggingPane {
     position: static}
 table.program {
-    font-size: x-small}
+    font-size: x-small;
+    padding: 0px;
+    border: 0px}
 table.program td {
     vertical-align: top}
+table.program th {
+    border: 1px solid #666666;
+    font-weight: bold;
+    text-decoration: underline}
 .smallbutton {
     background: #CCCCCC;
     padding: 1px 3px 1px 3px;
