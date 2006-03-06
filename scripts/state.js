@@ -22,7 +22,7 @@ var State = {
             var resultkeys = keys(result)
             forEach(resultkeys, 
                 function (key) {
-                    log(key + " = " + result[key]);
+                    //log(key + " = " + result[key]);
                     var elemlist = getElementsByTagAndClassName('span',key);
                     forEach(elemlist,
                         function (elem) {
