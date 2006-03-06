@@ -1,21 +1,37 @@
 var State = {
     base: "/state/",
     idbase: "state_",
+    stateHash: [],
+    currentState: [],
 
-    getKeys: function () {
-        log("getting keys...");
+    update: function () {
+        log("Updating state.");
         deferred = loadJSONDoc(this.base + "webGetState");
         deferred.addCallback(function(result) {
-            var keys = keys(result);
+            var resultkeys = keys(result);
+            forEach(resultkeys, 
+                function (resultkey) {
+                    var elem = window.getElement(resultkey);
+                    if (elem == null) {
+                        //code to add if id not a match
+                        //getElementsByTagAndClassName('span',resultkey);
+                    }
+                    else {
+                        elem.innerHTML = result[resultkey];
+                    }
+                }
+            )  
         });
-        return keys
+        deferred.addErrback(function (err) {
+            log("Error updating state: " + repr(err));
+        });
     },
     
-    //this runs very slowly.  
+    //this older version of State.update() runs very slowly.  
     //maybe store the values on the client, and check each time
     //if each value has changed.  if it has changed, then do a
     //getElementsByTagAndClassName
-    update: function () {
+    updateOld: function () {
         log("getting state...");
         deferred = loadJSONDoc(this.base + "webGetState");
         deferred.addCallback(function(result) {
@@ -37,15 +53,68 @@ var State = {
             log("Error updating state: " + repr(err));
         });
     },
+    
     updateLoop: function() {
         State.update();
-        callLater(5, State.updateLoop);
+        callLater(3, State.updateLoop);
     },
+    
+    makeHash: function () {
+        //makeHash is function that constructs State.stateHash - a hash table with 
+        //with (key, pointer) pairs where: 
+        //   key = a state variable (e.g. "ExperimentState.pmt_DAC_State[6].voltage")
+        //   pointer = a pointer to one HTML element that matches that state variable
+        //So, for example, 
+        // > stateHash[key] = pointer
+        // > stateHash[ExperimentState.pmt_DAC_State[6].voltage] = [object HTMLSpanElement]
+        log("Getting state from server.");
+        State.stateHash = [];
+        deferred = loadJSONDoc(this.base + "webGetState");
+        deferred.addCallback(function(result) {
+            log("State received.  Creating hash table.");
+            var resultkeys = keys(result);
+            //log(resultkeys);
+            forEach(resultkeys,
+                function (key) {
+                    //the next line is the one that makes this and other scripts VERY SLOW
+                    var elemlist = getElementsByTagAndClassName('span',key);
+                    forEach(elemlist,
+                        function (elem) {
+                            //log("trying stateHash[" + key + "] = " + elem);
+                            State.stateHash[key] = elem;
+                        }
+                    )    
+                }
+            )
+            log("Finished creating State.stateHash.  It has " + keys(State.stateHash).length + " entries.")
+        });
+        deferred.addErrback(function (err) {
+            log("Error updating state: " + repr(err));
+        });
+    },
+
+    updateWithHash: function () {
+        log("Updating state.");
+        deferred = loadJSONDoc(this.base + "webGetState");
+        deferred.addCallback(function (newState) {
+            var hashkeys = keys(State.stateHash);
+            forEach(hashkeys, 
+                function (hashkey) {
+                    if (newState[hashkey] == State.currentState[hashkey]) {
+                        //do nothing if there is no change
+                    }
+                    else {
+                        //if there is a change, put the new data in the appropriate elements
+                        State.stateHash[hashkey].innerHTML = newState[hashkey];
+                        log("changed " + hashkey);
+                    }
+                }
+            )
+            State.currentState = newState;
+        });
+        deferred.addErrback(function (err) {
+            log("Error updating state: " + repr(err));
+        });
+    },
+    
 };
-
-function doNothing() {
-    }
-
-//added to index.js ( onLoadScripts(): )
-//addLoadEvent(function() {State.init();});
-//addLoadEvent(function() {State.updateLoop();});
