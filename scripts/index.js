@@ -25,15 +25,8 @@ function loadClearSkyClock() {
     replaceChildNodes('img_skyclock', myImg);
     $('timestamp_skyclock').innerHTML= toISOTimestamp(dateToday);}
     
-function onLoadScripts() {
-    addLoadEvent(roundPanelCorners());
-    addLoadEvent(topTimeFunc());
-    addLoadEvent(jsInterpreterManager.initialize()); 
-    addLoadEvent(State.makeHash());
-    addLoadEvent(State.updateLoop());
-    }
-/*
-addLoadEvent(roundPanelCorners());
-addLoadEvent(topTimeFunc());
-addLoadEvent(jsInterpreterManager.initialize());
-*/
+addLoadEvent(roundPanelCorners);
+addLoadEvent(topTimeFunc);
+addLoadEvent(jsInterpreterManager.initialize); 
+addLoadEvent(State.makeHash);
+addLoadEvent(State.updateLoop);
