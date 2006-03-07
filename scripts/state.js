@@ -4,61 +4,6 @@ var State = {
     stateHash: [],
     currentState: [],
 
-    update: function () {
-        log("Updating state.");
-        deferred = loadJSONDoc(this.base + "webGetState");
-        deferred.addCallback(function(result) {
-            var resultkeys = keys(result);
-            forEach(resultkeys, 
-                function (resultkey) {
-                    var elem = window.getElement(resultkey);
-                    if (elem == null) {
-                        //code to add if id not a match
-                        //getElementsByTagAndClassName('span',resultkey);
-                    }
-                    else {
-                        elem.innerHTML = result[resultkey];
-                    }
-                }
-            )  
-        });
-        deferred.addErrback(function (err) {
-            log("Error updating state: " + repr(err));
-        });
-    },
-    
-    //this older version of State.update() runs very slowly.  
-    //maybe store the values on the client, and check each time
-    //if each value has changed.  if it has changed, then do a
-    //getElementsByTagAndClassName
-    updateOld: function () {
-        log("getting state...");
-        deferred = loadJSONDoc(this.base + "webGetState");
-        deferred.addCallback(function(result) {
-            var resultkeys = keys(result)
-            forEach(resultkeys, 
-                function (key) {
-                    //log(key + " = " + result[key]);
-                    var elemlist = getElementsByTagAndClassName('span',key);
-                    forEach(elemlist,
-                        function (elem) {
-                            callLater(0, function () {
-                                elem.innerHTML = result[key];});
-                        }
-                    )
-                }
-            )
-        });
-        deferred.addErrback(function (err) {
-            log("Error updating state: " + repr(err));
-        });
-    },
-    
-    updateLoop: function() {
-        State.updateWithHash();
-        callLater(1, State.updateLoop);
-    },
-    
     makeHash: function () {
         //makeHash is function that constructs State.stateHash - a hash table with 
         //with (key, pointer) pairs where: 
@@ -75,8 +20,9 @@ var State = {
             var resultkeys = keys(result);
             //log(resultkeys);
             forEach(getElementsByTagAndClassName('span','autoUpdate'),
-                function(elem) {
-                    stateVar = (sp=elem.className.split(' '), sp[0]=="autoUpdate" ? sp[1] : sp[0])
+                function(elem) {                
+//                    stateVar = (sp=elem.className.split(' '), sp[0]=="autoUpdate" ? sp[1] : sp[0])
+                    stateVar = elem.className.match(/ExperimentState[..a-zA-Z0-9\_\[\]]*/)[0];
                     State.stateHash[stateVar] = elem;
                     }
             )
@@ -89,6 +35,10 @@ var State = {
 
     updateWithHash: function () {
         log("Updating state.");
+        if (State.stateHash.length == 0) {
+            State.makeHash();
+            log("Getting new hash.");
+        }
         deferred = loadJSONDoc(this.base + "webGetState");
         deferred.addCallback(function (newState) {
             var hashkeys = keys(State.stateHash);
@@ -109,6 +59,11 @@ var State = {
         deferred.addErrback(function (err) {
             log("Error updating state: " + repr(err));
         });
+    },
+    
+    updateLoop: function() {
+        State.updateWithHash();
+        callLater(3, State.updateLoop);
     },
     
 };
