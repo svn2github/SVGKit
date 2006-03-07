@@ -1,7 +1,7 @@
 var State = {
     base: "/state/",
     idbase: "state_",
-    stateHash: [],
+    stateHash: null,
     currentState: [],
 
     makeHash: function () {
@@ -35,8 +35,8 @@ var State = {
 
     updateWithHash: function () {
         log("Updating state.");
-        if (State.stateHash.length == 0) {
-            State.makeHash();
+        if(State.stateHash == null) {
+           State.makeHash();
             log("Getting new hash.");
         }
         deferred = loadJSONDoc(this.base + "webGetState");
