@@ -55,8 +55,8 @@ var State = {
     },
     
     updateLoop: function() {
-        State.update();
-        callLater(3, State.updateLoop);
+        State.updateWithHash();
+        callLater(1, State.updateLoop);
     },
     
     makeHash: function () {
@@ -74,19 +74,13 @@ var State = {
             log("State received.  Creating hash table.");
             var resultkeys = keys(result);
             //log(resultkeys);
-            forEach(resultkeys,
-                function (key) {
-                    //the next line is the one that makes this and other scripts VERY SLOW
-                    var elemlist = getElementsByTagAndClassName('span',key);
-                    forEach(elemlist,
-                        function (elem) {
-                            //log("trying stateHash[" + key + "] = " + elem);
-                            State.stateHash[key] = elem;
-                        }
-                    )    
-                }
+            forEach(getElementsByTagAndClassName('span','autoUpdate'),
+                function(elem) {
+                    stateVar = (sp=elem.className.split(' '), sp[0]=="autoUpdate" ? sp[1] : sp[0])
+                    State.stateHash[stateVar] = elem;
+                    }
             )
-            log("Finished creating State.stateHash.  It has " + keys(State.stateHash).length + " entries.")
+            log("Finished creating State.stateHash.  It has " + keys(State.stateHash).length + " entries.");
         });
         deferred.addErrback(function (err) {
             log("Error updating state: " + repr(err));
@@ -106,7 +100,7 @@ var State = {
                     else {
                         //if there is a change, put the new data in the appropriate elements
                         State.stateHash[hashkey].innerHTML = newState[hashkey];
-                        log("changed " + hashkey);
+                        //log("changed " + hashkey);
                     }
                 }
             )

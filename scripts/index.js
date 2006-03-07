@@ -29,7 +29,8 @@ function onLoadScripts() {
     addLoadEvent(roundPanelCorners());
     addLoadEvent(topTimeFunc());
     addLoadEvent(jsInterpreterManager.initialize()); 
-//    addLoadEvent(State.updateLoop());
+    addLoadEvent(State.makeHash());
+    addLoadEvent(State.updateLoop());
     }
 /*
 addLoadEvent(roundPanelCorners());
