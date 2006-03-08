@@ -21,7 +21,6 @@ var State = {
             //log(resultkeys);
             forEach(getElementsByTagAndClassName('span','autoUpdate'),
                 function(elem) {                
-//                    stateVar = (sp=elem.className.split(' '), sp[0]=="autoUpdate" ? sp[1] : sp[0])
                     stateVar = elem.className.match(/ExperimentState[..a-zA-Z0-9\_\[\]]*/)[0];
                     State.stateHash[stateVar] = elem;
                     }
