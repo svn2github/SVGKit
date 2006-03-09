@@ -19,12 +19,11 @@ var ProgramChips = {
     },
 
     setPNDAC: function(vref) {
-        log("got to setPNDAC, vref=" +vref);
         if (vref == 'all') {
-//            for (i = 0; i <= 6; i++) {
-//                ProgramChips.setPNDAC(i);
-//            }
-//            ProgramChips.setPNDAC('bias');
+            ProgramChips.setPNDAC('bias');
+            for (i = 0; i <= 6; i++) {
+                ProgramChips.setPNDAC(i);
+            }
         }
         else {
             query_vref = queryString(getElement(this.idbase+'PulseNetDACForm'+vref));
