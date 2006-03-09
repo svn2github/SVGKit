@@ -27,8 +27,8 @@ var ProgramChips = {
 //            ProgramChips.setPNDAC('bias');
         }
         else {
-//            query_vref = queryString(getElement(idbase+'PulseNetDACForm'+vref));
-//            ProgramChips.command('programDACPulseNet?vref='+vref+'&'+query_vref);         
+            query_vref = queryString(getElement(this.idbase+'PulseNetDACForm'+vref));
+            ProgramChips.command('programDACPulseNet?vref='+vref+'&'+query_vref);         
         }
     },
     
