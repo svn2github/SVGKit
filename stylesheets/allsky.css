@@ -218,6 +218,8 @@ table.program th {
 select {
     font-size: x-small;
     cursor: pointer}
+input.checkbox {
+    margin: 0px}
 input.smallinput {
     padding: 1px 3px 1px 3px;
     font-size: x-small}
