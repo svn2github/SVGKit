@@ -1,40 +1,87 @@
 /* css file for The Harvard All-sky Optical SETI User Interface web page */
 
 /* begin COLORS -  backgrounds  */
-body {                background-color: #555555}
-div#container_outer {  background-color: #000000}
-div#container_inner {  background-color: #000000}
-div#interpreter_area { background-color: #CCCCCC}
+body {
+    background-color: #313439}
+div#container_outer { 
+    background-color: #000000}
+div#container_inner {  
+    background-color: #000000}
+div#interpreter_area { 
+    background-color: #CCCCCC}
+div.panel {
+    background-color: #313439}
+div.panelTitle {
+    background-color: #545A65}
+div.progressbar_inner {
+    background-color: #545A65}
+.smallbutton {
+    background-image: url(/static/images/titlebg.gif)}
+select {
+    background-color: #313439}
+input.smallinput {
+    background-color: #545A65}
+input.textbox:focus {
+    background-color: #FFFEE3}
 
-div.panel {            background-color: #AAAAAA}
-div.panelTitle {       background-color: #888888}
-input.textbox:focus {   background-color: #FFFEE3}
 /* begin COLORS - borders  */
-div#container_outer { border:      solid #AAAAAA 2px}
-div#container_inner { border-top:  solid #AAAAAA 2px;
-                     border-left: solid #AAAAAA 2px}
+div#container_outer { 
+    border: solid #545A65 2px}
+div#container_inner { 
+    border-top:  solid #545A65 2px;
+    border-left: solid #545A65 2px}
+.smallbutton {
+    border-top:    2px solid #545A65;
+    border-right:  2px solid #2B2D31;
+    border-bottom: 2px solid #2B2D31;
+    border-left:   2px solid #545A65}
+select {
+    border: 1px solid #545A65}
+input.smallinput {
+    border: 1px solid #2B2D31}
+.progressbar_outer {
+    border: 2px solid #222325}
+
 /* begin COLORS - fonts */
-div#body {            color: #FFFFFF}
-.topTitle {          color: #FF3300}
-.topTitleAccent {    color: #FF1100}
-.topCategory {       color: #FF3300}
-.topItem {           color: #777777}
-.topEnabled {        color: #FFFFFF}
-.menuCategory {      color: #0033FF}
+div#body { 
+    color: #FFFFFF}
+.topTitle { 
+    color: #113FBF}
+.topTitleAccent { 
+    color: #113FBF}
+.topCategory { 
+    color: #113FBF}
+.topItem { 
+    color: #545A65}
+.topEnabled { 
+    color: #9FAABF}
+.menuCategory {
+    color: #113FBF}
 .menuItem a:link, 
 .menuItem a:visited, 
 .menuItem a:active, 
-.menuItem a:hover { color: #777777}
-.menuItem { color: #777777}
+.menuItem a:hover { 
+    color: #545A65}
+.menuItem { 
+    color: #545A65}
+.panel { 
+    color: #C6C6C6}
 .panelShown a:link, 
 .panelShown a:visited, 
 .panelShown a:active, 
-.panelShown a:hover { color: #FFFFFF}
+.panelShown a:hover { 
+    color: #9FAABF}
+.smallbutton { 
+    color: #C6C6C6}
 div.panelTitle a:link, 
 div.panelTitle a:visited, 
 div.panelTitle a:active, 
-div.panelTitle a:hover { color: #0033FF}
-div.panelTitle { color: #0033FF}
+div.panelTitle a:hover { 
+    color: #0A246A}
+div.panelTitle { 
+    color: #0A246A}
+select {
+    color: #C6C6C6}
 /* end COLORS */
 
 /* begin BODY */
@@ -137,9 +184,8 @@ div.panel {
 div.panelInvisible {
     display: none}
 div.panelTitle {
-    width: 1029px;
     font-weight: bold;
-    font-size: small;
+    width: 1029px;
     padding-top:    3px;
     padding-bottom: 3px;
     padding-right:  3px;
@@ -154,19 +200,32 @@ div.panelContent {
 div#_MochiKit_LoggingPane {
     position: static}
 table.program {
+    border-collapse: collapse;
     font-size: x-small;
     padding: 0px;
-    border: 0px}
+    border:  0px}
+table.program tr{
+    padding: 0px;
+    border:  0px}
 table.program th {
     font-weight: bold;
     text-decoration: underline}
 .smallbutton {
-    background: #CCCCCC;
-    padding: 1px 3px 1px 3px;
     font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
-    font-size: x-small}
+    font-size: x-small;
+    margin:  0px;
+    padding: 1px 3px 1px 3px}
+select {
+    font-size: x-small;
+    cursor: pointer}
 input.smallinput {
+    padding: 1px 3px 1px 3px;
     font-size: x-small}
+div.progressbar_outer {
+    width: 300px;
+    height: 20px}
+div.progressbar_inner {
+    height: 20px}
 .invisible {
     display: none}
 /* end PANELS  */
