@@ -48,7 +48,7 @@ var Roof = {
             bar = getElement(Roof.idbase + "progress");
             bar.style.width = (progress * 300).toFixed(0) + "px";
             // do it again in 5 seconds
-            callLater(60, function() {Roof.updateProgress();});
+            callLater(2, function() {Roof.updateProgress();});
         });
         deferred.addErrback(function(err) {
             Roof.setStatus("Error updating position: " + repr(err));
