@@ -28,4 +28,4 @@ function loadClearSkyClock() {
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);
 addLoadEvent(jsInterpreterManager.initialize); 
-addLoadEvent(State.updateLoop);
+addLoadEvent(State.updateWithHash);

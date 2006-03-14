@@ -82,6 +82,8 @@ div.panelTitle {
     color: #0A246A}
 select {
     color: #C6C6C6}
+div#interpreter_area { 
+    color: #000000}
 /* end COLORS */
 
 /* begin BODY */
