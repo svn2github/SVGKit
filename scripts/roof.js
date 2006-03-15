@@ -37,6 +37,7 @@ var Roof = {
         deferred = loadJSONDoc(this.base+"webPosition");
         deferred.addCallback(function(progress) {
             // update roof position pct text
+            percent     = (progress*100)
             percent_str = (progress*100).toPrecision(3) + "%"
             replaceChildNodes(getElement(Roof.idbase + "pospct"),  
                                 SPAN(null, percent_str));
@@ -44,10 +45,12 @@ var Roof = {
             if (element) {
                 replaceChildNodes(element,  SPAN(null, percent_str));
             }
-            // update progress bar
-            bar = getElement(Roof.idbase + "progress");
-            bar.style.width = (progress * 300).toFixed(0) + "px";
-            // do it again in 5 seconds
+            // update progress bar (OLD)
+            //bar = getElement(Roof.idbase + "progress");
+            //bar.style.width = (progress * 300).toFixed(0) + "px";
+            // update svg drawing of observatory
+            // do it again in 2 seconds
+            obsSvg.translateRoof(percent);
             callLater(2, function() {Roof.updateProgress();});
         });
         deferred.addErrback(function(err) {
