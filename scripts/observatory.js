@@ -1,4 +1,4 @@
-var obsSvg = {
+var ObsSvg = {
 
     roof_base: '/roof/',
     roof_idbase: 'roof_',
@@ -8,8 +8,9 @@ var obsSvg = {
     obsSvg2: [],
 
     init: function () {
-        obsSvg.obsSvg1 = document.getElementById("obsSvg1").contentDocument ;
-        obsSvg.obsSvg2 = document.getElementById("obsSvg2").contentDocument ;
+        ObsSvg.obsSvg1 = document.getElementById("obsSvg1").contentDocument;
+        ObsSvg.obsSvg2 = document.getElementById("obsSvg2").contentDocument;
+        log("Initializing observatory svgs.");
     },
 
     translateRoof: function (percentOpen) {
@@ -23,14 +24,15 @@ var obsSvg = {
         var telescope1 = document.getElementById("obsSvg1").contentDocument.getElementById("telescope");
         var telescope2 = document.getElementById("obsSvg2").contentDocument.getElementById("telescope");
         var transform  = 'translate(535,210) rotate(' + degrees + ') translate(-535,-210)';
-        telescope.setAttribute("transform", transform);
+        telescope1.setAttribute("transform", transform);
+        telescope2.setAttribute("transform", transform);
     },
 
     rotateTelescopeDeclination: function (declination) {
-        var degrees = 90.0 - (declination + 42.5);
-        obsSvg.rotateTelescope(degrees) ;
+        var degrees = 47.5 - declination; // = 90 - (declination - latitude)
+        ObsSvg.rotateTelescope(degrees) ;
     },
 
 };
 
-addLoadEvent(function() {obsSvg.init});
+addLoadEvent(function() {ObsSvg.init});

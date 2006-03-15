@@ -50,7 +50,7 @@ var Roof = {
             //bar.style.width = (progress * 300).toFixed(0) + "px";
             // update svg drawing of observatory
             // do it again in 2 seconds
-            obsSvg.translateRoof(percent);
+            ObsSvg.translateRoof(percent);
             callLater(2, function() {Roof.updateProgress();});
         });
         deferred.addErrback(function(err) {
