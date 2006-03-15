@@ -159,6 +159,15 @@ div#toolbar_top table {
     margin:      0px;
     padding-top: 0px;
     font-size: small}
+table.topToolbar {
+    padding: 0px;
+    border:  0px}
+table.topToolbar tr{
+    padding: 0px;
+    border:  0px}
+table.topToolbar td{
+    padding: 0px;
+    border:  0px}
 
 .topTitle {
     padding-bottom: 2px;
