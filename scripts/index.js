@@ -28,5 +28,4 @@ function loadClearSkyClock() {
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);
 addLoadEvent(jsInterpreterManager.initialize); 
-addLoadEvent(ObsSvg.init);
 addLoadEvent(State.updateWithHash);

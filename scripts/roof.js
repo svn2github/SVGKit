@@ -37,8 +37,8 @@ var Roof = {
         deferred = loadJSONDoc(this.base+"webPosition");
         deferred.addCallback(function(progress) {
             // update roof position pct text
-            percent     = (progress*100)
-            percent_str = (progress*100).toPrecision(3) + "%"
+            percent     = (progress*100);
+            percent_str = (progress*100).toPrecision(3) + "%";
             replaceChildNodes(getElement(Roof.idbase + "pospct"),  
                                 SPAN(null, percent_str));
             element = getElement("top_" + Roof.idbase + "pospct");
@@ -62,7 +62,9 @@ var Roof = {
 
 };
 
-addLoadEvent(function() {Roof.updateProgress();});
+addLoadEvent(function() {
+    Roof.updateProgress();
+});
 /* For some reason, you have to wrap the Roof.updateProgress() call in a 
  * function, or within the call 'this' will be undefined.  My suspicion is that
  * somehow when you directly pass Roof.updateProgress as a function object, it
