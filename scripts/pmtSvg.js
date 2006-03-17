@@ -1,14 +1,14 @@
 var PMT = {
-    base:  "/diagnostics/",
-    idbase: "diagnostics_",
+    base:  "/pixel_view/",
+    idbase: "pixel_view_",
     pixelL: [],
     pixelR: [],
     fillColorDefault:  "#FF0025",
     strokeColorDefault: "#0A246A",
 
     init: function () {
-        PMT.pixelL = document.getElementById('diagnostics_pmt').contentDocument.getElementById("pmts_left").getElementsByTagName("rect");
-        PMT.pixelR = document.getElementById('diagnostics_pmt').contentDocument.getElementById("pmts_right").getElementsByTagName("rect");
+        PMT.pixelL = document.getElementById(PMT.idbase+'pmt').contentDocument.getElementById("pmts_left").getElementsByTagName("rect");
+        PMT.pixelR = document.getElementById(PMT.idbase+'pmt').contentDocument.getElementById("pmts_right").getElementsByTagName("rect");
         // TODO: Loop through and add onclick event to each rect
     },
     
