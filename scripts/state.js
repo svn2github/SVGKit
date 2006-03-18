@@ -48,7 +48,7 @@ var State = {
                 }
             )
             State.currentState = newState;
-            callLater(2, State.updateWithHash);
+            callLater(30, State.updateWithHash);
         });
         deferred.addErrback(function (err) {
             log("Error updating state: " + repr(err));
