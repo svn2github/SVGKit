@@ -128,7 +128,7 @@ var PMT = {
             var redComp     = scaledValue;
             var greenComp   = (1-2*scaledValue)^2;
             var blueComp    = 1-scaledValue;
-            var scaledColor = frgb(redComp,greenComp,blueComp));
+            //var scaledColor = frgb(redComp,greenComp,blueComp));
             var attrs = "fill:" + scaledColor + ";"              +
                         "fill-opacity:1;"                        +
                         "stroke:" + PMT.strokeColorDefault + ";" +
