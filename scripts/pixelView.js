@@ -31,14 +31,14 @@ var PixelView = {
                               "Programmed", 
                               "Coincidence Waiting", 
                               "Coincidence Read"  ],
-    SETI_status_colors:      [ 0, 1, 2, 3, 4 ], 
+    SETI_status_colors:      [ 5, 2, 1, 0, 3 ], 
     astro_status_values:     ["Not Programmed", 
                               "Reset", 
                               "Programmed", 
                               "Counters Started", 
                               "Counters Stopped",
                               "Counters Read" ],
-    astro_status_colors:     [ 0, 1, 2, 3, 4, 5 ], 
+    astro_status_colors:     [ 5, 2, 3, 1, 0, 12 ], 
     threshold_level_values:  [ "0", "1", "2", "3", "4", "5", "6" ],
     threshold_level_colors:  [ 0, 1, 2, 3, 4, 5, 6 ], 
     enabled_values:          [ "Disabled", "Enabled" ],
@@ -57,7 +57,7 @@ var PixelView = {
     PN_colors:               [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ],
     FCT_values:              [ "0", "1", "2", "3" ],
-    FCT_colors:              [ 0, 1, 2, 3 ],
+    FCT_colors:              [ 3, 2, 1, 0 ],
     
     
     loadParameters: function(selection) {

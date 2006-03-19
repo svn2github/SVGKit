@@ -10,14 +10,15 @@ var PMT = {
     init: function () {
         PMT.pixelL = document.getElementById(PMT.idbase+'pmt').contentDocument.getElementById("pmts_left").getElementsByTagName("rect");
         PMT.pixelR = document.getElementById(PMT.idbase+'pmt').contentDocument.getElementById("pmts_right").getElementsByTagName("rect");
-        PMT.color = ["#FF0000", "#00FF00", "#0000FF", "#00FFFF", 
-                     "#FF00FF", "#FFFF00", "#AA6600", "#00AA66",
-                     "#AA0066", "#0066AA", "#6600AA", "#66AA00", 
-                     "#FF9933", "#99FF33", "#3399FF", "#33FF99", 
-                     "#770000", "#007700", "#000077", "#007777", 
-                     "#770077", "#777700", "#553300", "#005533",
-                     "#550033", "#003355", "#330055", "#335500", 
-                     "#774422", "#447722", "#224477", "#227744" ];
+        PMT.color = ["#D62728", "#2CA02C", "#1F77BF", "#FF7F0E", 
+                     "#AA1155", "#5511AA", "#00AA66", "#AA6600",
+                     "#FF0000", "#FFFF00", "#0000FF", "#00FFFF", 
+                     "#FFFF00", "#FF00FF", "#22FFAA", "#FFAA22", 
+                     "#BE0F10", "#108410", "#06539B", "#C65E01", 
+                     "#550630", "#300655", "#005537", "#553700",
+                     "#AA0000", "#AAAA00", "#0000AA", "#00AAAA", 
+                     "#AAAA00", "#AA00AA", "#13AA77", "#AA7713",
+                     "#000000"];
         // TODO: Loop through and add onclick event to each rect
     },
     
@@ -44,7 +45,7 @@ var PMT = {
         var offset = 8;
         var j = PMT.snake_i-offset;
         if (PMT.snake_i < 512) {
-            PMT.setProps(PMT.snake_i, "both", PMT.fillColorDefault, 1, PMT.strokeColorDefault, 1);
+            PMT.setProps(PMT.snake_i, "both", "#FF0000", 1, PMT.strokeColorDefault, 1);
         }
         if (j >= 0) {
             PMT.setProps(j, "both", PMT.fillColorDefault, 0, PMT.strokeColorDefault, 1);
@@ -74,7 +75,7 @@ var PMT = {
     setAllWithOptions: function (chip, stateParam, selection, valueArray, colorArray) {
         PixelView.makeDiscreteKey(selection, valueArray, colorArray);
         for (pixelNum=0; pixelNum<512; pixelNum++) {
-            //calculate PN# or uC# for pixel
+            //calculate value for pixel
             if      (chip == "SETI" | chip == "Astro")  {
                 var PN         = Convert.pix2PN(pixelNum) ;
                 var ES         = "ExperimentState.pulsenet";
@@ -95,7 +96,6 @@ var PMT = {
                 var stateValue = PN%4;
             }
             else                   {return}
-            log(chip + ": " + pixelNum + " -> " + stateValue);
             //set SVG pixel color according to state parameter
             for (valueIndex=0; valueIndex<valueArray.length; valueIndex++) {
                 if (valueArray[valueIndex] == stateValue) {
@@ -112,6 +112,33 @@ var PMT = {
         }        
     },
 
+    //this function is not finished.
+    setAllContinuous: function (chip, minValue, maxValue) {
+        // TO DO: MAKE KEY FOR CONTINUOUS VARIABLES
+        for (pixelNum=0; pixelNum<512; pixelNum++) {
+            if (chip == "SETI" | chip == "Astro") {
+                var PN          = Convert.pix2PN(pixelNum) ;
+                var ES          = "ExperimentState.pulsenet";
+                var stateVar    = ES + chip + "_State[" + PN + "].thresholdVoltage";
+                var stateValue  = State.currentState[stateVar];
+                var scaledValue = (stateValue-minValue)/(maxValue-minValue);
+            }
+            else {return}
+            //set SVG pixel color according to state parameter 
+            var redComp     = scaledValue;
+            var greenComp   = (1-2*scaledValue)^2;
+            var blueComp    = 1-scaledValue;
+            var scaledColor = frgb(redComp,greenComp,blueComp));
+            var attrs = "fill:" + scaledColor + ";"              +
+                        "fill-opacity:1;"                        +
+                        "stroke:" + PMT.strokeColorDefault + ";" +
+                        "stroke-width:1;"                        +
+                        "stroke-opacity:1;"
+            PMT.pixelL[pixelNum].setAttribute("style",attrs);
+            PMT.pixelR[pixelNum].setAttribute("style",attrs);
+        }
+    },
+    
+   
 };
 
-// PMT.setAllWithOptions("SuC", "a", "a", "SETI_status_threshold_level", PixelView.SuC_values, PixelView.SuC_colors)
