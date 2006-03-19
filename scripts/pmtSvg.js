@@ -13,7 +13,11 @@ var PMT = {
         PMT.color = ["#FF0000", "#00FF00", "#0000FF", "#00FFFF", 
                      "#FF00FF", "#FFFF00", "#AA6600", "#00AA66",
                      "#AA0066", "#0066AA", "#6600AA", "#66AA00", 
-                     "#FF9933", "#99FF33", "#3399FF", "#33FF99", ]
+                     "#FF9933", "#99FF33", "#3399FF", "#33FF99", 
+                     "#770000", "#007700", "#000077", "#007777", 
+                     "#770077", "#777700", "#553300", "#005533",
+                     "#550033", "#003355", "#330055", "#335500", 
+                     "#774422", "#447722", "#224477", "#227744" ];
         // TODO: Loop through and add onclick event to each rect
     },
     
@@ -62,26 +66,36 @@ var PMT = {
     },
     
     //set all pixels to a solid color (opacity=1) according to a state parameter 
-    //variables:  chip       = IC that determines PulseNet state - "PN", "SuC", or "AuC"
-    //            astroSETI  = SETI or Astro parameter           - "SETI" or "Astro"
+    //variables:  chip       = IC that determines PulseNet state - "SETI", "Astro", "SuC", "AuC", "PN", or "FCT"
     //            stateParam = state parameter being plotted     - e.g. "programmingStatus";
     //            selection  = name of data to be displayed (used for id of key div)
     //            valueArray = possible parameter values         - e.g. PixelView.SETI_status_status_value_array;
     //            colorArray = possible pixel colors             - e.g. PMT.color;
-    setAllWithOptions: function (chip, astroSETI, stateParam, selection, valueArray, colorArray) {
-        if      (chip = "PN")  {
-            PixelView.makeDiscreteKey(selection, valueArray, colorArray);
-        }
+    setAllWithOptions: function (chip, stateParam, selection, valueArray, colorArray) {
+        PixelView.makeDiscreteKey(selection, valueArray, colorArray);
         for (pixelNum=0; pixelNum<512; pixelNum++) {
             //calculate PN# or uC# for pixel
-            if      (chip = "PN")  {var PN = Convert.pix2PN(pixelNum) }
-            else if (chip = "SuC") {var PN = Convert.pix2SuC(pixelNum)}
-            else if (chip = "AuC") {var PN = Convert.pix2AuC(pixelNum)}
+            if      (chip == "SETI" | chip == "Astro")  {
+                var PN         = Convert.pix2PN(pixelNum) ;
+                var ES         = "ExperimentState.pulsenet";
+                var stateVar   = ES + chip + "_State[" + PN + "]." + stateParam;
+                var stateValue = State.currentState[stateVar];
+            }
+            else if (chip == "SuC") {
+                var stateValue = Convert.pix2SuC(pixelNum);
+            }
+            else if (chip == "AuC") {
+                var stateValue = Convert.pix2AuC(pixelNum);
+            }
+            else if (chip == "PN") {
+                var stateValue = Convert.pix2PN(pixelNum);
+            }
+            else if (chip == "FCT") {
+                var PN         = Convert.pix2PN(pixelNum);
+                var stateValue = PN%4;
+            }
             else                   {return}
-            //get state variable (for left and right pixel[i])
-            var stateVar   = "ExperimentState.pulsenet" + astroSETI + "_State[" 
-                           + PN + "]." + stateParam
-            var stateValue = State.currentState[stateVar];
+            log(chip + ": " + pixelNum + " -> " + stateValue);
             //set SVG pixel color according to state parameter
             for (valueIndex=0; valueIndex<valueArray.length; valueIndex++) {
                 if (valueArray[valueIndex] == stateValue) {
@@ -95,7 +109,9 @@ var PMT = {
                     //exit for loop early if match on stateValue?
                 }
             }
-        }
-        
+        }        
     },
+
 };
+
+// PMT.setAllWithOptions("SuC", "a", "a", "SETI_status_threshold_level", PixelView.SuC_values, PixelView.SuC_colors)

@@ -42,10 +42,22 @@ var PixelView = {
     threshold_level_values:  [ "0", "1", "2", "3", "4", "5", "6" ],
     threshold_level_colors:  [ 0, 1, 2, 3, 4, 5, 6 ], 
     enabled_values:          [ "Disabled", "Enabled" ],
-    enabled_colors:          [ 2, 3 ], 
+    enabled_colors:          [ 0, 1 ], 
     pulsenet_pixel_values:   [ "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  
                                "8",  "9", "10", "11", "12", "13", "14", "15" ],
     pulsenet_pixel_colors:   [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ],
+    SuC_values:              [ "0", "1", "2", "3", "4", "5", "6", "7" ],
+    SuC_colors:              [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+    AuC_values:              [ "8", "9", "10", "11" ],
+    AuC_colors:              [ 0, 1, 2, 3 ],
+    PN_values:               [  "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  
+                                "8",  "9", "10", "11", "12", "13", "14", "15",
+                               "16", "17", "18", "19", "20", "21", "22", "23",  
+                               "24", "25", "26", "27", "28", "29", "30", "31" ],
+    PN_colors:               [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ],
+    FCT_values:              [ "0", "1", "2", "3" ],
+    FCT_colors:              [ 0, 1, 2, 3 ],
     
     
     loadParameters: function(selection) {
@@ -53,8 +65,8 @@ var PixelView = {
         PMT.all(0);
         PixelView.clearParameterDivs(selection);
         //display new parameter div
-        elem_id = PixelView.idbase + "parameters_" + selection;
-        parameter_div = document.getElementById(elem_id);
+        var elem_id = PixelView.idbase + "parameters_" + selection;
+        var parameter_div = document.getElementById(elem_id);
         removeElementClass(parameter_div, "invisible");
     },
 
@@ -62,8 +74,8 @@ var PixelView = {
         //clear previous parameter div
         forEach(PixelView.parameterList, 
             function(param) {
-                elem_id = PixelView.idbase + "parameters_" + param;
-                parameter_div = document.getElementById(elem_id);
+                var elem_id = PixelView.idbase + "parameters_" + param;
+                var parameter_div = document.getElementById(elem_id);
                 addElementClass(parameter_div, "invisible");
             }
         );
@@ -74,57 +86,73 @@ var PixelView = {
         PMT.all(0);
         PixelView.clearKeyDivs(selection);
         //display new key div
-        elem_id = PixelView.idbase + "key_" + selection;
-        key_div = document.getElementById(elem_id);
+        var elem_id = PixelView.idbase + "key_" + selection;
+        var key_div = document.getElementById(elem_id);
         removeElementClass(key_div, "invisible");
         //start new SVG display & insert new key content (if necessary)
         if      (selection == "none") {}
         else if (selection == "SETI_status_status") {
-            PMT.setAllWithOptions("PN", "SETI", "programmingStatus",  selection, 
+            PMT.setAllWithOptions("SETI", "programmingStatus",  selection, 
                                   PixelView.SETI_status_values, 
                                   PixelView.SETI_status_colors);
         }
         else if (selection == "SETI_status_threshold_level") {
-            PMT.setAllWithOptions("PN", "SETI", "thresholdVrefNumber",  selection, 
+            PMT.setAllWithOptions("SETI", "thresholdVrefNumber",  selection, 
                                   PixelView.threshold_level_values, 
                                   PixelView.threshold_level_colors);
         }
         else if (selection == "SETI_status_threshold_voltage")  {}
         else if (selection == "SETI_status_veto")               {
-            PMT.setAllWithOptions("PN", "SETI", "vetoMode", selection, 
+            PMT.setAllWithOptions("SETI", "vetoMode", selection, 
                                   PixelView.enabled_values, 
                                   PixelView.enabled_colors);
         }
         else if (selection == "SETI_status_clockhalf")          {
-            PMT.setAllWithOptions("PN", "SETI", "clockHalfMode", selection, 
+            PMT.setAllWithOptions("SETI", "clockHalfMode", selection, 
                                   PixelView.enabled_values, 
                                   PixelView.enabled_colors);
         }
         else if (selection == "SETI_status_coincblock")         {
-            PMT.setAllWithOptions("PN", "SETI", "coincBlock", selection,
+            PMT.setAllWithOptions("SETI", "coincBlock", selection,
                                   PixelView.enabled_values, 
                                   PixelView.enabled_colors);
         }
         else if (selection == "astro_status_status")            {
-            PMT.setAllWithOptions("PN", "Astro", "programmingStatus",  selection, 
+            PMT.setAllWithOptions("Astro", "programmingStatus",  selection, 
                                   PixelView.astro_status_values, 
                                   PixelView.astro_status_colors);
         }
         else if (selection == "astro_status_threshold_level")   {
-            PMT.setAllWithOptions("PN", "Astro", "thresholdVrefNumber",  selection, 
+            PMT.setAllWithOptions("Astro", "thresholdVrefNumber",  selection, 
                                   PixelView.threshold_level_values, 
                                   PixelView.threshold_level_colors);
         }
         else if (selection == "astro_status_threshold_voltage") {}
         else if (selection == "astro_status_pixel")             {
-            PMT.setAllWithOptions("PN", "Astro", "pixelAddress",  selection, 
+            PMT.setAllWithOptions("Astro", "pixelAddress",  selection, 
                                   PixelView.pulsenet_pixel_values, 
                                   PixelView.pulsenet_pixel_colors);
         }
-        else if (selection == "instrument_highlight_SETI_uC")   {}
-        else if (selection == "instrument_highlight_astro_uC")  {}
-        else if (selection == "instrument_highlight_pulsenet")  {}
-        else if (selection == "instrument_highlight_4color")    {}
+        else if (selection == "instrument_highlight_SETI_uC")   {
+            PMT.setAllWithOptions("SuC", null,  selection, 
+                                  PixelView.SuC_values, 
+                                  PixelView.SuC_colors);
+        } 
+        else if (selection == "instrument_highlight_astro_uC")  {
+            PMT.setAllWithOptions("AuC", null,  selection, 
+                                  PixelView.AuC_values, 
+                                  PixelView.AuC_colors);
+        } 
+        else if (selection == "instrument_highlight_pulsenet")  {
+            PMT.setAllWithOptions("PN", null,  selection, 
+                                  PixelView.PN_values, 
+                                  PixelView.PN_colors);
+        } 
+        else if (selection == "instrument_highlight_4color")    {
+            PMT.setAllWithOptions("FCT", null,  selection, 
+                                  PixelView.FCT_values, 
+                                  PixelView.FCT_colors);
+        } 
         else if (selection == "instrument_debugging_snake")     {
             PMT.snake();
         }
@@ -133,8 +161,8 @@ var PixelView = {
     clearKeyDivs: function(selection) {
         forEach(PixelView.keyList,
             function(key) {
-                elem_id = PixelView.idbase + "key_" + key;
-                key_div = document.getElementById(elem_id);
+                var elem_id = PixelView.idbase + "key_" + key;
+                var key_div = document.getElementById(elem_id);
                 addElementClass(key_div, "invisible");
             }
         );
@@ -142,29 +170,46 @@ var PixelView = {
     
     makeDiscreteKey: function (selection, valueArray, colorArray) {
         var rows = [];
-        for (i=0; i<valueArray.length; i++) {
-            var tdColor = TD({ "style" : {"backgroundColor" : PMT.color[colorArray[i]], 
-                                          "width"   : "12px", 
-                                          "height"  : "12px",
-                                          "border"  :  "0px",
-                                          "padding" :  "0px",
-                                          "margin"  : "-2px" } }, null);
-            var tdKey   = TD({ "style" : {"height"  : "12px", 
-                                          "border"  :  "0px",
-                                          "padding" : "0px", 
-                                          "margin" : "-2px" } }, valueArray[i]);
-            rows[i]   = TR(null, [tdColor, tdKey] );
+        if  (valueArray.length <= 16) {
+            for (i=0; i<valueArray.length; i++) {
+               var tdColor = PixelView.keyTD("color", PMT.color[colorArray[i]]);
+               var tdKey   = PixelView.keyTD("key",   valueArray[i]);
+               rows[i]     = TR(null, [tdColor, tdKey]);
+            }
+        }
+        else {
+            for (i=0; i<valueArray.length/2; i++) {
+               var tdColor1 = PixelView.keyTD("color", PMT.color[colorArray[i]]);
+               var tdColor2 = PixelView.keyTD("color", PMT.color[colorArray[i+valueArray.length/2]]);
+               var tdKey1   = PixelView.keyTD("key",   valueArray[i]);
+               var tdKey2   = PixelView.keyTD("key",   valueArray[i+valueArray.length/2]);
+               var tdSpacer = TD( { "style" : {"width" : "8px"} }, null);
+               rows[i]      = TR(null, [tdColor1, tdKey1, tdSpacer, tdColor2, tdKey2]);
+            }
         }
         var newTable = TABLE(null, TBODY(null, rows));
-        elem_id = PixelView.idbase + "key_" + selection;
+        var elem_id = PixelView.idbase + "key_" + selection;
         document.getElementById(elem_id).innerHTML = toHTML(newTable);
     },
+
+    keyTD: function (type, value) {
+        if (type == "color") {
+            var mytd = TD({ "style" : {"backgroundColor" : value, "width"   : "12px", 
+                                       "height"  : "12px",        "border"  :  "0px", 
+                                       "padding" :  "0px",        "margin"  : "-2px" } }, null);
+        }
+        else if (type == "key") {
+            var mytd = TD({ "style" : {"height"  : "12px", "border" :  "0px", 
+                                       "padding" : "0px",  "margin" : "-2px" } }, value);
+        }
+        return mytd
+    },
+    
+    
+    
 };
 
 //IDEAS:
 //* highlight pixel for the coincidence plot you're looking at
 //* clickable pixel map?: PulseNet#, uC#, plots of coincidences
 
-
-
-//  PixelView.makeDiscreteKey("SETI_status_veto", PixelView.enabled_values, PMT.color)
