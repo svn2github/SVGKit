@@ -49,6 +49,16 @@ var PixelView = {
     
     
     loadParameters: function(selection) {
+        //clear previous key div & SVG display
+        PMT.all(0);
+        PixelView.clearParameterDivs(selection);
+        //display new parameter div
+        elem_id = PixelView.idbase + "parameters_" + selection;
+        parameter_div = document.getElementById(elem_id);
+        removeElementClass(parameter_div, "invisible");
+    },
+
+    clearParameterDivs: function(selection) {
         //clear previous parameter div
         forEach(PixelView.parameterList, 
             function(param) {
@@ -57,69 +67,57 @@ var PixelView = {
                 addElementClass(parameter_div, "invisible");
             }
         );
-        //display new parameter div
-        elem_id = PixelView.idbase + "parameters_" + selection;
-        parameter_div = document.getElementById(elem_id);
-        removeElementClass(parameter_div, "invisible");
-        //clear previous SVG display
-        PMT.all(0);    },
+    },
 
     loadKeys: function(selection) {
-        //clear previous key div
-        forEach(PixelView.keyList,
-            function(key) {
-                elem_id = PixelView.idbase + "key_" + key;
-                key_div = document.getElementById(elem_id);
-                addElementClass(key_div, "invisible");
-            }
-        );
+        //clear previous key div & SVG display
+        PMT.all(0);
+        PixelView.clearKeyDivs(selection);
         //display new key div
         elem_id = PixelView.idbase + "key_" + selection;
         key_div = document.getElementById(elem_id);
         removeElementClass(key_div, "invisible");
-        //stop previous SVG display
-        PMT.all(0);
-        //start new SVG display
+        //start new SVG display & insert new key content (if necessary)
         if      (selection == "none") {}
         else if (selection == "SETI_status_status") {
-            PMT.setAllWithOptions("PN", "SETI", "programmingStatus", 
+            PMT.setAllWithOptions("PN", "SETI", "programmingStatus",  selection, 
                                   PixelView.SETI_status_values, 
                                   PixelView.SETI_status_colors);
         }
         else if (selection == "SETI_status_threshold_level") {
-            PMT.setAllWithOptions("PN", "SETI", "thresholdVrefNumber", 
+            PMT.setAllWithOptions("PN", "SETI", "thresholdVrefNumber",  selection, 
                                   PixelView.threshold_level_values, 
                                   PixelView.threshold_level_colors);
         }
         else if (selection == "SETI_status_threshold_voltage")  {}
         else if (selection == "SETI_status_veto")               {
-            PMT.setAllWithOptions("PN", "SETI", "vetoMode", 
+            PMT.setAllWithOptions("PN", "SETI", "vetoMode", selection, 
                                   PixelView.enabled_values, 
                                   PixelView.enabled_colors);
         }
         else if (selection == "SETI_status_clockhalf")          {
-            PMT.setAllWithOptions("PN", "SETI", "clockHalfMode", 
+            PMT.setAllWithOptions("PN", "SETI", "clockHalfMode", selection, 
                                   PixelView.enabled_values, 
                                   PixelView.enabled_colors);
         }
         else if (selection == "SETI_status_coincblock")         {
-            PMT.setAllWithOptions("PN", "SETI", "coincBlock", 
+            PMT.setAllWithOptions("PN", "SETI", "coincBlock", selection,
                                   PixelView.enabled_values, 
                                   PixelView.enabled_colors);
         }
         else if (selection == "astro_status_status")            {
-            PMT.setAllWithOptions("PN", "Astro", "programmingStatus", 
+            PMT.setAllWithOptions("PN", "Astro", "programmingStatus",  selection, 
                                   PixelView.astro_status_values, 
                                   PixelView.astro_status_colors);
         }
         else if (selection == "astro_status_threshold_level")   {
-            PMT.setAllWithOptions("PN", "Astro", "thresholdVrefNumber", 
+            PMT.setAllWithOptions("PN", "Astro", "thresholdVrefNumber",  selection, 
                                   PixelView.threshold_level_values, 
                                   PixelView.threshold_level_colors);
         }
         else if (selection == "astro_status_threshold_voltage") {}
         else if (selection == "astro_status_pixel")             {
-            PMT.setAllWithOptions("PN", "Astro", "pixelAddress", 
+            PMT.setAllWithOptions("PN", "Astro", "pixelAddress",  selection, 
                                   PixelView.pulsenet_pixel_values, 
                                   PixelView.pulsenet_pixel_colors);
         }
@@ -131,17 +129,33 @@ var PixelView = {
             PMT.snake();
         }
     },
+
+    clearKeyDivs: function(selection) {
+        forEach(PixelView.keyList,
+            function(key) {
+                elem_id = PixelView.idbase + "key_" + key;
+                key_div = document.getElementById(elem_id);
+                addElementClass(key_div, "invisible");
+            }
+        );
+    },
     
     makeDiscreteKey: function (selection, valueArray, colorArray) {
         var rows = [];
         for (i=0; i<valueArray.length; i++) {
-            rows += [valueArray[i], colorArray[i]];
+            var tdColor = TD({ "style" : {"backgroundColor" : PMT.color[colorArray[i]], 
+                                          "width"   : "12px", 
+                                          "height"  : "12px",
+                                          "border"  :  "0px",
+                                          "padding" :  "0px",
+                                          "margin"  : "-2px" } }, null);
+            var tdKey   = TD({ "style" : {"height"  : "12px", 
+                                          "border"  :  "0px",
+                                          "padding" : "0px", 
+                                          "margin" : "-2px" } }, valueArray[i]);
+            rows[i]   = TR(null, [tdColor, tdKey] );
         }
-        row_display = function (row) {
-            return TR(null, map(partial(TD, null), row));
-        }
-        var newTable = TABLE({'class': 'prettytable'},
-                       TBODY(null, map(row_display, rows)));
+        var newTable = TABLE(null, TBODY(null, rows));
         elem_id = PixelView.idbase + "key_" + selection;
         document.getElementById(elem_id).innerHTML = toHTML(newTable);
     },
@@ -152,3 +166,5 @@ var PixelView = {
 //* clickable pixel map?: PulseNet#, uC#, plots of coincidences
 
 
+
+//  PixelView.makeDiscreteKey("SETI_status_veto", PixelView.enabled_values, PMT.color)
