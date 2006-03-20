@@ -24,7 +24,9 @@ var PixelView = {
               "instrument_highlight_astro_uC",
               "instrument_highlight_pulsenet",
               "instrument_highlight_4color",
-              "instrument_debugging_snake"],
+              "instrument_debugging_snake",
+              "discrete",
+              "continuous"],
                
     SETI_status_values:      ["Not Programmed", 
                               "Reset", 
@@ -62,7 +64,7 @@ var PixelView = {
     
     loadParameters: function(selection) {
         //clear previous key div & SVG display
-        PMT.all(0);
+        PMT.all(1);
         PixelView.clearParameterDivs(selection);
         //display new parameter div
         var elem_id = PixelView.idbase + "parameters_" + selection;
@@ -83,7 +85,7 @@ var PixelView = {
 
     loadKeys: function(selection) {
         //clear previous key div & SVG display
-        PMT.all(0);
+        PMT.all(1);
         PixelView.clearKeyDivs(selection);
         //display new key div
         var elem_id = PixelView.idbase + "key_" + selection;
@@ -92,66 +94,70 @@ var PixelView = {
         //start new SVG display & insert new key content (if necessary)
         if      (selection == "none") {}
         else if (selection == "SETI_status_status") {
-            PMT.setAllWithOptions("SETI", "programmingStatus",  selection, 
-                                  PixelView.SETI_status_values, 
-                                  PixelView.SETI_status_colors);
+            PMT.setAllDiscrete("SETI", "programmingStatus",  selection, 
+                               PixelView.SETI_status_values, 
+                               PixelView.SETI_status_colors);
         }
         else if (selection == "SETI_status_threshold_level") {
-            PMT.setAllWithOptions("SETI", "thresholdVrefNumber",  selection, 
-                                  PixelView.threshold_level_values, 
-                                  PixelView.threshold_level_colors);
+            PMT.setAllDiscrete("SETI", "thresholdVrefNumber",  selection, 
+                               PixelView.threshold_level_values, 
+                               PixelView.threshold_level_colors);
         }
-        else if (selection == "SETI_status_threshold_voltage")  {}
+        else if (selection == "SETI_status_threshold_voltage")  {
+            PMT.setAllContinuous("SETI", 0, 2.5);
+        }
         else if (selection == "SETI_status_veto")               {
-            PMT.setAllWithOptions("SETI", "vetoMode", selection, 
-                                  PixelView.enabled_values, 
-                                  PixelView.enabled_colors);
+            PMT.setAllDiscrete("SETI", "vetoMode", selection, 
+                               PixelView.enabled_values, 
+                               PixelView.enabled_colors);
         }
         else if (selection == "SETI_status_clockhalf")          {
-            PMT.setAllWithOptions("SETI", "clockHalfMode", selection, 
-                                  PixelView.enabled_values, 
-                                  PixelView.enabled_colors);
+            PMT.setAllDiscrete("SETI", "clockHalfMode", selection, 
+                               PixelView.enabled_values, 
+                               PixelView.enabled_colors);
         }
         else if (selection == "SETI_status_coincblock")         {
-            PMT.setAllWithOptions("SETI", "coincBlock", selection,
-                                  PixelView.enabled_values, 
-                                  PixelView.enabled_colors);
+            PMT.setAllDiscrete("SETI", "coincBlock", selection,
+                               PixelView.enabled_values, 
+                               PixelView.enabled_colors);
         }
         else if (selection == "astro_status_status")            {
-            PMT.setAllWithOptions("Astro", "programmingStatus",  selection, 
-                                  PixelView.astro_status_values, 
-                                  PixelView.astro_status_colors);
+            PMT.setAllDiscrete("Astro", "programmingStatus",  selection, 
+                               PixelView.astro_status_values, 
+                               PixelView.astro_status_colors);
         }
         else if (selection == "astro_status_threshold_level")   {
-            PMT.setAllWithOptions("Astro", "thresholdVrefNumber",  selection, 
-                                  PixelView.threshold_level_values, 
-                                  PixelView.threshold_level_colors);
+            PMT.setAllDiscrete("Astro", "thresholdVrefNumber",  selection, 
+                               PixelView.threshold_level_values, 
+                               PixelView.threshold_level_colors);
         }
-        else if (selection == "astro_status_threshold_voltage") {}
+        else if (selection == "astro_status_threshold_voltage") {
+            PMT.setAllContinuous("Astro", 0, 2.5);
+        }
         else if (selection == "astro_status_pixel")             {
-            PMT.setAllWithOptions("Astro", "pixelAddress",  selection, 
-                                  PixelView.pulsenet_pixel_values, 
-                                  PixelView.pulsenet_pixel_colors);
+            PMT.setAllDiscrete("Astro", "pixelAddress",  selection, 
+                               PixelView.pulsenet_pixel_values, 
+                               PixelView.pulsenet_pixel_colors);
         }
         else if (selection == "instrument_highlight_SETI_uC")   {
-            PMT.setAllWithOptions("SuC", null,  selection, 
-                                  PixelView.SuC_values, 
-                                  PixelView.SuC_colors);
+            PMT.setAllDiscrete("SuC", null,  selection, 
+                               PixelView.SuC_values, 
+                               PixelView.SuC_colors);
         } 
         else if (selection == "instrument_highlight_astro_uC")  {
-            PMT.setAllWithOptions("AuC", null,  selection, 
-                                  PixelView.AuC_values, 
-                                  PixelView.AuC_colors);
+            PMT.setAllDiscrete("AuC", null,  selection, 
+                               PixelView.AuC_values, 
+                               PixelView.AuC_colors);
         } 
         else if (selection == "instrument_highlight_pulsenet")  {
-            PMT.setAllWithOptions("PN", null,  selection, 
-                                  PixelView.PN_values, 
-                                  PixelView.PN_colors);
+            PMT.setAllDiscrete("PN", null,  selection, 
+                               PixelView.PN_values, 
+                               PixelView.PN_colors);
         } 
         else if (selection == "instrument_highlight_4color")    {
-            PMT.setAllWithOptions("FCT", null,  selection, 
-                                  PixelView.FCT_values, 
-                                  PixelView.FCT_colors);
+            PMT.setAllDiscrete("FCT", null,  selection, 
+                               PixelView.FCT_values, 
+                               PixelView.FCT_colors);
         } 
         else if (selection == "instrument_debugging_snake")     {
             PMT.snake();

@@ -3,8 +3,13 @@ var PMT = {
     idbase: "pixel_view_",
     pixelL: [],
     pixelR: [],
+    //keyGradient:    null,
+    //keyGradientText: [],
     fillColorDefault:   "#000000",
     strokeColorDefault: "#545a65",
+    gradientColorTop:     Color.fromHexString('#FF0000'),
+    gradientColorBottom : Color.fromHexString('#0000FF'),
+
     color: [],
 
     init: function () {
@@ -21,6 +26,12 @@ var PMT = {
                      "#000000"];
         // TODO: Loop through and add onclick event to each rect
     },
+
+    //initKeyGradient: function () {
+    //    PMT.keyGradient     = document.getElementById(PMT.idbase+'keyGradient').contentDocument;
+    //    PMT.keyGradientText = PMT.keyGradient.getElementById("key").getElementsByTagName("text");
+    //    addElementClass(PMT.keyGradient,"invisible");
+    //},
     
     setProps: function (pixnum, side, fillColor, fillOpacity, strokeColor, strokeOpacity) {
         attrs = "fill: " + fillColor + "; " +
@@ -48,7 +59,7 @@ var PMT = {
             PMT.setProps(PMT.snake_i, "both", "#FF0000", 1, PMT.strokeColorDefault, 1);
         }
         if (j >= 0) {
-            PMT.setProps(j, "both", PMT.fillColorDefault, 0, PMT.strokeColorDefault, 1);
+            PMT.setProps(j, "both", PMT.fillColorDefault, 1, PMT.strokeColorDefault, 1);
         }
         PMT.snake_i++;
         if (PMT.snake_i < 512+offset) {
@@ -72,7 +83,7 @@ var PMT = {
     //            selection  = name of data to be displayed (used for id of key div)
     //            valueArray = possible parameter values         - e.g. PixelView.SETI_status_status_value_array;
     //            colorArray = possible pixel colors             - e.g. PMT.color;
-    setAllWithOptions: function (chip, stateParam, selection, valueArray, colorArray) {
+    setAllDiscrete: function (chip, stateParam, selection, valueArray, colorArray) {
         PixelView.makeDiscreteKey(selection, valueArray, colorArray);
         for (pixelNum=0; pixelNum<512; pixelNum++) {
             //calculate value for pixel
@@ -112,31 +123,47 @@ var PMT = {
         }        
     },
 
+    //  removeElementClass(document.getElementById(PMT.idbase + "key_continuous"),"invisible");
+    
     //this function is not finished.
     setAllContinuous: function (chip, minValue, maxValue) {
-        // TO DO: MAKE KEY FOR CONTINUOUS VARIABLES
-        for (pixelNum=0; pixelNum<512; pixelNum++) {
-            if (chip == "SETI" | chip == "Astro") {
-                var PN          = Convert.pix2PN(pixelNum) ;
-                var ES          = "ExperimentState.pulsenet";
-                var stateVar    = ES + chip + "_State[" + PN + "].thresholdVoltage";
-                var stateValue  = State.currentState[stateVar];
-                var scaledValue = (stateValue-minValue)/(maxValue-minValue);
+        removeElementClass("invisible", PMT.idbase + "key_continuous");
+        keyDiv = document.getElementById(PMT.idbase + "key_continuous")
+        deferred = doSimpleXMLHttpRequest("/static/images/keyGradient.svg");
+        deferred.addCallback(function(result) {
+            log("setAllContinuous.result = " + result);
+            keyDiv.innerHTML = result;
+            keyGradient = document.getElementById(PMT.idbase+'keyGradient').contentDocument;
+            keyText     = keyGradient.contentDocument.getElementById("key").getElementsByTagName("text");
+            for (i=0; i<5; i++) {
+                var value = minValue + i*(maxValue - minValue)/4;
+                keyText[i].firstChild.firstChild.textContent = value.toPrecision(3);
             }
-            else {return}
-            //set SVG pixel color according to state parameter 
-            var redComp     = scaledValue;
-            var greenComp   = (1-2*scaledValue)^2;
-            var blueComp    = 1-scaledValue;
-            //var scaledColor = frgb(redComp,greenComp,blueComp));
-            var attrs = "fill:" + scaledColor + ";"              +
-                        "fill-opacity:1;"                        +
-                        "stroke:" + PMT.strokeColorDefault + ";" +
-                        "stroke-width:1;"                        +
-                        "stroke-opacity:1;"
-            PMT.pixelL[pixelNum].setAttribute("style",attrs);
-            PMT.pixelR[pixelNum].setAttribute("style",attrs);
-        }
+            // set pixel values
+            for (pixelNum=0; pixelNum<512; pixelNum++) {
+                if (chip == "SETI" | chip == "Astro") {
+                    var PN          = Convert.pix2PN(pixelNum) ;
+                    var ES          = "ExperimentState.pulsenet";
+                    var stateVar    = ES + chip + "_State[" + PN + "].thresholdVoltage";
+                    var stateValue  = State.currentState[stateVar];
+                    var scaledValue = (stateValue-minValue)/(maxValue-minValue);
+                }
+                else {return}
+                scaledColor = PMT.gradientColorTop.blendedColor(PMT.gradientColorBottom, 
+                                 scaledValue).toHexString();
+                log(pixelNum + "  " + scaledColor);
+                var attrs = "fill:" + scaledColor + ";"              +
+                            "fill-opacity:1;"                        +
+                            "stroke:" + PMT.strokeColorDefault + ";" +
+                            "stroke-width:1;"                        +
+                            "stroke-opacity:1;"
+                PMT.pixelL[pixelNum].setAttribute("style",attrs);
+                PMT.pixelR[pixelNum].setAttribute("style",attrs);
+            }
+        });
+        deferred.addErrback(function (err) {
+            log("Error toggling key: " + repr(err));
+        });
     },
     
    
