@@ -7,6 +7,8 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
 (c) 2005 Bob Ippolito.  All rights Reserved.
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
+    http://www.sitepoint.com/article/oriented-programming-2
+    http://www.sitepoint.com/article/javascript-objects
 ***/
 
 if (typeof(dojo) != 'undefined') {
@@ -26,7 +28,10 @@ try {
 }
 
 if (typeof(MochiKit.SVG) == 'undefined') {
-    MochiKit.SVG = {};
+    // Constructor
+    MochiKit.SVG = function(widthOrIdOrNode, height, id, type) {
+        this.__init__(widthOrIdOrNode, height, id, type);
+    };
 }
 
 MochiKit.SVG.NAME = "MochiKit.SVG";
@@ -34,15 +39,18 @@ MochiKit.SVG.VERSION = "1.2";
 MochiKit.SVG.__repr__ = function () {
     return "[" + this.NAME + " " + this.VERSION + "]";
 };
+MochiKit.SVG.prototype.__repr__ = MochiKit.SVG.__repr__;
 
 MochiKit.SVG.toString = function () {
     return this.__repr__();
 };
+MochiKit.SVG.prototype.toString = MochiKit.SVG.toString;
 
 // The following has been converted by Zeba Wunderlich's Perl Script
 // from http://www.w3.org/TR/SVG/eltindex.html
 
 MochiKit.SVG.EXPORT = [
+/*
     "setCurrentSVG",
     "currentSVGDocument",
     "currentSVGElement",
@@ -130,118 +138,20 @@ MochiKit.SVG.EXPORT = [
     "USE",
     "VIEW",
     "VKERN"
+    */
 ];
 
 MochiKit.SVG.EXPORT_OK = [
 ];
 
-MochiKit.SVG.appendNode = function (node) {
-    appendChildNodes(MochiKit.SVG._svgElement, node);
-}
 
-MochiKit.SVG.createDOM = function (name, attrs/*, nodes... */) {
-    /*
-        Like MochiKit.SVG.createDOM, but with the SVG namespace.
-    */
+MochiKit.SVG.prototype._svgMIME = 'image/svg+xml';
+MochiKit.SVG.prototype._svgEmptyName = 'empty.svg';
+MochiKit.SVG.prototype._mochiKitBaseURI = '';
+MochiKit.SVG.prototype._errorText = "You can't display SVG. Download Firefox." ;
+MochiKit.SVG.prototype._defaultSVGType = 'object';
 
-    var elem;
-    var self = MochiKit.SVG;
-    var dom = MochiKit.DOM;
-    if (typeof(name) == 'string') {
-        elem = self._svgDocument.createElementNS("http://www.w3.org/2000/svg", name);
-    } else {
-        elem = name;
-    }
-    if (attrs) {
-        dom.updateNodeAttributes(elem, attrs);
-    }
-    if (arguments.length <= 2) {
-        return elem;
-    } else {
-        var args = MochiKit.Base.extend([elem], arguments, 2);
-        return dom.appendChildNodes.apply(this, args);
-    }
-};
-
-MochiKit.SVG.createDOMFunc = function (/* tag, attrs, *nodes */) {
-    /***
-
-        Convenience function to create a partially applied createSVGDOM
-
-        @param tag: The name of the tag
-
-        @param attrs: Optionally specify the attributes to apply
-
-        @param *notes: Optionally specify any children nodes it should have
-
-        @rtype: function
-
-    ***/
-    var m = MochiKit.Base;
-    return m.partial.apply(
-        this,
-        m.extend([MochiKit.SVG.createDOM], arguments)
-    );
-};
-
-/* The problem is that each time the object or embed is shown (first time
-   or after being hidden) there is a delay before the SVG content is
-   accessible.
-*/
-
-
-
-MochiKit.SVG.grabSVG = function (htmlElement) {
-    /***
-        Given an HTML element (or it's id) that refers to an SVG, 
-        get the SVGDocument object.
-        If htmlElement is an 'object' use contentDocument.
-        If htmlElement is an 'embed' use getSVGDocument().
-        If htmlElement is an inline SVG, return something else.
-        
-        If is's an object or embed and it's not showing or
-        the SVG file hasn't loaded, this won't work.
-        
-        @param htmlElement: either an id string or a dom element ('object', 'embed', 'svg)
-    ***/
-    var svgDocument = null;
-    if (typeof(htmlElement) == 'string') {
-        htmlElement = MochiKit.DOM.getElement(htmlElement);
-    }
-    tagName = htmlElement.tagName.toLowerCase();
-    if (tagName == 'svg')  // Inline
-        svgDocument = null;
-    else if (tagName == 'embed' && htmlElement.getSVGDocument)
-        svgDocument = htmlElement.getSVGDocument();
-    else if (tagName == 'object' && htmlElement.contentDocument)
-        svgDocument = htmlElement.contentDocument
-    return svgDocument
-}
-
-
-MochiKit.SVG.setCurrentSVG = function (svgDocument) {
-    /***
-        Given an SVGDocument, set the current SVGDocument and SVGSVGElement
-        If you pass in a string, grabSVG will get called to get the svgDocument.
-        
-        @param svgDocument: either an id string or a SVGDocument object
-    ***/
-    var self = MochiKit.SVG;
-    var document = svgDocument;
-    if (typeof(svgDocument) == 'string') {
-        document = self.grabSVG(svgDocument);
-    }
-    self._svgDocument = document;
-    self._svgElement = document.rootElement;   // The W3C way of doing it.  Other way is document.documentElement
-}
-
-
-MochiKit.SVG._svgMIME = 'image/svg+xml';
-MochiKit.SVG._svgEmptyName = 'empty.svg';
-MochiKit.SVG._svgEmptyBase = '';
-MochiKit.SVG._errorText = "You can't display SVG. Download Firefox." 
-
-MochiKit.SVG.getBaseURI = function() {
+MochiKit.SVG.prototype.setBaseURI = function() {
     var scripts = document.getElementsByTagName("script");
     for (var i = 0; i < scripts.length; i++) {
         var src = scripts[i].getAttribute("src");
@@ -249,13 +159,113 @@ MochiKit.SVG.getBaseURI = function() {
             continue;
         }
         if (src.match(/MochiKit.js$/)) {  // Confused why putting "SVG.js" doesn't work, but it gets called right after the browser read the script tag for MochiKit even here.
-            MochiKit.SVG._svgEmptyBase = src.substring(0, src.lastIndexOf('MochiKit.js'));
+            this._mochiKitBaseURI = src.substring(0, src.lastIndexOf('MochiKit.js'));
         }
     }
 };
-MochiKit.SVG.getBaseURI();
 
-MochiKit.SVG.createSVG = function (type, width /*=100*/, height /*=100*/, id /* optional */) {
+MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode, height, id, type) {
+    // The following are described at http://www.w3.org/TR/SVG/struct.html
+    this.htmlElement = null;   // the <object> or <embed> html element the SVG lives in, otherwise null
+    this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
+    this.svgElement = null;   // corresponds to the 'svg' element
+    this._redrawId = null;
+    this._defaultSVGType = 'object'; // Determine a good default dynamically (inline svg, object, or embed)
+    
+    this.setBaseURI();
+    if (typeof(widthOrIdOrNode) != 'number') {
+        this.grabSVG(widthOrIdOrNode);
+    }
+    else {
+        this.createSVG(widthOrIdOrNode, height, id, type)
+    }
+    // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
+
+    //var createSVGDOMFunc = this.createSVGDOMFunc;
+    this.A = this.createSVGDOMFunc("a")
+    this.ALTGLYPH = this.createSVGDOMFunc("altGlyph")
+    this.ALTGLYPHDEF = this.createSVGDOMFunc("altGlyphDef")
+    this.ALTGLYPHITEM = this.createSVGDOMFunc("altGlyphItem")
+    this.ANIMATE = this.createSVGDOMFunc("animate")
+    this.ANIMATECOLOR = this.createSVGDOMFunc("animateColor")
+    this.ANIMATEMOTION = this.createSVGDOMFunc("animateMotion")
+    this.ANIMATETRANSFORM = this.createSVGDOMFunc("animateTransform")
+    this.CIRCLE = this.createSVGDOMFunc("circle")
+    this.CLIPPATH = this.createSVGDOMFunc("clipPath")
+    this.COLOR_PROFILE = this.createSVGDOMFunc("color-profile")
+    this.CURSOR = this.createSVGDOMFunc("cursor")
+    this.DEFINITION_SRC = this.createSVGDOMFunc("definition-src")
+    this.DEFS = this.createSVGDOMFunc("defs")
+    this.DESC = this.createSVGDOMFunc("desc")
+    this.ELLIPSE = this.createSVGDOMFunc("ellipse")
+    this.FEBLEND = this.createSVGDOMFunc("feBlend")
+    this.FECOLORMATRIX = this.createSVGDOMFunc("feColorMatrix")
+    this.FECOMPONENTTRANSFER = this.createSVGDOMFunc("feComponentTransfer")
+    this.FECOMPOSITE = this.createSVGDOMFunc("feComposite")
+    this.FECONVOLVEMATRIX = this.createSVGDOMFunc("feConvolveMatrix")
+    this.FEDIFFUSELIGHTING = this.createSVGDOMFunc("feDiffuseLighting")
+    this.FEDISPLACEMENTMAP = this.createSVGDOMFunc("feDisplacementMap")
+    this.FEDISTANTLIGHT = this.createSVGDOMFunc("feDistantLight")
+    this.FEFLOOD = this.createSVGDOMFunc("feFlood")
+    this.FEFUNCA = this.createSVGDOMFunc("feFuncA")
+    this.FEFUNCB = this.createSVGDOMFunc("feFuncB")
+    this.FEFUNCG = this.createSVGDOMFunc("feFuncG")
+    this.FEFUNCR = this.createSVGDOMFunc("feFuncR")
+    this.FEGAUSSIANBLUR = this.createSVGDOMFunc("feGaussianBlur")
+    this.FEIMAGE = this.createSVGDOMFunc("feImage")
+    this.FEMERGE = this.createSVGDOMFunc("feMerge")
+    this.FEMERGENODE = this.createSVGDOMFunc("feMergeNode")
+    this.FEMORPHOLOGY = this.createSVGDOMFunc("feMorphology")
+    this.FEOFFSET = this.createSVGDOMFunc("feOffset")
+    this.FEPOINTLIGHT = this.createSVGDOMFunc("fePointLight")
+    this.FESPECULARLIGHTING = this.createSVGDOMFunc("feSpecularLighting")
+    this.FESPOTLIGHT = this.createSVGDOMFunc("feSpotLight")
+    this.FETILE = this.createSVGDOMFunc("feTile")
+    this.FETURBULENCE = this.createSVGDOMFunc("feTurbulence")
+    this.FILTER = this.createSVGDOMFunc("filter")
+    this.FONT = this.createSVGDOMFunc("font")
+    this.FONT_FACE = this.createSVGDOMFunc("font-face")
+    this.FONT_FACE_FORMAT = this.createSVGDOMFunc("font-face-format")
+    this.FONT_FACE_NAME = this.createSVGDOMFunc("font-face-name")
+    this.FONT_FACE_SRC = this.createSVGDOMFunc("font-face-src")
+    this.FONT_FACE_URI = this.createSVGDOMFunc("font-face-uri")
+    this.FOREIGNOBJECT = this.createSVGDOMFunc("foreignObject")
+    this.G = this.createSVGDOMFunc("g")
+    this.GLYPH = this.createSVGDOMFunc("glyph")
+    this.GLYPHREF = this.createSVGDOMFunc("glyphRef")
+    this.HKERN = this.createSVGDOMFunc("hkern")
+    this.IMAGE = this.createSVGDOMFunc("image")
+    this.LINE = this.createSVGDOMFunc("line")
+    this.LINEARGRADIENT = this.createSVGDOMFunc("linearGradient")
+    this.MARKER = this.createSVGDOMFunc("marker")
+    this.MASK = this.createSVGDOMFunc("mask")
+    this.METADATA = this.createSVGDOMFunc("metadata")
+    this.MISSING_GLYPH = this.createSVGDOMFunc("missing-glyph")
+    this.MPATH = this.createSVGDOMFunc("mpath")
+    this.PATH = this.createSVGDOMFunc("path")
+    this.PATTERN = this.createSVGDOMFunc("pattern")
+    this.POLYGON = this.createSVGDOMFunc("polygon")
+    this.POLYLINE = this.createSVGDOMFunc("polyline")
+    this.RADIALGRADIENT = this.createSVGDOMFunc("radialGradient")
+    this.RECT = this.createSVGDOMFunc("rect")
+    this.SCRIPT = this.createSVGDOMFunc("script")
+    this.SET = this.createSVGDOMFunc("set")
+    this.STOP = this.createSVGDOMFunc("stop")
+    this.STYLE = this.createSVGDOMFunc("style")
+    this.SVG = this.createSVGDOMFunc("svg")
+    this.SWITCH = this.createSVGDOMFunc("switch")
+    this.SYMBOL = this.createSVGDOMFunc("symbol")
+    this.TEXT = this.createSVGDOMFunc("text")
+    this.TEXTPATH = this.createSVGDOMFunc("textPath")
+    this.TITLE = this.createSVGDOMFunc("title")
+    this.TREF = this.createSVGDOMFunc("tref")
+    this.TSPAN = this.createSVGDOMFunc("tspan")
+    this.USE = this.createSVGDOMFunc("use")
+    this.VIEW = this.createSVGDOMFunc("view")
+    this.VKERN = this.createSVGDOMFunc("vkern")
+};
+
+MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id /* optional */, type /* optional */) {
     /***
 
         Create a new HTML DOM element of specified type ('object', 'embed', or 'svg')
@@ -272,7 +282,6 @@ MochiKit.SVG.createSVG = function (type, width /*=100*/, height /*=100*/, id /* 
         @rtype: DOMElement
 
     ***/
-    var self = MochiKit.SVG;
     var dom = MochiKit.DOM;
     
     if (typeof(width) == "undefined" || width == null) {
@@ -284,59 +293,150 @@ MochiKit.SVG.createSVG = function (type, width /*=100*/, height /*=100*/, id /* 
     if (typeof(id) == "undefined" || id == null) {
         id = null;
     }
+    if (typeof(type) == "undefined" || type == null) {
+        type = this._defaultSVGType;
+    }
     
     var attrs = {'width':width, 'height':height};
     if (id != null) {
         attrs['id'] = id;
     }
     
-    //var svgDocument = null;
-    //var svgElement = null;
+    attrs['width'] = width;
+    attrs['height'] = height;
+    
+    var finishSettingProps = function (svg) {
+        svg.svgElement = svg.svgDocument.rootElement;
+        setNodeAttribute(svg.svgElement, 'width', width);
+        setNodeAttribute(svg.svgElement, 'height', height);
+    }
     
     if (type=='inline') {
         attrs['xmlns:svg'] = 'http://www.w3.org/2000/svg';
         attrs['xmlns'] = 'http://www.w3.org/2000/svg';
-        var svgElement = self.SVG(attrs);
-        return svgElement;
+        this.htmlElement = null;
+        this.svgDocument = document;
+        this.svgElement = this.createDOM('svg', attrs);
     }
     else if (type=='object') {
-        attrs['data'] = self._svgEmptyBase + self._svgEmptyName;
-        attrs['type'] = self._svgMIME;
-        var htmlElement = createDOM('object', attrs, self._errorText);
-        //svgDocument = htmlElement.contentDocument;
+        attrs['data'] = this._mochiKitBaseURI + this._svgEmptyName;
+        attrs['type'] = this._svgMIME;
+        this.htmlElement = createDOM('object', attrs, this._errorText);
+        this.htmlElement.svgObject = this;
+        addToCallStack(this.htmlElement, 'onload', function (event) {
+            var svg = event.currentTarget.svgObject;
+            svg.svgDocument = svg.htmlElement.contentDocument;
+            finishSettingProps(svg);
+        } );
     }
     else if (type=='embed') {
-        attrs['src'] = self._svgEmptyBase + self._svgEmptyName;
-        attrs['type'] = self._svgMIME;
+        attrs['src'] = this._svgEmptyBase + this._svgEmptyName;
+        attrs['type'] = this._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
-        var htmlElement = createDOM('embed', attrs );
-        //svgDocument = htmlElement.getSVGDocument();
+        this.htmlElement = createDOM('embed', attrs );
+        this.htmlElement.svgObject = this;
+        addToCallStack(this.htmlElement, 'onload', function () {
+            var svg = event.currentTarget.svgObject;
+            svg.svgDocument = svg.htmlElement.getSVGDocument();
+            finishSettingProps(svg);
+        } );
     }
-    else {
-        return null;
-    }
-    
-    //svgElement = svgDocument.rootElement;
-    //setNodeAttribute(svgElement, 'width', width);
-    //setNodeAttribute(svgElement, 'height', height);
-    
-    return htmlElement;
 }
- 
-MochiKit.SVG.currentSVGDocument = function () {
-    return MochiKit.SVG._svgDocument;
-};
 
-MochiKit.SVG.currentSVGElement = function () {
-    return MochiKit.SVG._svgElement;
-};
+/* The problem is that each time the object or embed is shown (first time
+   or after being hidden) there is a delay before the SVG content is
+   accessible.
+*/
 
-MochiKit.SVG.currentSVGSource = function (decorate /* = false */) {
-    var self = MochiKit.SVG;
-    if (typeof(decorate) == "undefined" || decorate == null) {
-        ms = false;
+MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
+    /***
+        Given an HTML element (or it's id) that refers to an SVG, 
+        get the SVGDocument object.
+        If htmlElement is an 'object' use contentDocument.
+        If htmlElement is an 'embed' use getSVGDocument().
+        If htmlElement is an inline SVG, return something else.
+        
+        If is's an object or embed and it's not showing or
+        the SVG file hasn't loaded, this won't work.
+        
+        @param htmlElement: either an id string or a dom element ('object', 'embed', 'svg)
+    ***/
+    if (typeof(htmlElement) == 'string') {
+        htmlElement = MochiKit.DOM.getElement(htmlElement);
     }
-    var source = toHTML(self._svgElement);
+    this.htmlElement = htmlElement;
+    var tagName = htmlElement.tagName.toLowerCase();
+    if (tagName == 'svg')  { // Inline
+        this.svgDocument = document;
+        this.svgElement = htmlElement;
+    }
+    else if (tagName == 'object' && htmlElement.contentDocument) {
+        this.svgDocument = htmlElement.contentDocument;
+        this.svgElement = this.svgDocument.rootElement;
+    }
+    else if (tagName == 'embed' && htmlElement.getSVGDocument) {
+        this.svgDocument = htmlElement.getSVGDocument();
+        this.svgElement = this.svgDocument.rootElement;
+    }
+}
+
+MochiKit.SVG.prototype.append = function (node) {
+    /***
+        Convenience method for appending to the root element
+    ***/
+    appendChildNodes(this.svgElement, node);
+}
+
+MochiKit.SVG.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
+    /*
+        Like MochiKit.SVG.createDOM, but with the SVG namespace.
+    */
+    var elem;
+    var dom = MochiKit.DOM;
+    if (typeof(name) == 'string') {
+        elem = this.svgDocument.createElementNS("http://www.w3.org/2000/svg", name);
+    } else {
+        elem = name;
+    }
+    if (attrs) {
+        dom.updateNodeAttributes(elem, attrs);
+    }
+    if (arguments.length <= 2) {
+        return elem;
+    } 
+    else {
+        var args = MochiKit.Base.extend([elem], arguments, 2);
+        return dom.appendChildNodes.apply(this, args);
+    }
+};
+
+MochiKit.SVG.prototype.createSVGDOMFunc = function (/* tag, attrs, *nodes */) {
+    /***
+
+        Convenience function to create a partially applied createSVGDOM
+
+        @param tag: The name of the tag
+
+        @param attrs: Optionally specify the attributes to apply
+
+        @param *notes: Optionally specify any children nodes it should have
+
+        @rtype: function
+
+    ***/
+    var m = MochiKit.Base;
+    return m.partial.apply(
+        this,
+        m.extend([this.createSVGDOM], arguments)
+    );
+};
+
+
+MochiKit.SVG.prototype.xmlSource = function (decorate /* = false */) {
+    if (typeof(decorate) == "undefined" || decorate == null) {
+        decorate = false;
+    }
+    var source = toHTML(this.svgElement);
     var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
     if (decorate) {
         return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
@@ -346,130 +446,27 @@ MochiKit.SVG.currentSVGSource = function (decorate /* = false */) {
     }
 }
 
-MochiKit.SVG.suspendRedraw = function (miliseconds /* = 1000 */) {
-    var self = MochiKit.SVG;
+MochiKit.SVG.prototype.suspendRedraw = function (miliseconds /* = 1000 */) {
     if (typeof(miliseconds) == "undefined" || miliseconds == null) {
         ms = 1000;
     }
-    self._redrawId = self._svgElement.suspendRedraw(miliseconds);
+    this._redrawId = this.svgElement.suspendRedraw(miliseconds);
 }
 
-MochiKit.SVG.unsuspendRedraw = function () {
-    if (self._redrawId != null) {
-        self._svgElement.unsuspendRedraw(self._redrawId);
-        self._redrawId = null;
+MochiKit.SVG.prototype.unsuspendRedraw = function () {
+    if (this._redrawId != null) {
+        this.svgElement.unsuspendRedraw(this._redrawId);
+        this._redrawId = null;
     }
 }
-
-MochiKit.SVG.__new__ = function (win) {
-
+MochiKit.SVG.__new__ = function () {
     var m = MochiKit.Base;
-    // The following are described at http://www.w3.org/TR/SVG/struct.html
-    this._svgDocument = null;  // When an 'svg' element is embedded inline this will not exist
-    this._svgElement = null;   // corresponds to the 'svg' element
-    this._redrawId = null;
-
-    //this.domConverters = new m.AdapterRegistry(); 
-
-    var createDOMFunc = this.createDOMFunc;
-    //this.A = createDOMFunc("a")
-    this.ALTGLYPH = createDOMFunc("altGlyph")
-    this.ALTGLYPHDEF = createDOMFunc("altGlyphDef")
-    this.ALTGLYPHITEM = createDOMFunc("altGlyphItem")
-    this.ANIMATE = createDOMFunc("animate")
-    this.ANIMATECOLOR = createDOMFunc("animateColor")
-    this.ANIMATEMOTION = createDOMFunc("animateMotion")
-    this.ANIMATETRANSFORM = createDOMFunc("animateTransform")
-    this.CIRCLE = createDOMFunc("circle")
-    this.CLIPPATH = createDOMFunc("clipPath")
-    this.COLOR_PROFILE = createDOMFunc("color-profile")
-    this.CURSOR = createDOMFunc("cursor")
-    this.DEFINITION_SRC = createDOMFunc("definition-src")
-    this.DEFS = createDOMFunc("defs")
-    this.DESC = createDOMFunc("desc")
-    this.ELLIPSE = createDOMFunc("ellipse")
-    this.FEBLEND = createDOMFunc("feBlend")
-    this.FECOLORMATRIX = createDOMFunc("feColorMatrix")
-    this.FECOMPONENTTRANSFER = createDOMFunc("feComponentTransfer")
-    this.FECOMPOSITE = createDOMFunc("feComposite")
-    this.FECONVOLVEMATRIX = createDOMFunc("feConvolveMatrix")
-    this.FEDIFFUSELIGHTING = createDOMFunc("feDiffuseLighting")
-    this.FEDISPLACEMENTMAP = createDOMFunc("feDisplacementMap")
-    this.FEDISTANTLIGHT = createDOMFunc("feDistantLight")
-    this.FEFLOOD = createDOMFunc("feFlood")
-    this.FEFUNCA = createDOMFunc("feFuncA")
-    this.FEFUNCB = createDOMFunc("feFuncB")
-    this.FEFUNCG = createDOMFunc("feFuncG")
-    this.FEFUNCR = createDOMFunc("feFuncR")
-    this.FEGAUSSIANBLUR = createDOMFunc("feGaussianBlur")
-    this.FEIMAGE = createDOMFunc("feImage")
-    this.FEMERGE = createDOMFunc("feMerge")
-    this.FEMERGENODE = createDOMFunc("feMergeNode")
-    this.FEMORPHOLOGY = createDOMFunc("feMorphology")
-    this.FEOFFSET = createDOMFunc("feOffset")
-    this.FEPOINTLIGHT = createDOMFunc("fePointLight")
-    this.FESPECULARLIGHTING = createDOMFunc("feSpecularLighting")
-    this.FESPOTLIGHT = createDOMFunc("feSpotLight")
-    this.FETILE = createDOMFunc("feTile")
-    this.FETURBULENCE = createDOMFunc("feTurbulence")
-    this.FILTER = createDOMFunc("filter")
-    this.FONT = createDOMFunc("font")
-    this.FONT_FACE = createDOMFunc("font-face")
-    this.FONT_FACE_FORMAT = createDOMFunc("font-face-format")
-    this.FONT_FACE_NAME = createDOMFunc("font-face-name")
-    this.FONT_FACE_SRC = createDOMFunc("font-face-src")
-    this.FONT_FACE_URI = createDOMFunc("font-face-uri")
-    this.FOREIGNOBJECT = createDOMFunc("foreignObject")
-    this.G = createDOMFunc("g")
-    this.GLYPH = createDOMFunc("glyph")
-    this.GLYPHREF = createDOMFunc("glyphRef")
-    this.HKERN = createDOMFunc("hkern")
-    this.IMAGE = createDOMFunc("image")
-    this.LINE = createDOMFunc("line")
-    this.LINEARGRADIENT = createDOMFunc("linearGradient")
-    this.MARKER = createDOMFunc("marker")
-    this.MASK = createDOMFunc("mask")
-    this.METADATA = createDOMFunc("metadata")
-    this.MISSING_GLYPH = createDOMFunc("missing-glyph")
-    this.MPATH = createDOMFunc("mpath")
-    this.PATH = createDOMFunc("path")
-    this.PATTERN = createDOMFunc("pattern")
-    this.POLYGON = createDOMFunc("polygon")
-    this.POLYLINE = createDOMFunc("polyline")
-    this.RADIALGRADIENT = createDOMFunc("radialGradient")
-    this.RECT = createDOMFunc("rect")
-    this.SCRIPT = createDOMFunc("script")
-    this.SET = createDOMFunc("set")
-    this.STOP = createDOMFunc("stop")
-    this.STYLE = createDOMFunc("style")
-    this.SVG = createDOMFunc("svg")
-    this.SWITCH = createDOMFunc("switch")
-    this.SYMBOL = createDOMFunc("symbol")
-    this.TEXT = createDOMFunc("text")
-    this.TEXTPATH = createDOMFunc("textPath")
-    this.TITLE = createDOMFunc("title")
-    this.TREF = createDOMFunc("tref")
-    this.TSPAN = createDOMFunc("tspan")
-    this.USE = createDOMFunc("use")
-    this.VIEW = createDOMFunc("view")
-    this.VKERN = createDOMFunc("vkern")
-
-
-    //this.hideElement = m.partial(this.setDisplayForElement, "none");
-    //this.showElement = m.partial(this.setDisplayForElement, "block");
-    //this.removeElement = this.swapDOM;
-
-    //this.$ = this.getElement;
-
     this.EXPORT_TAGS = {
         ":common": this.EXPORT,
         ":all": m.concat(this.EXPORT, this.EXPORT_OK)
     };
-
     m.nameFunctions(this);
-
-};
-
+}
 MochiKit.SVG.__new__(this);
 
 MochiKit.Base._exportSymbols(this, MochiKit.SVG);
