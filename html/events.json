@@ -1,5 +1,5 @@
 {
-    "columns": [ "event_date, "event_type", "id_name"],
+    "columns": [ "event_date", "event_type", "id_name"],
     "rows": [
         ["2000-05-08", "Event Type 1", "0"],
         ["2001-02-10", "Event Type 2", "1"],
