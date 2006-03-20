@@ -205,8 +205,8 @@ MochiKit.SVG.grabSVG = function (htmlElement) {
         @param htmlElement: either an id string or a dom element ('object', 'embed', 'svg)
     ***/
     var svgDocument = null;
-    if (typeof(node) == 'string') {
-        htmlElement = document.getElementById(htmlElement);
+    if (typeof(htmlElement) == 'string') {
+        htmlElement = MochiKit.DOM.getElement(htmlElement);
     }
     tagName = htmlElement.tagName.toLowerCase();
     if (tagName == 'svg')  // Inline
@@ -324,12 +324,27 @@ MochiKit.SVG.createSVG = function (type, width /*=100*/, height /*=100*/, id /* 
 }
  
 MochiKit.SVG.currentSVGDocument = function () {
-    return MochiKit.DOM._svgDocument;
+    return MochiKit.SVG._svgDocument;
 };
 
 MochiKit.SVG.currentSVGElement = function () {
-    return MochiKit.DOM._svgElement;
+    return MochiKit.SVG._svgElement;
 };
+
+MochiKit.SVG.currentSVGSource = function (decorate /* = false */) {
+    var self = MochiKit.SVG;
+    if (typeof(decorate) == "undefined" || decorate == null) {
+        ms = false;
+    }
+    var source = toHTML(self._svgElement);
+    var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
+    if (decorate) {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
+    }
+    else {
+        return newsrc;
+    }
+}
 
 MochiKit.SVG.suspendRedraw = function (miliseconds /* = 1000 */) {
     var self = MochiKit.SVG;
