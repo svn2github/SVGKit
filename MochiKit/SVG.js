@@ -237,8 +237,23 @@ MochiKit.SVG.setCurrentSVG = function (svgDocument) {
 
 
 MochiKit.SVG._svgMIME = 'image/svg+xml';
-MochiKit.SVG._svgEmpty = 'empty.svg';
+MochiKit.SVG._svgEmptyName = 'empty.svg';
+MochiKit.SVG._svgEmptyBase = '';
 MochiKit.SVG._errorText = "You can't display SVG. Download Firefox." 
+
+MochiKit.SVG.getBaseURI = function() {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute("src");
+        if (!src) {
+            continue;
+        }
+        if (src.match(/MochiKit.js$/)) {  // Confused why putting "SVG.js" doesn't work, but it gets called right after the browser read the script tag for MochiKit even here.
+            MochiKit.SVG._svgEmptyBase = src.substring(0, src.lastIndexOf('MochiKit.js'));
+        }
+    }
+};
+MochiKit.SVG.getBaseURI();
 
 MochiKit.SVG.createSVG = function (type, width /*=100*/, height /*=100*/, id /* optional */) {
     /***
@@ -285,13 +300,13 @@ MochiKit.SVG.createSVG = function (type, width /*=100*/, height /*=100*/, id /* 
         return svgElement;
     }
     else if (type=='object') {
-        attrs['data'] = self._svgEmpty;
+        attrs['data'] = self._svgEmptyBase + self._svgEmptyName;
         attrs['type'] = self._svgMIME;
         var htmlElement = createDOM('object', attrs, self._errorText);
         //svgDocument = htmlElement.contentDocument;
     }
     else if (type=='embed') {
-        attrs['src'] = self._svgEmpty;
+        attrs['src'] = self._svgEmptyBase + self._svgEmptyName;
         attrs['type'] = self._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
         var htmlElement = createDOM('embed', attrs );
