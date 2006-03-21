@@ -264,3 +264,39 @@ div#interpreter_output {
     font-family: Monaco, "lucida console", Courier, monospace;
     font-size: 0.8em}
 /* end JavaScript Interpreter  */  
+
+
+table.datagrid {
+    border-collapse: collapse;
+}
+
+table.datagrid thead th { 
+    text-align: left;
+    background-color: #545A65;
+    background-repeat: no-repeat;
+    color: white;
+    font-weight: bold;
+    padding: .3em .7em;
+    font-size: x-small;
+    padding-right: 5px;
+    background-repeat: no-repeat;
+}
+
+table.datagrid thead th.over {
+    background-color: #9FAABF;
+    cursor: pointer;
+}
+
+table.datagrid tbody th {
+    font-weight: bold;
+}
+
+table.datagrid tbody td, table.datagrid tbody th {
+    font-size: x-small;
+    text-align: left;
+    padding: 0em .3em 0em .7em;
+    border-bottom: 1px solid #545A65;
+}
+
+.mochi-template { display: none; }
+.mochi-example { display: none; }

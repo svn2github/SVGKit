@@ -1,0 +1,10 @@
+{
+    "columns": [ "event_date", "event_type", "id"],
+    "rows": [
+        ["2005-05-08", "Event Type 6", "5"],
+        ["2006-02-10", "Event Type 2", "6"],
+        ["2007-09-24", "Event Type 4", "7"],
+        ["2008-01-10", "Event Type 5", "9"],
+        ["2009-03-27", "Event Type 7", "10"]
+    ]
+}

@@ -168,6 +168,7 @@ valueForKeyPath = function (data, keyPath) {
 
 
 SortableManager = function () {
+    this.initial_flag = true;
     this.thead = null;
     this.thead_proto = null;
     this.tbody = null;
@@ -284,18 +285,13 @@ SortableManager.prototype = {
             }
             domains.push(domain);
         }
-        log(data.domains == null);
-        //data.domains = domains;
-        //this.data = data;
-        if (this.data == null) {
+        if (this.initial_flag == true) {
             data.domains = domains;
             this.data = data;
         }
         else {
-            data.domains += domains;
+            this.data.domains = this.data.domains.concat(domains);
             this.data['rows'] += ','+data['rows'];
-            log(this.data.domains);
-            log(this.data['rows']);
         }
         // perform a sort and display based upon the previous sort state,
         // defaulting to an ascending sort if this is the first sort
@@ -381,8 +377,11 @@ SortableManager.prototype = {
         }
         //var domains = this.data.domains;
         var domains = this.data.domains;
-        log("domains.length="+domains.length);
-        log("this.data.rows.split(',').length/3="+this.data.rows.split(',').length/this.data.columns.length);
+        //log("domains.length="+domains.length);
+        //log("this.data.rows.split(',').length/3="+this.data.rows.split(',').length/this.data.columns.length);
+        if (this.initial_flag == true) {
+            this.initial_flag = false;
+        }
         for (var i = 0; i < domains.length; i++) {
             var domain = domains[i];
             domain.__sort__ = sortfunc(domain[key]);
