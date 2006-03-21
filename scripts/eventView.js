@@ -1,59 +1,42 @@
 var PixelView = {
     base:  "/event_view/",
-    idbase: "event_view_",  
+    idbase: "event_view_",
+    filterElems: [],
+    
+ 
+    checkAllFilters: function(state) {
+        var filterNames = PixelView.getAllFilterNames();
+        for (i = 0; i < filterNames.length; i++) {
+            $(filterNames[i]).checked = state;
+        }
+    },
+    
+    getFilterElems: function () {
+        var filter = document.getElementById(PixelView.idbase+'filter');
+        PixelView.filterElems = filter.getElementsByTagName('input');
+    },
+   
+   getAllFilterNames: function() {
+        var filterNames = [];
+        for (i=0; i<PixelView.filterElems.length; i++) {
+            filterNames.push(PixelView.filterElems[i].id);
+        }
+        return filterNames;
+    },
+    
+    getAllCheckedEventTypes: function() {
+        var checkedEventTypes = "";
+        for (i=0; i<PixelView.filterElems.length; i++) {
+            if (PixelView..filterElems[i].checked == true) {
+                checkedEventTypes += PixelView.filterElems[i].name + ',';
+            }
+        }
+        return checkedEventTypes;
+    },
+    
 };
 
-
-
-/*
-
-On page load, the SortableManager:
-
-- Rips out all of the elements with the mochi-example class.
-- Finds the elements with the mochi-template class and saves them for
-  later parsing with "MochiTAL".
-- Finds the anchor tags with the mochi:dataformat attribute and gives them
-  onclick behvaiors to load new data, using their href as the data source.
-  This makes your XML or JSON look like a normal link to a search engine
-  (or javascript-disabled browser).
-- Clones the thead element from the table because it will be replaced on each
-  sort.
-- Sets up a default sort key of "event_date" and queues a load of the json
-  document.
-
-
-On data load, the SortableManager:
-
-- Parses the table data from the document (columns list, rows list-of-lists)
-  and turns them into a list of [{column:value, ...}] objects for easy sorting
-  and column order stability.
-- Chooses the default (or previous) sort state and triggers a sort request
-
-
-On sort request:
-
-- Replaces the cloned thead element with a copy of it that has the sort
-  indicator (&uarr; or &darr;) for the most recently sorted column (matched up
-  to the first field in the th's mochi:sortcolumn attribute), and attaches
-  onclick, onmousedown, onmouseover, onmouseout behaviors to them. The second
-  field of mochi:sortcolumn attribute is used to perform a non-string sort.
-- Performs the sort on the domains list.  If the second field of
-  mochi:sortcolumn was not "str", then a custom function is used and the
-  results are stored away in a __sort__ key, which is then used to perform the
-  sort (read: shwartzian transform).
-- Calls processMochiTAL on the page, which finds the mochi-template sections 
-  and then looks for mochi:repeat and mochi:content attributes on them, using
-  the data object.
-
-*/
-
 processMochiTAL = function (dom, data) {
-    /***
-
-        A TAL-esque template attribute language processor,
-        including content replacement and repeat
-
-    ***/
 
     // nodeType == 1 is an element, we're leaving
     // text nodes alone.
@@ -118,9 +101,19 @@ ignoreEvent = function (ev) {
 };
 
 SortTransforms = {
-    "str": operator.identity,
-    "istr": function (s) { return s.toLowerCase(); },
-    "isoDate": isoDate
+    "int"     : function (s) { 
+                    var totalDigits = 8; //pad integer until it has this many digits
+                    var pad = '';
+                    if (totalDigits > s.length) {
+                        for (i=0; i<(totalDigits-s.length); i++) {
+                            pad += "0";
+                        }
+                    }
+                    return pad + s; 
+                }, 
+    "str"     : operator.identity,
+    "istr"    : function (s) { return s.toLowerCase(); },
+    "isoDate" : operator.identity //isoDate
 };
 
 getAttribute = function (dom, key) {
@@ -131,13 +124,15 @@ getAttribute = function (dom, key) {
     }
 };
 
+
+/***
 datatableFromXMLRequest = function (req) {
-    /***
+    / ***
 
         This effectively converts domains.xml to the
         same form as domains.json
 
-    ***/
+    *** /
     var xml = req.responseXML;
     var nodes = xml.getElementsByTagName("column");
     var rval = {"columns": map(scrapeText, nodes)};
@@ -151,9 +146,12 @@ datatableFromXMLRequest = function (req) {
     return rval;
 };
 
+***/
+
 loadFromDataAnchor = function (ev) {
     ignoreEvent(ev);
-    var format = this.getAttribute("mochi:dataformat");
+    //var format = this.getAttribute("mochi:dataformat");
+    var format = "json";
     var href = this.href;
     sortableManager.loadFromURL(format, href);
 };
@@ -199,6 +197,7 @@ SortableManager.prototype = {
                 "node": template
             });
         }
+        
         // set up the data anchors to do loads
         var anchors = getElementsByTagAndClassName("a", null);
         for (var i = 0; i < anchors.length; i++) {
@@ -213,8 +212,8 @@ SortableManager.prototype = {
         this.thead = getElementsByTagAndClassName("thead", null)[0];
         this.thead_proto = this.thead.cloneNode(true);
 
-        this.sortkey = "event_date";
-        this.loadFromURL("json", "static/html/events.json");
+        this.sortkey = "id";
+        this.loadFromURL("json", "event/getEvents?maxResults=50");
     },
 
     "loadFromURL": function (format, url) {
@@ -297,7 +296,7 @@ SortableManager.prototype = {
         // defaulting to an ascending sort if this is the first sort
         var order = this.sortState[this.sortkey];
         if (typeof(order) == 'undefined') {
-            order = true;
+            order = false;
         }
         this.drawSortedRows(this.sortkey, order, false);
     },
@@ -316,8 +315,8 @@ SortableManager.prototype = {
             //log('onSortClick', name);
             var order = self.sortState[name];
             if (typeof(order) == 'undefined') {
-                // if it's never been sorted by this column, sort ascending
-                order = true;
+                // if it's never been sorted by this column, sort descending
+                order = false;
             } else if (self.sortkey == name) {
                 // if this column was sorted most recently, flip the sort order
                 order = !((typeof(order) == 'undefined') ? false : order);
@@ -409,3 +408,5 @@ SortableManager.prototype = {
 // create the global SortableManager and initialize it on page load
 sortableManager = new SortableManager();
 addLoadEvent(sortableManager.initialize);
+
+addLoadEvent(PixelView.getFilterElems);

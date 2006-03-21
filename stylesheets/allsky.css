@@ -1,6 +1,6 @@
 /* css file for The Harvard All-sky Optical SETI User Interface web page */
 
-/* begin COLORS -  backgrounds  */
+/* start COLORS -  backgrounds  */
 body {
     background-color: #313439}
 div#container_outer { 
@@ -24,7 +24,7 @@ input.smallinput {
 input.textbox:focus {
     background-color: #FFFEE3}
 
-/* begin COLORS - borders  */
+/* start COLORS - borders  */
 div#container_outer { 
     border: solid #545A65 2px}
 div#container_inner { 
@@ -42,7 +42,7 @@ input.smallinput {
 .progressbar_outer {
     border: 2px solid #222325}
 
-/* begin COLORS - fonts */
+/* start COLORS - fonts */
 div#body { 
     color: #FFFFFF}
 .topTitle { 
@@ -86,13 +86,13 @@ div#interpreter_area {
     color: #000000}
 /* end COLORS */
 
-/* begin BODY */
+/* start BODY */
 body {
     font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
     font-weight: normal}
 /* end BODY */
     
-/* begin CONTAINERS  */
+/* start CONTAINERS  */
 div#container_outer {
     margin: 0 auto;
     width: 1230px;
@@ -108,7 +108,7 @@ div#container_inner {
     text-align: left}
 /* end CONTAINERS  */
     
-/* begin SIDE TOOLBAR  */
+/* start SIDE TOOLBAR  */
 div#toolbar_side {
     position: absolute;
     width:      150px;
@@ -149,7 +149,7 @@ div#toolbar_side a {
     font-weight: bold}
 /* end SIDE TOOLBAR  */
 
-/* begin TOP TOOLBAR  */
+/* start TOP TOOLBAR  */
 div#toolbar_top {
     position: absolute;
     margin-left: 0px;
@@ -188,7 +188,7 @@ table.topToolbar td{
     font-weight: bold}
 /* end TOP TOOLBAR  */
 
-/* begin PANELS  */
+/* start PANELS  */
 div.panel {
     margin: 10px;
     font-size: small}
@@ -231,6 +231,9 @@ select {
     cursor: pointer}
 input.checkbox {
     margin: 0px}
+input.radio {
+    margin: 0px;
+    padding: 0px}
 input.smallinput {
     padding: 1px 3px 1px 3px;
     font-size: x-small}
@@ -265,11 +268,9 @@ div#interpreter_output {
     font-size: 0.8em}
 /* end JavaScript Interpreter  */  
 
-
+/* start event table  */  
 table.datagrid {
-    border-collapse: collapse;
-}
-
+    border-collapse: collapse;}
 table.datagrid thead th { 
     text-align: left;
     background-color: #545A65;
@@ -277,26 +278,28 @@ table.datagrid thead th {
     color: white;
     font-weight: bold;
     padding: .3em .7em;
-    font-size: x-small;
+    font-size: small;
     padding-right: 5px;
-    background-repeat: no-repeat;
-}
-
+    background-repeat: no-repeat;}
 table.datagrid thead th.over {
     background-color: #9FAABF;
-    cursor: pointer;
-}
-
+    cursor: pointer;}
 table.datagrid tbody th {
-    font-weight: bold;
-}
-
+    font-weight: bold;}
 table.datagrid tbody td, table.datagrid tbody th {
     font-size: x-small;
     text-align: left;
     padding: 0em .3em 0em .7em;
-    border-bottom: 1px solid #545A65;
-}
+    border-bottom: 1px solid #545A65;}
+div.events {
+    max-height:192px; /*  max-height = 24 + 14*table_rows */
+    overflow:auto}
+div.event_filter {
+    max-height:130px; /*  max-height.event_filter = max_height.events - 62px */
+    overflow:auto}
 
-.mochi-template { display: none; }
-.mochi-example { display: none; }
+.mochi-template { 
+    display: none; }
+.mochi-example { 
+    display: none; }
+/* end event table  */  
