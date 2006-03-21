@@ -18,7 +18,7 @@ On page load, the SortableManager:
   (or javascript-disabled browser).
 - Clones the thead element from the table because it will be replaced on each
   sort.
-- Sets up a default sort key of "domain_name" and queues a load of the json
+- Sets up a default sort key of "event_date" and queues a load of the json
   document.
 
 
@@ -212,7 +212,7 @@ SortableManager.prototype = {
         this.thead = getElementsByTagAndClassName("thead", null)[0];
         this.thead_proto = this.thead.cloneNode(true);
 
-        this.sortkey = "event_name";
+        this.sortkey = "event_date";
         this.loadFromURL("json", "static/html/events.json");
     },
 
@@ -242,10 +242,10 @@ SortableManager.prototype = {
         d.addBoth(function (res) {
             self.deferred = null; 
             log('loadFromURL success');
+            log(res);
             return res;
         });
-        // on success, tag the result with the format used so we can display
-        // it
+        // on success, tag the result with the format used so we can display it
         d.addCallback(function (res) {
             res.format = format;
             return res;
@@ -264,6 +264,7 @@ SortableManager.prototype = {
         return d;
     },
 
+        
     "initWithData": function (data) {
         /***
 
@@ -283,8 +284,19 @@ SortableManager.prototype = {
             }
             domains.push(domain);
         }
-        data.domains = domains;
-        this.data = data;
+        log(data.domains == null);
+        //data.domains = domains;
+        //this.data = data;
+        if (this.data == null) {
+            data.domains = domains;
+            this.data = data;
+        }
+        else {
+            data.domains += domains;
+            this.data['rows'] += ','+data['rows'];
+            log(this.data.domains);
+            log(this.data['rows']);
+        }
         // perform a sort and display based upon the previous sort state,
         // defaulting to an ascending sort if this is the first sort
         var order = this.sortState[this.sortkey];
@@ -292,8 +304,8 @@ SortableManager.prototype = {
             order = true;
         }
         this.drawSortedRows(this.sortkey, order, false);
-
     },
+   
 
     "onSortClick": function (name) {
         /***
@@ -305,7 +317,7 @@ SortableManager.prototype = {
         var self = this;
         // on click, flip the last sort order of that column and sort
         return function () {
-            log('onSortClick', name);
+            //log('onSortClick', name);
             var order = self.sortState[name];
             if (typeof(order) == 'undefined') {
                 // if it's never been sorted by this column, sort ascending
@@ -325,7 +337,7 @@ SortableManager.prototype = {
             if appropriate
 
         ***/
-        log('drawSortedRows', key, forward);
+        //log('drawSortedRows', key, forward);
 
         // save it so we can flip next time
         this.sortState[key] = forward;
@@ -367,7 +379,10 @@ SortableManager.prototype = {
         if (!sortfunc) {
             throw new TypeError("unsupported sort style " + repr(sortstyle));
         }
+        //var domains = this.data.domains;
         var domains = this.data.domains;
+        log("domains.length="+domains.length);
+        log("this.data.rows.split(',').length/3="+this.data.rows.split(',').length/this.data.columns.length);
         for (var i = 0; i < domains.length; i++) {
             var domain = domains[i];
             domain.__sort__ = sortfunc(domain[key]);
@@ -380,7 +395,7 @@ SortableManager.prototype = {
         // process every template with the given data
         // and put the processed templates in the DOM
         for (var i = 0; i < this.templates.length; i++) {
-            log('template', i, template);
+            //log('template', i, template);
             var template = this.templates[i];
             var dom = template.template.cloneNode(true);
             processMochiTAL(dom, this.data);
@@ -395,15 +410,3 @@ SortableManager.prototype = {
 // create the global SortableManager and initialize it on page load
 sortableManager = new SortableManager();
 addLoadEvent(sortableManager.initialize);
-
-// rewrite the view-source links
-addLoadEvent(function () {
-    var elems = getElementsByTagAndClassName("A", "view-source");
-    var page = "ajax_tables/";
-    for (var i = 0; i < elems.length; i++) {
-        var elem = elems[i];
-        var href = elem.href.split(/\//).pop();
-        elem.target = "_blank";
-        elem.href = "../view-source/view-source.html#" + page + href;
-    }
-});
