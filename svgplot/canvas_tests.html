@@ -879,7 +879,7 @@ function addTests() {
                                        BR(null),
                                        buton=INPUT({'type':"button", 'value':"Do It"}) ),
                               svgTD=TD(null),
-                              TD(null, svgSrcArea=TEXTAREA({'rows':"16", 'cols':"40", 'wrap':"off"} ,"SVG Source") )
+                              TD(null, svgSrcArea=TEXTAREA({'rows':"16", 'cols':"60", 'wrap':"off"} ,"SVG Source") )
                         );
             appendChildNodes(table, tr);
             addToCallStack(buton, 'onclick', partial(doTest, canvasTD, svgTD, functionArea, svgSrcArea) );
