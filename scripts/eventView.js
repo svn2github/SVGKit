@@ -12,13 +12,13 @@ var EventView = {
     },
     
     checkAllFilters: function(state) {
-        var filterNames = EventView.getAllFilterNames();
+        var filterNames = EventView.getFilterNames();
         for (i=0; i<filterNames.length; i++) {
             $(filterNames[i]).checked = state;
         }
     },
     
-   getAllFilterNames: function() {
+   getFilterNames: function() {
         var filterNames = [];
         for (i=0; i<EventView.filterElems.length; i++) {
             filterNames.push(EventView.filterElems[i].id);
@@ -26,7 +26,7 @@ var EventView = {
         return filterNames;
     },
     
-    getAllCheckedEventTypes: function() {
+    getCheckedEventTypes: function() {
         var checkedEventTypes = "";
         for (i=0; i<EventView.filterElems.length; i++) {
             if (EventView.filterElems[i].checked == true) {
@@ -45,33 +45,105 @@ var EventView = {
 		forEach(EventView.controlElems, 
 			function(elem) {
 				elemName = elem.id;
-				EventView.controlSettings[elemName] = elem.value;
-				log(EventView.controlSettings[elemName]);
+                if      (elem.type == "radio" | elem.type == "checkbox") {
+                    EventView.controlSettings[elemName] = elem.checked;
+                }
+                else if (elem.type == "text") {
+                    EventView.controlSettings[elemName] = elem.value;
+                }
 			}
 		);
 	},
-	//controls = document.getElementById(EventView.idbase+'controls'); forEach(controls, function(elem) {log(elem.id)})
+    
+    insertCurrentTime: function () {
+        var dateToday = toISOTimestamp(new Date());
+        var match = EventView.idbase + "events_since_time"
+        forEach (EventView.controlElems, 
+            function (elem) {
+                if (elem.name == match) {
+                    elem.value = dateToday;
+                }
+            }
+        );
+    },
+
 	loadTable: function () {
-		//
+        //get current control & filter settings 
+        EventView.getControlSettings();
+        EventView.getFilterElems();
+        filters = EventView.getFilterNames();
+        //set variables
+        var settings = EventView.controlSettings;
+        var prefix   = EventView.idbase + "controls_";
+        var checkedFilters = "";
+        var comma          = "";
+        //apply event type filter
+        for (i=0; i<filters.length; i++) {
+            if (EventView.filterElems[i].checked == true) {
+                if (checkedFilters == "") {comma = "" ;}
+                else                      {comma = ",";}
+                checkedFilters += comma + 
+                                  filters[i].slice(EventView.idbase.length, 
+                                                   filters[i].length);
+            }
+        }
+        if (checkedFilters == "") {return}
+        var query = "event/getEvents?typeFilter=" + checkedFilters;
+        //separate cases for displaying different sets of events
+        if (settings[prefix + "sel_recent"] == true) {
+            var typeQuery = "";
+            var maxElemName = EventView.idbase + "controls_max_events";
+            var maxEvents = EventView.controlSettings[maxElemName]; 
+        }
+        else if (settings[prefix + "sel_since_id"] == true) {
+            var sinceEvent   = EventView.idbase + "controls_events_id";
+            var maxElemName1 = EventView.idbase + "controls_max_events";
+            var maxElemName2 = EventView.idbase + "controls_num_events_id";
+            var typeQuery = "&sinceEvent=" + EventView.controlSettings[sinceEvent];
+            var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
+                                     parseInt(EventView.controlSettings[maxElemName2]));
+            log(maxEvents);
+        }
+        else if (settings[prefix + "sel_since_time"] == true) {
+            var sinceDate    = EventView.idbase + "controls_events_time";
+            var maxElemName1 = EventView.idbase + "controls_max_events";
+            var maxElemName2 = EventView.idbase + "controls_num_events_time";
+            var typeQuery = "&sinceDate=" + EventView.controlSettings[sinceDate];
+            var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
+                                     parseInt(EventView.controlSettings[maxElemName2])); 
+        }
+        else {return}
+        var maxResults = "&maxResults=" + maxEvents;
+        //construct query string and send to server
+        query += maxResults + typeQuery;
+        sortableManager.loadFromURL(query)
 	},
     
 	clearTable: function () {
-		//
+        tab = document.getElementById("sortable_table");
+        for (i=tab.rows.length-1;i>0;i--) {
+            removeElement(tab.rows[i]);
+        }
 	},
     
+
+    
+    //features to add: highlight new rows, settings stored in cookies, autoload,
+    //                 remove duplicate events?, max visible rows, max rows in table
 };
+addLoadEvent(EventView.getFilterElems);
+addLoadEvent(EventView.insertCurrentTime);
+
 
 processMochiTAL = function (dom, data) {
 
-    // nodeType == 1 is an element, we're leaving
-    // text nodes alone.
+    // nodeType == 1 is an element, we're leaving text nodes alone.
     if (dom.nodeType != 1) {
         return;
     }
     var attr;
-    // duplicate this element for each item in the
-    // given list, and then process the duplicated
-    // element again (sans mochi:repeat tag)
+    // duplicate this element for each item in the given list, and then process 
+    // the duplicated element again (sans mochi:repeat tag)
     attr = getAttribute(dom, "mochi:repeat");
     if (attr) {
         dom.removeAttribute("mochi:repeat");
@@ -137,7 +209,9 @@ SortTransforms = {
                     return pad + s; 
                 }, 
     "str"     : operator.identity,
-    "istr"    : function (s) { return s.toLowerCase(); },
+    "istr"    : function (s) { 
+                    return s.toLowerCase(); 
+                },
     "isoDate" : operator.identity //isoDate
 };
 
@@ -147,38 +221,6 @@ getAttribute = function (dom, key) {
     } catch (e) {
         return null;
     }
-};
-
-
-/***
-datatableFromXMLRequest = function (req) {
-    / ***
-
-        This effectively converts domains.xml to the
-        same form as domains.json
-
-    *** /
-    var xml = req.responseXML;
-    var nodes = xml.getElementsByTagName("column");
-    var rval = {"columns": map(scrapeText, nodes)};
-    var rows = [];
-    nodes = xml.getElementsByTagName("row") 
-    for (var i = 0; i < nodes.length; i++) {
-        var cells = nodes[i].getElementsByTagName("cell");
-        rows.push(map(scrapeText, cells));
-    }
-    rval.rows = rows;
-    return rval;
-};
-
-***/
-
-loadFromDataAnchor = function (ev) {
-    ignoreEvent(ev);
-    //var format = this.getAttribute("mochi:dataformat");
-    var format = "json";
-    var href = this.href;
-    sortableManager.loadFromURL(format, href);
 };
 
 valueForKeyPath = function (data, keyPath) {
@@ -238,27 +280,19 @@ SortableManager.prototype = {
         this.thead_proto = this.thead.cloneNode(true);
 
         this.sortkey = "id";
-        this.loadFromURL("json", "event/getEvents?maxResults=50");
+        //this.loadFromURL("event/getEvents?maxResults=50");
+        this.loadFromURL("event/getEvents?typeFilter=RoofEvent&maxResults=200");
     },
-
-    "loadFromURL": function (format, url) {
-        log('loadFromURL', format, url);
+   
+    
+    "loadFromURL": function (url) {
+        log('loadFromURL', url);
         var d;
         if (this.deferred) {
             this.deferred.cancel();
-        }
-        if (format == "xml") {
-            var req = getXMLHttpRequest();
-            if (req.overrideMimeType) {
-                req.overrideMimeType("text/xml");
-            }
-            req.open("GET", url, true);
-            d = sendXMLHttpRequest(req).addCallback(datatableFromXMLRequest);
-        } else if (format == "json") {
-            d = loadJSONDoc(url);
-        } else {
-            throw new TypeError("format " + repr(format) + " not supported");
-        }
+        }       
+        format = "json";
+        d = loadJSONDoc(url)
         // keep track of the current deferred, so that we can cancel it
         this.deferred = d;
         var self = this;
@@ -266,8 +300,8 @@ SortableManager.prototype = {
         // completed, and pass through the result or error
         d.addBoth(function (res) {
             self.deferred = null; 
-            log('loadFromURL success');
-            log(res);
+            log('Events received from server.  Inserting into Event View table.');
+            //log(res);
             return res;
         });
         // on success, tag the result with the format used so we can display it
@@ -277,27 +311,22 @@ SortableManager.prototype = {
         });
         // call this.initWithData(data) once it's ready
         d.addCallback(this.initWithData);
-        // if anything goes wrong, except for a simple cancellation,
-        // then log the error and show the logger
+        // if anything goes wrong, except for a cancellation, log the error
         d.addErrback(function (err) {
             if (err instanceof CancelledError) {
                 return;
             }
             logError(err);
-            //logger.debuggingBookmarklet();
         });
         return d;
     },
-
-        
+    
     "initWithData": function (data) {
-        /***
-
-            Initialize the SortableManager with a table object
-        
-        ***/
-
         // reformat to [{column:value, ...}, ...] style as the domains key
+        //log("dir(data) = " + dir(data));
+        //log("data.columns = " + data.columns);
+        //log("data.format  = " + data.format);
+        //log("data.rows    = " + data.rows);
         var domains = [];
         var rows = data.rows;
         var cols = data.columns;
@@ -326,13 +355,7 @@ SortableManager.prototype = {
         this.drawSortedRows(this.sortkey, order, false);
     },
    
-
     "onSortClick": function (name) {
-        /***
-
-            Return a sort function for click events
-
-        ***/
         // save ourselves from doing a bind
         var self = this;
         // on click, flip the last sort order of that column and sort
@@ -351,19 +374,10 @@ SortableManager.prototype = {
     },
 
     "drawSortedRows": function (key, forward, clicked) {
-        /***
-
-            Draw the new sorted table body, and modify the column headers
-            if appropriate
-
-        ***/
-        //log('drawSortedRows', key, forward);
-
         // save it so we can flip next time
         this.sortState[key] = forward;
         this.sortkey = key;
         var sortstyle;
-
         // setup the sort columns   
         var thead = this.thead_proto.cloneNode(true);
         var cols = thead.getElementsByTagName("th");
@@ -389,7 +403,6 @@ SortableManager.prototype = {
             }
         }
         this.thead = swapDOM(this.thead, thead);
-
         // apply a sort transform to a temporary column named __sort__,
         // and do the sort based on that column
         if (!sortstyle) {
@@ -410,11 +423,9 @@ SortableManager.prototype = {
             var domain = domains[i];
             domain.__sort__ = sortfunc(domain[key]);
         }
-
         // perform the sort based on the state given (forward or reverse)
         var cmp = (forward ? keyComparator : reverseKeyComparator);
         domains.sort(cmp("__sort__"));
-
         // process every template with the given data
         // and put the processed templates in the DOM
         for (var i = 0; i < this.templates.length; i++) {
@@ -424,14 +435,11 @@ SortableManager.prototype = {
             processMochiTAL(dom, this.data);
             template.node = swapDOM(template.node, dom);
         }
- 
-
-    }
-
+    },
+    
 };
 
 // create the global SortableManager and initialize it on page load
 sortableManager = new SortableManager();
 addLoadEvent(sortableManager.initialize);
 
-addLoadEvent(EventView.getFilterElems);
