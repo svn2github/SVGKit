@@ -7,7 +7,16 @@
 <title>SVG Canvas Tests</title>
 
 <link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
-
+<style type="text/css">
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: x-small;
+}
+textarea {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: x-small;
+}
+</style>
 <script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
 <!--
 <script type="text/javascript" src="interpreter/interpreter.js"></script>
@@ -724,7 +733,7 @@ var testFunctions = {
         sun.src = 'sun.png';
         moon.src = 'moon.png';
         earth.src = 'earth.png';
-        setInterval( partial(drawSolarSystem, context) ,2000);
+        setInterval( partial(drawSolarSystem, context) ,10000);
     },
     
     'clock' : function(context) {
@@ -822,7 +831,7 @@ var testFunctions = {
           ctx.restore();
         }
         doClock(context);
-        setInterval( partial(doClock, context) ,1000);
+        setInterval( partial(doClock, context) ,2000);
     }
     
     /*
@@ -835,25 +844,48 @@ var testFunctions = {
     
 };
 
+function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
+    var ctx;
+    var canvas = CANVAS({'width':200, 'height':200});
+    replaceChildNodes(canvasTD, canvas);
+    if (canvas.getContext) {
+        var ctx = canvas.getContext("2d");
+        testFunction = eval(functionArea.value);
+        ctx.clearRect(0,0,200,200);
+        testFunction(ctx);
+    }
+    
+    ctx = new MochiKit.SVGCanvas(200, 200);
+    var setSVGSrc = function (svg, textarea) {
+        replaceChildNodes(textarea, svg.toXML());
+    }
+    ctx.svg.whenReady( partial(testFunction, ctx) );
+    ctx.svg.whenReady( partial(setSVGSrc, ctx.svg, svgSrcArea) );
+    replaceChildNodes(svgTD, ctx.svg.htmlElement);
+}
 
 function addTests() {
     log("getting table");
     var table = $('tests');
+    var i = 0, start = 0, number = 999;
     for (var test in testFunctions) {
-        log("doing test", test);
-        var svg = new MochiKit.SVG(200,200);
-        var canvas = CANVAS({'width':200,'height':200});
-        var tr = TR(null, TD(null, test, BR(null), IMG({'src':test+'.png'})), 
-                          TD(null,canvas), 
-                          TD(null, svg.htmlElement));
-        appendChildNodes(table, tr);
-        var ctx;
-        if (canvas.getContext) {
-            var ctx = canvas.getContext("2d");
-            testFunctions[test](ctx);
+        if (i>=start && i-start<=number) {
+            log("doing test", test);
+            var canvasSrc = (""+testFunctions[test]).replace(/ +/g, " ");
+            var functionArea, svgSrcArea, button, canvasTD, svgTD;
+            var tr = TR(null, TD(null, test, BR(null), IMG({'src':test+'.png'}) ), 
+                              canvasTD=TD(null), 
+                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, canvasSrc),
+                                       BR(null),
+                                       buton=INPUT({'type':"button", 'value':"Do It"}) ),
+                              svgTD=TD(null),
+                              TD(null, svgSrcArea=TEXTAREA({'rows':"16", 'cols':"40", 'wrap':"off"} ,"SVG Source") )
+                        );
+            appendChildNodes(table, tr);
+            addToCallStack(buton, 'onclick', partial(doTest, canvasTD, svgTD, functionArea, svgSrcArea) );
+            doTest(canvasTD, svgTD, functionArea, svgSrcArea);
         }
-        ctx = new MochiKit.SVGCanvas(svg);
-        svg.whenReady( partial(testFunctions[test], ctx) );
+        i++;
     }
 }
 
@@ -867,8 +899,9 @@ addLoadEvent(addTests);
 
 <div>
 
+<form  method="post" action="javascript:void()">
 <table id="tests" border="1">
-<tr><td>Image</td><td>Canvas</td><td>SVG</td></tr>
+<tr><td>Image</td><td>Canvas</td><td>Canvas Source</td><td>SVG</td><td>SVG Source</td></tr>
 </table>
 
 
