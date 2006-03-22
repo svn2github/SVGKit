@@ -1,0 +1,162 @@
+    "A",
+    "ALTGLYPH",
+    "ALTGLYPHDEF",
+    "ALTGLYPHITEM",
+    "ANIMATE",
+    "ANIMATECOLOR",
+    "ANIMATEMOTION",
+    "ANIMATETRANSFORM",
+    "CIRCLE",
+    "CLIPPATH",
+    "COLOR_PROFILE",
+    "CURSOR",
+    "DEFINITION_SRC",
+    "DEFS",
+    "DESC",
+    "ELLIPSE",
+    "FEBLEND",
+    "FECOLORMATRIX",
+    "FECOMPONENTTRANSFER",
+    "FECOMPOSITE",
+    "FECONVOLVEMATRIX",
+    "FEDIFFUSELIGHTING",
+    "FEDISPLACEMENTMAP",
+    "FEDISTANTLIGHT",
+    "FEFLOOD",
+    "FEFUNCA",
+    "FEFUNCB",
+    "FEFUNCG",
+    "FEFUNCR",
+    "FEGAUSSIANBLUR",
+    "FEIMAGE",
+    "FEMERGE",
+    "FEMERGENODE",
+    "FEMORPHOLOGY",
+    "FEOFFSET",
+    "FEPOINTLIGHT",
+    "FESPECULARLIGHTING",
+    "FESPOTLIGHT",
+    "FETILE",
+    "FETURBULENCE",
+    "FILTER",
+    "FONT",
+    "FONT_FACE",
+    "FONT_FACE_FORMAT",
+    "FONT_FACE_NAME",
+    "FONT_FACE_SRC",
+    "FONT_FACE_URI",
+    "FOREIGNOBJECT",
+    "G",
+    "GLYPH",
+    "GLYPHREF",
+    "HKERN",
+    "IMAGE",
+    "LINE",
+    "LINEARGRADIENT",
+    "MARKER",
+    "MASK",
+    "METADATA",
+    "MISSING_GLYPH",
+    "MPATH",
+    "PATH",
+    "PATTERN",
+    "POLYGON",
+    "POLYLINE",
+    "RADIALGRADIENT",
+    "RECT",
+    "SCRIPT",
+    "SET",
+    "STOP",
+    "STYLE",
+    "SVG",
+    "SWITCH",
+    "SYMBOL",
+    "TEXT",
+    "TEXTPATH",
+    "TITLE",
+    "TREF",
+    "TSPAN",
+    "USE",
+    "VIEW",
+    "VKERN",
+this.A = createDOMFunc("a")
+this.ALTGLYPH = createDOMFunc("altGlyph")
+this.ALTGLYPHDEF = createDOMFunc("altGlyphDef")
+this.ALTGLYPHITEM = createDOMFunc("altGlyphItem")
+this.ANIMATE = createDOMFunc("animate")
+this.ANIMATECOLOR = createDOMFunc("animateColor")
+this.ANIMATEMOTION = createDOMFunc("animateMotion")
+this.ANIMATETRANSFORM = createDOMFunc("animateTransform")
+this.CIRCLE = createDOMFunc("circle")
+this.CLIPPATH = createDOMFunc("clipPath")
+this.COLOR_PROFILE = createDOMFunc("color-profile")
+this.CURSOR = createDOMFunc("cursor")
+this.DEFINITION_SRC = createDOMFunc("definition-src")
+this.DEFS = createDOMFunc("defs")
+this.DESC = createDOMFunc("desc")
+this.ELLIPSE = createDOMFunc("ellipse")
+this.FEBLEND = createDOMFunc("feBlend")
+this.FECOLORMATRIX = createDOMFunc("feColorMatrix")
+this.FECOMPONENTTRANSFER = createDOMFunc("feComponentTransfer")
+this.FECOMPOSITE = createDOMFunc("feComposite")
+this.FECONVOLVEMATRIX = createDOMFunc("feConvolveMatrix")
+this.FEDIFFUSELIGHTING = createDOMFunc("feDiffuseLighting")
+this.FEDISPLACEMENTMAP = createDOMFunc("feDisplacementMap")
+this.FEDISTANTLIGHT = createDOMFunc("feDistantLight")
+this.FEFLOOD = createDOMFunc("feFlood")
+this.FEFUNCA = createDOMFunc("feFuncA")
+this.FEFUNCB = createDOMFunc("feFuncB")
+this.FEFUNCG = createDOMFunc("feFuncG")
+this.FEFUNCR = createDOMFunc("feFuncR")
+this.FEGAUSSIANBLUR = createDOMFunc("feGaussianBlur")
+this.FEIMAGE = createDOMFunc("feImage")
+this.FEMERGE = createDOMFunc("feMerge")
+this.FEMERGENODE = createDOMFunc("feMergeNode")
+this.FEMORPHOLOGY = createDOMFunc("feMorphology")
+this.FEOFFSET = createDOMFunc("feOffset")
+this.FEPOINTLIGHT = createDOMFunc("fePointLight")
+this.FESPECULARLIGHTING = createDOMFunc("feSpecularLighting")
+this.FESPOTLIGHT = createDOMFunc("feSpotLight")
+this.FETILE = createDOMFunc("feTile")
+this.FETURBULENCE = createDOMFunc("feTurbulence")
+this.FILTER = createDOMFunc("filter")
+this.FONT = createDOMFunc("font")
+this.FONT_FACE = createDOMFunc("font-face")
+this.FONT_FACE_FORMAT = createDOMFunc("font-face-format")
+this.FONT_FACE_NAME = createDOMFunc("font-face-name")
+this.FONT_FACE_SRC = createDOMFunc("font-face-src")
+this.FONT_FACE_URI = createDOMFunc("font-face-uri")
+this.FOREIGNOBJECT = createDOMFunc("foreignObject")
+this.G = createDOMFunc("g")
+this.GLYPH = createDOMFunc("glyph")
+this.GLYPHREF = createDOMFunc("glyphRef")
+this.HKERN = createDOMFunc("hkern")
+this.IMAGE = createDOMFunc("image")
+this.LINE = createDOMFunc("line")
+this.LINEARGRADIENT = createDOMFunc("linearGradient")
+this.MARKER = createDOMFunc("marker")
+this.MASK = createDOMFunc("mask")
+this.METADATA = createDOMFunc("metadata")
+this.MISSING_GLYPH = createDOMFunc("missing-glyph")
+this.MPATH = createDOMFunc("mpath")
+this.PATH = createDOMFunc("path")
+this.PATTERN = createDOMFunc("pattern")
+this.POLYGON = createDOMFunc("polygon")
+this.POLYLINE = createDOMFunc("polyline")
+this.RADIALGRADIENT = createDOMFunc("radialGradient")
+this.RECT = createDOMFunc("rect")
+this.SCRIPT = createDOMFunc("script")
+this.SET = createDOMFunc("set")
+this.STOP = createDOMFunc("stop")
+this.STYLE = createDOMFunc("style")
+this.SVG = createDOMFunc("svg")
+this.SWITCH = createDOMFunc("switch")
+this.SYMBOL = createDOMFunc("symbol")
+this.TEXT = createDOMFunc("text")
+this.TEXTPATH = createDOMFunc("textPath")
+this.TITLE = createDOMFunc("title")
+this.TREF = createDOMFunc("tref")
+this.TSPAN = createDOMFunc("tspan")
+this.USE = createDOMFunc("use")
+this.VIEW = createDOMFunc("view")
+this.VKERN = createDOMFunc("vkern")
