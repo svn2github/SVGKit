@@ -1,38 +1,63 @@
-var PixelView = {
+var EventView = {
     base:  "/event_view/",
     idbase: "event_view_",
     filterElems: [],
+    controlElems: [],
+	controlSettings: [],
     
- 
+    getFilterElems: function () {
+        var filter   = document.getElementById(EventView.idbase+'filter');
+        EventView.filterElems = filter.getElementsByTagName('input');
+        EventView.controlElems = document.getElementById(EventView.idbase+'controls');
+    },
+    
     checkAllFilters: function(state) {
-        var filterNames = PixelView.getAllFilterNames();
-        for (i = 0; i < filterNames.length; i++) {
+        var filterNames = EventView.getAllFilterNames();
+        for (i=0; i<filterNames.length; i++) {
             $(filterNames[i]).checked = state;
         }
     },
     
-    getFilterElems: function () {
-        var filter = document.getElementById(PixelView.idbase+'filter');
-        PixelView.filterElems = filter.getElementsByTagName('input');
-    },
-   
    getAllFilterNames: function() {
         var filterNames = [];
-        for (i=0; i<PixelView.filterElems.length; i++) {
-            filterNames.push(PixelView.filterElems[i].id);
+        for (i=0; i<EventView.filterElems.length; i++) {
+            filterNames.push(EventView.filterElems[i].id);
         }
         return filterNames;
     },
     
     getAllCheckedEventTypes: function() {
         var checkedEventTypes = "";
-        for (i=0; i<PixelView.filterElems.length; i++) {
-            if (PixelView..filterElems[i].checked == true) {
-                checkedEventTypes += PixelView.filterElems[i].name + ',';
+        for (i=0; i<EventView.filterElems.length; i++) {
+            if (EventView.filterElems[i].checked == true) {
+				if (checkedEventTypes == "") {
+					checkedEventTypes += EventView.filterElems[i].name
+				}
+				else {
+					checkedEventTypes +=  ',' + EventView.filterElems[i].name;
+				}
             }
         }
         return checkedEventTypes;
     },
+	
+	getControlSettings: function () {
+		forEach(EventView.controlElems, 
+			function(elem) {
+				elemName = elem.id;
+				EventView.controlSettings[elemName] = elem.value;
+				log(EventView.controlSettings[elemName]);
+			}
+		);
+	},
+	//controls = document.getElementById(EventView.idbase+'controls'); forEach(controls, function(elem) {log(elem.id)})
+	loadTable: function () {
+		//
+	},
+    
+	clearTable: function () {
+		//
+	},
     
 };
 
@@ -409,4 +434,4 @@ SortableManager.prototype = {
 sortableManager = new SortableManager();
 addLoadEvent(sortableManager.initialize);
 
-addLoadEvent(PixelView.getFilterElems);
+addLoadEvent(EventView.getFilterElems);

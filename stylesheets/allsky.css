@@ -84,6 +84,8 @@ select {
     color: #C6C6C6}
 div#interpreter_area { 
     color: #000000}
+input.smallinput {
+    color: #C6C6C6}	
 /* end COLORS */
 
 /* start BODY */
