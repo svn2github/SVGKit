@@ -20,6 +20,12 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     Problem of divs loading and unloading, especially with multiple writeln() in the interpreter.
     Perhaps on unload, save xml and then restore on a load.
     Can't draw anything until it's loaded.  Really annoying in the interpreter.
+    
+    Browser SVG:
+     * Should always provide fallback content -- png, pdf, (shudder) swf
+     * Interactivity requires SVG, but initial static content should have static fallback
+     * Best effort to have it work on Firefox, Opera, Safari, IE+ASV, Batik
+     * Text sucks -- different settings/browsers render it in vastly differens sizes.
 ***/
 
 if (typeof(dojo) != 'undefined') {
@@ -46,6 +52,7 @@ if (typeof(MochiKit.SVG) == 'undefined') {
             return new MochiKit.SVG(widthOrIdOrNode, height, id, type);
         }
         this.__init__(widthOrIdOrNode, height, id, type);
+        return null
     };
 }
 
@@ -198,7 +205,7 @@ MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
     this._redrawId = null;
-    this._defaultSVGType = 'object'; // Determine a good default dynamically (inline svg, object, or embed)
+    this.newSVGType = 'object'; // Determine a good default dynamically (inline svg, object, or embed)
     
     log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
     this.setBaseURI();
@@ -299,15 +306,27 @@ MochiKit.SVG.prototype.whenReady = function (func) {
         func();
     }
     else if (this.htmlElement != null) {
+        //log("adding to onload event for htmlElement=", this.htmlElement, " the function", func);
         addToCallStack(this.htmlElement, 'onload', func);
     }
 }
 
-MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id /* optional */, type /* optional */) {
+MochiKit.SVG.prototype.setSize = function(width, height) {
+    setNodeAttribute(this.svgElement, 'width', width);
+    setNodeAttribute(this.svgElement, 'height', height);
+    if (this.htmlElement != null && this.htmlElement != this.svgElement) {
+        // For inline images, this was just accomplished above.
+        setNodeAttribute(this.htmlElement, 'width', width);
+        setNodeAttribute(this.htmlElement, 'height', height);
+    }
+}
+
+MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id /* optional */) {
     /***
 
         Create a new HTML DOM element of specified type ('object', 'embed', or 'svg')
-        and set the attributes appropriately.
+        and set the attributes appropriately.  You'd never call this for JavaScript
+        code within the SVG.
 
         @param type: The tag that we will create
 
@@ -331,9 +350,6 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
     if (typeof(id) == "undefined" || id == null) {
         id = null;
     }
-    if (typeof(type) == "undefined" || type == null) {
-        type = this._defaultSVGType;
-    }
     
     var attrs = {'width':width, 'height':height};
     if (id != null) {
@@ -345,18 +361,22 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
     
     var finishSettingProps = function (svg) {
         svg.svgElement = svg.svgDocument.rootElement;
-        setNodeAttribute(svg.svgElement, 'width', width);
-        setNodeAttribute(svg.svgElement, 'height', height);
+        svg.setSize(width, height);
     }
     
-    if (type=='inline') {
-        attrs['xmlns:svg'] = 'http://www.w3.org/2000/svg';
-        attrs['xmlns'] = 'http://www.w3.org/2000/svg';
-        this.htmlElement = null;
+    if (this.newSVGType=='inline') {
+        /*  Make sure html tag has SVG namespace support?
+                <html xmlns="http://www.w3.org/1999/xhtml"
+                  xmlns:svg="http://www.w3.org/2000/svg"
+                  xml:lang="en">
+        */
+        attrs['xmlns:svg'] = 'http://www.w3.org/2000/svg';  // for <svg:circle ...> tags
+        attrs['xmlns'] = 'http://www.w3.org/2000/svg';      // for <circle> tags
         this.svgDocument = document;
-        this.svgElement = this.createDOM('svg', attrs);
+        this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
+        this.htmlElement = this.svgElement;   // When you move it around in HTML, you want to move the <svg> directly.
     }
-    else if (type=='object') {
+    else if (this.newSVGType=='object') {
         attrs['data'] = this._mochiKitBaseURI + this._svgEmptyName;
         attrs['type'] = this._svgMIME;
         this.htmlElement = createDOM('object', attrs, this._errorText);
@@ -366,7 +386,7 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
             finishSettingProps(svg);
         } );
     }
-    else if (type=='embed') {
+    else if (this.newSVGType=='embed') {
         attrs['src'] = this._mochiKitBaseURI + this._svgEmptyName;
         attrs['type'] = this._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
@@ -490,7 +510,8 @@ MochiKit.SVG.prototype.toXML = function (decorate /* = false */) {
         decorate = false;
     }
     var source = toHTML(this.svgElement);
-    var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
+    //var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
+    var newsrc = source.replace(/>/g, ">\n");
     if (decorate) {
         return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
     }
@@ -512,6 +533,24 @@ MochiKit.SVG.prototype.unsuspendRedraw = function () {
         this._redrawId = null;
     }
 }
+
+MochiKit.SVG.prototype.deleteContent = function() {
+    /***
+        Deletes all graphics content, but leaves definitions
+    ***/
+}
+
+MochiKit.SVG.prototype.deleteEverything = function() {
+    /***
+        Deletes everything including definitions
+    ***/
+}
+
+MochiKit.SVG.prototype.test = function() {
+    var circ = this.CIRCLE({'cx':30,'cy':30,'r':10});
+    this.append(circ);
+}
+
 MochiKit.SVG.__new__ = function () {
     var m = MochiKit.Base;
     this.EXPORT_TAGS = {
@@ -524,4 +563,4 @@ MochiKit.SVG.__new__(this);
 
 MochiKit.Base._exportSymbols(this, MochiKit.SVG);
 
-SVG = MochiKit.SVG;
+var SVG = MochiKit.SVG;

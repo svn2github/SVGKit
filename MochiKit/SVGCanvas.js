@@ -29,9 +29,103 @@ When wouldn't you use this?
 Maybe this should auto-export its methods to the SVG object when included.
 Convenient, but very confusing to users.
 
-* Function to set the current object to insert into (like a <g>)
-* Fix the problem with the stars and clock -- transforming while defining a path
-  (maybe emit small path segments in a <g> whose properties get set once the fill or stroke is given.
+* Add other compositing modes, prhaps by calling some getBoundingPath and creating a new <mask>
+  <mask id="Mask" maskUnits="userSpaceOnUse"
+          x="0" y="0" width="800" height="300">
+      <rect x="0" y="0" width="800" height="300" fill="url(#Gradient)"  />
+  </mask>
+  <text id="Text" x="400" y="200" font-size="100" fill="blue" mask="url(#Mask)" />
+* linearGradient doesn't work in inline mode.
+* shadows: rendered from image A, using the current shadow styles, creating image B.
+* arcTo doesn't work here or in Mozilla.
+
+Writing the SVG:
+* Graphics only get written to the SVG when you do a fill(), stroke() or clip() 
+    or things like fillRect() that call one of these.
+* This means that changing things like fillStyle just replace the current fillStyle.
+    - These things only get looked at when you do a fill(), so if you issue a bunch of 
+    path commands interspersed with setting fillStyle, only the final value when you
+    call fill() will matter.
+    - You can also issue multiple fills with the same style, in which case it might be 
+    efficient to put all of the objects thus created in a single group that has those properties,
+    but when you issue the first fill(), you don't know if there will be others with the same styling or not.
+    - Of course you can do a stack-based save(), you can do a restore() on these things.
+* Transformations are cumulative when you're writing a path rather than replacing like fillStyle
+   This can get handled in three ways:
+    - We can keep a current transformation matrix as a JavaScript array 
+      and apply it explicitly to the numbers inside of a path's d="" attribute.
+      Doing a restore() restores the last JavaScript matrix.
+      Advantage: If you draw minute ticks on a clock by (lineTo, rotate, lineTo, rotate...)
+        you just get out a single path with a complicated, but pre-computed d="" attribute.
+        Just a straight-up list of points.        
+      Disadvantage: Numbers in d are long decimals, not reflective of the commands you issued.
+    - Minor variation -- keep the path points as the ones give, but accumulate the transformation
+      into a single matrix(a,b,c,d,e,f) transformation on each path.  Still linear.
+      Disadvantage -- still have to group in case of move transform move transform move fill, so not great.
+    - We can apply the cumulated transformation to each bit of path as a long string:
+      <g fill="red">
+          <path d="" transform=transform="translate(0.5, 0.5)"/>
+          <path d="" transform=transform="translate(0.5, 0.5) translate(45, 45)"/>
+          <path d="" transform=transform="translate(0.5, 0.5) translate(45, 45) translate(85, 85)"/>
+      </g>
+      A restore() gets you back the previous long transformation string.
+      Disadvantage:  Until you do a restore(), these strings get longer and longer and
+      must be computed redundantly for each path rendered.  Still have to group.
+    - We can start a new group every time there is a transformation with just
+      that additional transform.  Doing a restore() means you go back to adding elements 
+      to the group you were in when you did a save.
+      Advantage: Every bit of information is written only once and it's exactly the parameters
+      you passed.  This includes color information -- only the differences get written
+      when you do a fill and then a new group is started.
+      Disadvantage: clock example looks extremely nested:
+      <g fill="red">
+        <path/>
+        <g transform="rotate()">
+          <path/>
+          <g transform="rotate()">
+            <path/>
+            <g transform="rotate()" fill="green">
+              ...
+          </g>
+        </g>
+      </g>
+      Disadvantage: fillStyle lineTo fill fillStyle lineTo fill fillStyle lineTo fill
+        Can just change the one parameter and emit path path path rather than g(p g(p g( g)))
+        Some threshold for the number of parameters changed before you make a new group
+      Disadvantage: Set style and then write path. This just includes current style information
+        Then you keep the same style but write another path.  It should really create a group,
+        move the first path into it, then add the second path.  DOM manipulations are slow, for
+        the alternative is to have all properties set in groups, so for every path you get a new group
+        even if there's only one.  I guess it's created once and rendered many times, so some slow
+        manipulations are okay to make the SVG tighter.
+      Disadvantage: Changing to drawing in a different high-level group, you lose all of your
+        transform information.  Maybe that's just what you have to live with.  When you go to a new
+        high-level group you probably want to start drawing in the userCoordinates of that group anyway.
+* Patters and gradients and other global <defs> that can be used at any time also
+    get written uppon creation, but in the <defs> so they don't get drawn.
+* Test by issuing commands in a random order and make sure you get the same result for Canvas and SVG.
+
+topLevelGroup  // Not included in stack.  When this changes, if stack is not empty it is a warning: save() restore() imbalance.
+groupAtLastGrphics
+styleAtLastGrphics
+singletonPath   // null if we're in a group with two paths already
+singletonStyleDifferences  // The style of the singleton that we'll have to apply to the group
+currentGroup
+currentStyle
+
+fillStyle=one
+lineTo
+fill   // creates <path style="one">
+lineTo
+fill  // if there have been no style changes and no transform changes this should be added to d=""
+fillStyle=two
+lineTo 
+fill  // should make <g style="one"> <path/> <path style="two"/> </g>
+fillRect // should make <g style="one"> <path/> <g style="two"> <path/> <rect/> </g> </g>
+
+In this sense, styles and transforms are exactly the same except 
+only differences count for styles whereas every transformation is a difference.
+
 
 ***/
 
@@ -59,6 +153,7 @@ if (typeof(MochiKit.SVGCanvas) == 'undefined') {
         }
         log("constructor got: ", widthOrIdOrNode, height, id, type); 
         this.__init__(widthOrIdOrNode, height, id, type);
+        return null
     };
 }
 
@@ -84,17 +179,19 @@ MochiKit.SVGCanvas.EXPORT_OK = [
 
 /* Create a SVGCanvas object that acts just like a canvas context */
 
-MochiKit.SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/, type /*optional*/) {
+MochiKit.SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
     /***
         Can pass it in an SVG object, or can pass it things that the SVG constructor uses.
     ***/
-    if (typeof(widthOrIdOrNode) == 'object' && widthOrIdOrNode.constructor == MochiKit.SVG)
-        this.svg = widthOrIdOrNode;
-    else {
-        this.svg = new SVG(widthOrIdOrNode, height, id, type)
-    }
+    var isSVG = typeof(widthOrIdOrNode) == 'object' && widthOrIdOrNode.constructor == MochiKit.SVG;
+    this.svg = isSVG ? widthOrIdOrNode : new SVG(widthOrIdOrNode, height, id);
+    log("Working with svg: ", this.svg, " this: ", this);
+    this.svg.whenReady( bind(this._setDefaults, this) );
+}
+
+MochiKit.SVGCanvas.prototype._setDefaults = function() {
+    log("_setDefaults with svg: ", this.svg, " this: ", this);
     
-    log("this.svg is: " + this.svg);
     this._defaultState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", rgba(r, g, b, alpha) (0-255), or from a gradient
                             'strokeStyle': "#000000", // Same as above
                             'globalAlpha': 1.0, // Float between 0.0 and 1.0
@@ -107,11 +204,16 @@ MochiKit.SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, heig
                             'shadowColor': null, // color the canvas applies when displaying a shadow (same as two color methods above)
                             'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
                             'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
-                            'transformations': "" /*" translate(.5,.5) "*/ };  // Because canvas pixels are centered. Maybe this should all be in a <g>
-    
+                            'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
+                            'transformations' : "",  // Applys to all subpaths.
+                            'clipGroup' : this.svg.svgElement,  // When you start, there is no clipping
+                            'currentGroup' : this.svg.svgElement };  // if this is changed, you also have to change the clipGroup
+    this._setState(this, this._defaultState);  // Copy the state above to be accessed with this.fillStyle, etc.
+    //this.setDestination(this.svg.svgElement);  // By default, draw to the top-level element, but can be changed.
+    //this._transformsMakeGroups = false;  // As opposed to explictly performing transformation and only keeping a JS matrix
     this._stateStack = []; // A state stack
-    this._pathString = "";
-    this._setState(this, this._defaultState);
+    log("calling beginPath");
+    this.beginPath();  // clears _subpaths, and calls and calls moveTo(0,0)
 }
 
 // Helper methods:
@@ -123,70 +225,17 @@ MochiKit.SVGCanvas.prototype._setState = function(dest, src) {
     }
 }
 
-MochiKit.SVGCanvas.prototype._emitPath = function () {
-    var path = this.svg.PATH({'d':this._pathString});
-    this._setTransformAttribute(path);
-    return path;
-}
-
 MochiKit.SVGCanvas.prototype._addPathSegment = function(path, ex, ey) {
 }
 
-MochiKit.SVGCanvas.prototype._setStrokeAttributes = function (node) {
-    if (typeof(this.strokeStyle) == 'string') {
-        var c = Color.fromString(this.strokeStyle);
-        setNodeAttribute(node, 'stroke', c.toHexString());
-        setNodeAttribute(node, 'stroke-opacity', c.asRGB()['a']*this.globalAlpha);
-    }
-    else if ( this.strokeStyle.constructor == MochiKit.SVGCanvas.LinearGradient || 
-              this.strokeStyle.constructor == MochiKit.SVGCanvas.RadialGradient ) {
-        log("Trying to stroke with gradient id=", this.strokeStyle.id);
-        this.strokeStyle.applyGradient();
-        setNodeAttribute(node, 'stroke', 'url(#'+ this.strokeStyle.id +')');
-        setNodeAttribute(node, 'stroke-opacity', this.globalAlpha);
-    }
-    else if ( this.strokeStyle.constructor == MochiKit.SVGCanvas.Pattern ) {
-        log("Trying to stroke with pattern id=", this.strokeStyle.id);
-        setNodeAttribute(node, 'stroke', 'url(#'+ this.strokeStyle.id +')');
-        setNodeAttribute(node, 'stroke-opacity', this.globalAlpha);
-    }
-    
-    setNodeAttribute(node, 'stroke-width', this.lineWidth);
-    setNodeAttribute(node, 'stroke-linejoin', this.lineJoin);
-    if (this.miterLimit != null)
-        setNodeAttribute(node, 'stroke-miterlimit', this.miterLimit);
-    setNodeAttribute(node, 'stroke-linecap', this.lineCap);
-    setNodeAttribute(node, 'fill', 'none');
-    setNodeAttribute(node, 'fill-opacity', 0);
+// SVG Specific Methods
+
+MochiKit.SVGCanvas.prototype.setDestination = function(node) {
+    // First finish any group you happen to be in.
+    this._destination = node;
 }
 
-MochiKit.SVGCanvas.prototype._setFillAttributes = function (node) {
-    if (typeof(this.fillStyle) == 'string') {
-        var c = Color.fromString(this.fillStyle);
-        setNodeAttribute(node, 'fill', c.toHexString());
-        setNodeAttribute(node, 'fill-opacity', c.asRGB()['a']*this.globalAlpha);
-    }
-    else if ( this.fillStyle.constructor == MochiKit.SVGCanvas.LinearGradient || 
-              this.fillStyle.constructor == MochiKit.SVGCanvas.RadialGradient ) {
-        log("Trying to fill with gradient id=", this.fillStyle.id);
-        this.fillStyle.applyGradient();
-        setNodeAttribute(node, 'fill', 'url(#'+ this.fillStyle.id +')');
-        setNodeAttribute(node, 'fill-opacity', this.globalAlpha);
-    }
-    else if ( this.fillStyle.constructor == MochiKit.SVGCanvas.Pattern ) {
-        log("Trying to fill with pattern id=", this.fillStyle.id);
-        setNodeAttribute(node, 'fill', 'url(#'+ this.fillStyle.id +')');
-        setNodeAttribute(node, 'fill-opacity', this.globalAlpha);
-    }
-    setNodeAttribute(node, 'stroke', 'none');
-    setNodeAttribute(node, 'stroke-opacity', 0);
-    setNodeAttribute(node, 'fill-rule', 'nonzero');
-}
-    
-MochiKit.SVGCanvas.prototype._setTransformAttribute = function (node) {
-    if (this.transformations != "") {
-        setNodeAttribute(node, 'transform', this.transformations);
-    }
+MochiKit.SVGCanvas.prototype.text = function(text, x, y) {
 }
 
 //Canvas State Methods
@@ -208,65 +257,174 @@ MochiKit.SVGCanvas.prototype.restore = function() {
     Not easy to fix without transforming all of the path coordinates explicitly because
     there's no easy way to anticipate if the end result will be a fill or a stroke, so you can't just emit small paths.
 */
-MochiKit.SVGCanvas.prototype.rotate = function(angle) {
-    if (this._pathString != "") {
-        log("rotate inside of a path string.");
-        // Begin a new group and start inserting into that (should transformations go in the group?)
-        // Emit the path into the new group and reset _pathString
+MochiKit.SVGCanvas.prototype.moveThanSingleMove = / M [\-0-9eE\.]+,[\-0-9eE\.]+ /;
+
+MochiKit.SVGCanvas.prototype._isPathEmptyOrMove = function(onlyToZero) {
+    if (typeof(onlyToZero)=='boolean' && onlyToZero==true) {
+        return this._subpaths[this._subpaths.length-1] == '' || this._subpaths[this._subpaths.length-1] == ' M 0,0';
     }
-    this.transformations += "rotate(" + angle * 180.0 / Math.PI + ")";
+    else {
+        return !this.moveThanSingleMove.test(this._subpaths[this._subpaths.length-1]);
+    }
+}
+
+MochiKit.SVGCanvas.prototype.rotate = function(angle) {
+    var deg = angle*180/Math.PI;
+    if (this._subpaths.length==1 && this._isPathEmptyOrMove(true) )
+        this.transformations += "rotate(" + deg + ")";
+    else {
+        if (this.currentTransformationMatrix==null)
+            this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
+        this.currentTransformationMatrix = this.currentTransformationMatrix.rotate(deg);
+    }
 }
 MochiKit.SVGCanvas.prototype.scale = function(sx, sy) {
-    if (this._pathString != "") {
-        log("scale inside of a path string.");
+    if (this._subpaths.length==1 && this._isPathEmptyOrMove(true))
+        this.transformations += "scale(" + sx +"," + sy + ")";
+    else{
+        if (this.currentTransformationMatrix==null)
+            this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
+        this.currentTransformationMatrix = this.currentTransformationMatrix.scaleNonUniform(sx, sy);
     }
-    this.transformations += "scale(" + sx +"," + sy + ")";
 }
 MochiKit.SVGCanvas.prototype.translate = function(tx, ty) {
-    if (this._pathString != "") {
-        log("translate inside of a path string.");
+    if (this._subpaths.length==1 && this._isPathEmptyOrMove(true) )
+        this.transformations += "translate(" + tx +"," + ty + ")";
+    else {
+        if (this.currentTransformationMatrix==null)
+            this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
+        this.currentTransformationMatrix = this.currentTransformationMatrix.translate(tx, ty);
     }
-    this.transformations += "translate(" + tx +"," + ty + ")";
+}
+
+MochiKit.SVGCanvas.prototype._transformWithCTM = function(x,y) {
+    var p = this.svg.svgElement.createSVGPoint()
+    p.x = x
+    p.y = y
+    if (this.currentTransformationMatrix == null)
+        return p;
+    else {
+        if (this.currentTransformationMatrix==null)
+            this.currentTransformationMatrix == this.svg.svgElement.createSVGMatrix()
+        return p.matrixTransform(this.currentTransformationMatrix);
+    }
 }
 
 // Working With Paths
 
     
 MochiKit.SVGCanvas.prototype.beginPath = function() {
-    /* Note: The current path is not part of the graphics state. 
-       Consequently, saving and restoring the graphics state has 
-       no effect on the current path. */
-    this._pathString = "";
+    /***
+        resets the list of subpaths to an empty list, and calls 
+        moveTo() with the point (0,0). When the context is 
+        created, a call to beginPath() is implied.
+        
+        Note: The current path is not part of the graphics state. 
+        Consequently, saving and restoring the graphics state has 
+        no effect on the current path. 
+    ***/
+    log("in beginPath");
+    this._subpaths = [""];
+    this.moveTo(0,0);
 }
-    
-MochiKit.SVGCanvas.prototype.closePath = function() {
-    this._pathString += " Z";
+
+
+MochiKit.SVGCanvas.prototype._pushAndClear = function(addToEnd) {
+    if (!this._isPathEmptyOrMove()) {
+        log("_pushAndClear: pushing it, and clearing current subpath = ", this._subpaths[this._subpaths.length-1]);
+        if (typeof(addToEnd) == 'string')
+            this._subpaths[this._subpaths.length-1] += addToEnd;
+        this._subpaths.push("");
+    }
+    else {
+        log("_pushAndClear: didn't push it = ", this._subpaths[this._subpaths.length-1]);
+    }
 }
-    
+
 MochiKit.SVGCanvas.prototype.moveTo = function(x, y) {
-    var newPath = " M " + x + "," + y;;
-    log("Move path.d = ", newPath);
-    this._pathString += newPath;
-    this._lastx = x;
-    this._lasty = y;
+    /***
+        method sets the current position to the given coordinate and creates 
+        a new subpath with that point as its first (and only) point. If there 
+        was a previous subpath, and it consists of just one point, then that 
+        subpath is removed from the path.
+        We don't error check or optimize.
+    ***/
+    log("moveTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
+    this._pushAndClear();
+    var p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] = " M " + p.x + "," + p.y;  // This must match moveThanSingleMove
+    this._lastx = p.x;
+    this._lasty = p.y;
 }
+
+MochiKit.SVGCanvas.prototype.closePath = function() {
+    /***
+        adds a straight line from the current position to the first point in 
+        the last subpath and marks the subpath as closed, if the last subpath 
+        isn't closed, and if it has more than one point in its list of points. 
+        If the last subpath is not open or has only one point, it does nothing.
+        SVG handles this. We don't error check or optimize.
+    ***/
+    log("closePath(): path = ", this._subpaths[this._subpaths.length-1]);
+    this._pushAndClear(" Z");
+}
+
     
 MochiKit.SVGCanvas.prototype.lineTo = function(x, y) {
-    this._pathString += " L " + x + "," + y;
-    this._lastx = x;
-    this._lasty = y;
+    /***
+        adds the given coordinate (x, y) to the list of points of the subpath, 
+        and connects the current position to that point with a straight line.
+    ***/
+    log("lineTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
+    if (this._subpaths[this._subpaths.length-1] == '') {
+        log("lineTo detected no current path. Calling moveTo instead ala Firefox");
+        this.moveTo(x, y);
+        return;
+    }
+    var p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] += " L " + p.x + "," + p.y;
+    this._lastx = p.x;
+    this._lasty = p.y;
 }
     
 MochiKit.SVGCanvas.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {
-    this._pathString += " Q " + cpx + "," + cpy + " " + x + "," + y;
-    this._lastx = x;
-    this._lasty = y;
+    var cp = this._transformWithCTM(cpx,cpy);
+    var p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] += " Q " + cp.x + "," + cp.y + " " + p.x + "," + p.y;
+    this._lastx = p.x;
+    this._lasty = p.y;
 }
 MochiKit.SVGCanvas.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
-    this._pathString += " C " + cp1x + "," + cp1y + " " + cp2x + "," + cp2y + " " + x + "," + y;
-    this._lastx = x;
-    this._lasty = y;
+    var cp1 = this._transformWithCTM(cp1x,cp1y);
+    var cp2 = this._transformWithCTM(cp2x,cp2y);
+    var p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] += " C " + cp1.x + "," + cp1.y + " " + cp2.x + "," + cp2.y + " " + p.x + "," + p.y;
+    this._lastx = p.x;
+    this._lasty = p.y;
 }
+MochiKit.SVGCanvas.prototype.rect = function (x, y, w, h) {
+    /***
+        Does not start a new path.
+        creates a new subpath containing just the rectangle with top left 
+        coordinate (x, y), width w and height h, and marks it as closed. 
+        It then calls moveTo with the point (0,0).
+    ***/
+    log("RECT ", x, y, w, h);
+    log("this._subpaths[this._subpaths.length-1] = ", this._subpaths[this._subpaths.length-1]);
+    var p, q
+    p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] += " M " + p.x + "," + p.y;
+    q = this._transformWithCTM(x+w,y);
+    this._subpaths[this._subpaths.length-1] += " L " + q.x + "," + q.y;
+    q = this._transformWithCTM(x+w,y+w);
+    this._subpaths[this._subpaths.length-1] += " L " + q.x + "," + q.y;
+    q = this._transformWithCTM(x,y+w);
+    this._subpaths[this._subpaths.length-1] += " L " + q.x + "," + q.y;
+    this._subpaths[this._subpaths.length-1] += " L " + p.x + "," + p.y;
+    log("now this._subpaths[this._subpaths.length-1] = ", this._subpaths[this._subpaths.length-1]);
+    this.moveTo(0,0);
+}
+
 MochiKit.SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
     /*
      This method draws an arc that is tangent to the line from the 
@@ -280,6 +438,8 @@ MochiKit.SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
      After adding the arc, the current point is reset to the endpoint 
      of the arc (the second tangent point). 
     */
+    /* Looks like Mozilla hasn't implimented it yet either. */
+    return
     var t1x, t1y, t2x, t2y; // Tangent points 1 and 2
     var x0 = this._lastx
     var y0 = this._lasty;
@@ -301,7 +461,7 @@ MochiKit.SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
     t2y = y1 + s*by/b;
 
     this.lineTo(tp1x, tp1y);  // The path may already be close enough.
-    this._pathString += " A " + radius + "," + radius + " 0 0,1 " + t2x + "," + t2y;
+    this._subpaths[this._subpaths.length-1] += " A " + radius + "," + radius + " 0 0,1 " + t2x + "," + t2y;
     this._lastx = x;
     this._lasty = y;
 }
@@ -319,9 +479,16 @@ MochiKit.SVGCanvas.prototype._normalizeAngle = function (radians) {
         return radians + twoPI * (1.0 + Math.ceil(radians/twoPI));
 }
 
+MochiKit.SVGCanvas.prototype._distance = function (point1, point2) {
+    var dx = point1.x - point2.x;
+    var dy = point1.y - point2.y;
+    return Math.sqrt(dx*dx+dy*dy);
+}
+
+
 
 MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
-    /*
+    /***
     adds an arc to the current path. The arc is given by the circle that 
     has its origin at (x, y) and that has radius radius. The points at 
     startAngle and endAngle along the circle, measured in radians clockwise 
@@ -336,14 +503,17 @@ MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle,
     current position is set to the end point. 
     
     On the SVG side, see http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
-    */
+    ***/
     log("arc: ", x, y, radius, startAngle*180/Math.PI, endAngle*180/Math.PI, anticlockwise);
     var da = endAngle-startAngle;
     if ( Math.abs(da) >= 2.0 * Math.PI ) {
         // Full Circle
-        this.moveTo(x-radius, y);
-        this._pathString += " A " + radius + "," + radius + " 0 1,0 " + (x+radius) + "," + y;
-        this._pathString += " A " + radius + "," + radius + " 0 1,0 " + (x-radius) + "," + y;
+        log("Full Circle");
+        this.arc(x, y, radius, 0, Math.PI, true);
+        this.arc(x, y, radius, Math.PI, 0, true);
+        //this.moveTo(x-radius, y);
+        //this._subpaths[this._subpaths.length-1] += " A " + radius + "," + radius + " 0 1,0 " + (x+radius) + "," + y;
+        //this._subpaths[this._subpaths.length-1] += " A " + radius + "," + radius + " 0 1,0 " + (x-radius) + "," + y;
     }
     else {
         da = this._normalizeAngle(da);
@@ -367,66 +537,197 @@ MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle,
         
         var largeArc = ((da<180 && !anticlockwise) || (da>180 && anticlockwise)) ? '0' : '1';
         var sweep = anticlockwise ? '0' : '1';
-        this.moveTo(sx, sy);
-        /*
-        if ( this._pathString == "" ) {
-            this.moveTo(sx, sy);
+        var s = this._transformWithCTM(sx, sy);
+        var e = this._transformWithCTM(ex, ey);
+        var org = this._transformWithCTM(0, 0);
+        var rx = this._transformWithCTM(radius, 0);
+        var ry = this._transformWithCTM(0, radius);
+        var radx = this._distance(org, rx);
+        var rady = this._distance(org, ry);
+        var angle = Math.acos( (rx.x - org.x) / radx ) * 180 / Math.PI;
+        if (this._lastx != s.x && this._lasty != s.y) {
+            if (!this._isPathEmptyOrMove(true))
+                this.lineTo(sx, sy);
+            else if (this._lastx != s.x && this._lasty != s.y)
+                this.moveTo(sx,sy);
         }
-        else {
-            this.lineTo(sx, sy);  // The path may already be close enough.
-        }
-        */
-        var newPath = " A " + radius + "," + radius + " 0 " +  largeArc + "," + sweep + " " + ex + "," + ey;
+        var newPath = " A " + radx + "," + rady + " " + angle + " " +  largeArc + "," + sweep + " " + e.x + "," + e.y;
         log("Arcing path.d = ", newPath);
-        this._pathString += newPath;
+        this._subpaths[this._subpaths.length-1] += newPath;
+        this._lastx = e.x;
+        this._lasty = e.y;
     }
-    this._lastx = ex;
-    this._lasty = ey;
 }
-MochiKit.SVGCanvas.prototype.rect = function (x, y, w, h) {
-    log("RECT ", x, y, w, h);
-    this._pathString += " M " + x + "," + y;
-    this._pathString += " L " + (x+w) + "," + y;
-    this._pathString += " L " + (x+w) + "," + (y+w);
-    this._pathString += " L " + x + "," + (y+w);
-    this._pathString += " L " + x + "," + y;
-    log("this._pathString = ", this._pathString);
-    this._lastx = x;
-    this._lasty = y;
-}
+
     
-MochiKit.SVGCanvas.prototype.clip = function () {
-    /***
-        NOT IMPLIMENTED
-    ***/
-    this._pathString = "";
+MochiKit.SVGCanvas.prototype._setTransformAttribute = function (node) {
+    if (this.transformations != "") {
+        setNodeAttribute(node, 'transform', this.transformations);
+    }
 }
+
+MochiKit.SVGCanvas.prototype._emitPaths = function () {
+    var pathcount = this._subpaths.length;
+    var paths = [];
+    var i;
     
+    for (i=0; i<pathcount; i++) {
+        log("_emitPaths(): _subpaths.length =", pathcount, "current subpath["+i+"] =", this._subpaths[i]);
+        if (this.moveThanSingleMove.test(this._subpaths[i])) {
+            var path = this.svg.PATH({'d':this._subpaths[i]});
+            paths.push(path)
+        }
+    }
+    if (paths.length == 0) {    
+        log("emitting null path");
+        return null;
+    }
+    if (paths.length == 1) {
+        // Construct a single path:  <path transform="blah">
+        this._setTransformAttribute(paths[0])
+        return paths[0];
+    }
+    else {
+        // Construct a group:  <g transform="blah"> <path> <path> <path> </g>
+        var group = this.svg.G(null);
+        this._setTransformAttribute(group);
+        for (i=0; i<paths.length; i++) {
+            appendChildNodes(group, paths[i]);
+        }
+        return group;
+    }
+}
+
 
     //Stroking a Path
 
-MochiKit.SVGCanvas.prototype.stroke = function () {
-    var path = this._emitPath();
-    this._setStrokeAttributes(path);
-    this.svg.append(path);
+MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
+    /***
+        type is 'stroke' or 'fill'  (not 'clip')
+    ***/
+
+    var style, other;
+    if (type=='stroke') {
+        style = this.strokeStyle;
+        other = 'fill';
+    }
+    else if (type=='fill') {
+        style = this.fillStyle;
+        other = 'stroke';
+    }
+    log("this.strokeStyle =", this.strokeStyle);
+    log('type =', type, 'style = ', style, 'this.strokeStyle=', this.strokeStyle);
+    
+    if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'
+        var c = Color.fromString(style);
+        setNodeAttribute(node, type, c.toHexString());
+        setNodeAttribute(node, type+'-opacity', c.asRGB()['a']*this.globalAlpha);
+    }
+    else if ( style.constructor == MochiKit.SVGCanvas.LinearGradient || 
+               style.constructor == MochiKit.SVGCanvas.RadialGradient ) {
+        log("Trying to draw with gradient id=", style.id);
+        style.applyGradient();
+        setNodeAttribute(node, type, 'url(#'+ style.id +')');
+        setNodeAttribute(node, type+'-opacity', this.globalAlpha);
+    }
+    else if ( style.constructor == MochiKit.SVGCanvas.Pattern ) {
+        log("Trying to stroke with pattern id=", style.id);
+        setNodeAttribute(node, type, 'url(#'+ style.id +')');
+        setNodeAttribute(node, type+'-opacity', this.globalAlpha);
+    }
+    /*
+    if (this.clipId != null) {
+        setNodeAttribute(node, 'clip-path', 'url(#'+this.clipId+')' );
+    }
+    */
+    
+    setNodeAttribute(node, other, 'none');
+    setNodeAttribute(node, other+'-opacity', 0);
+    
+    if (type=='fill') {
+        setNodeAttribute(node, 'fill-rule', 'nonzero');
+    }
+    else if (type=='stroke') {
+        setNodeAttribute(node, 'stroke-width', this.lineWidth);
+        setNodeAttribute(node, 'stroke-linejoin', this.lineJoin);
+        if (this.miterLimit != null)
+            setNodeAttribute(node, 'stroke-miterlimit', this.miterLimit);
+        setNodeAttribute(node, 'stroke-linecap', this.lineCap);
+    }
 }
+
+MochiKit.SVGCanvas.prototype.stroke = function () {
+    var paths = this._emitPaths();
+    if (paths != null) {
+        this._setGraphicsAttributes(paths, 'stroke');
+        log("this.clipGroup=", this.clipGroup);
+        appendChildNodes(this.clipGroup, paths);
+    }
+}
+
+MochiKit.SVGCanvas.prototype.fill = function () {
+    /***
+        fills each subpath of the current path in turn, using fillStyle, 
+        and using the non-zero winding number rule. Open subpaths are implicitly 
+        closed when being filled (without affecting the actual subpaths).
+    ***/
+    var paths = this._emitPaths();
+    if (paths != null) {
+        this._setGraphicsAttributes(paths, 'fill');
+        appendChildNodes(this.clipGroup, paths);
+    }
+}
+
+MochiKit.SVGCanvas.prototype.clip = function () {
+    /***
+        <g clip-rule="nonzero">
+          <clipPath id="MyClip">
+            <path d="..." />
+          </clipPath>
+          <rect clip-path="url(#MyClip)" clip-rule="evenodd" ... />
+        </g>
+    ***/
+    var paths = this._emitPaths();
+    if (paths != null) {
+        var clipId = this.svg.createUniqueID('clip');
+        var clipPath = this.svg.CLIPPATH({'id':clipId});  // , 'clipPathUnits':'userSpaceOnUse'  default
+        appendChildNodes(clipPath, paths);
+        this.svg.append(clipPath);
+        this.clipGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
+        appendChildNodes(this.currentGroup, this.clipGroup);
+    }
+}
+
+
+
+MochiKit.SVGCanvas.prototype._setShapeTransform = function(shape) {
+    var m = this.currentTransformationMatrix;
+    // Add the current transformation matrix to the transformation list only if it's not the identity matrix.
+    var transform = m==null ?  '' : ' matrix('+m['a']+','+m['b']+','+m['c']+','+m['d']+','+m['e']+','+m['f']+')'
+    if (transform  != '' || this.transformations != '')
+        setNodeAttribute(shape, 'transform', this.transformations + transform);
+}
+
 MochiKit.SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
                               'height':h});
-    this._setTransformAttribute(rect);
-    this._setStrokeAttributes(rect);
-    this.svg.append(rect);
+    this._setShapeTransform(rect);
+    this._setGraphicsAttributes(rect, 'stroke');
+    appendChildNodes(this.clipGroup, rect);
 }
 
-//Filling an Area
-
-MochiKit.SVGCanvas.prototype.fill = function () {
-    var path = this._emitPath();
-    this._setFillAttributes(path);
-    this.svg.append(path);
+MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
+    var rect = this.svg.RECT({'x':x,
+                              'y':y,
+                              'width':w,
+                              'height':h});
+    this._setShapeTransform(rect);
+    this._setGraphicsAttributes(rect, 'fill');
+    appendChildNodes(this.clipGroup, rect);
 }
+
 MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
     var rect = this.svg.RECT({'x':x,
                               'y':y,
@@ -435,17 +736,8 @@ MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
                               'fill':'white',
                               'fill-opacity':1.0,
                               'fill-rule':'nonzero'});
-    this._setTransformAttribute(rect);
-    this.svg.append(rect);
-}
-MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
-    var rect = this.svg.RECT({'x':x,
-                              'y':y,
-                              'width':w,
-                              'height':h});
-    this._setTransformAttribute(rect);
-    this._setFillAttributes(rect);
-    this.svg.append(rect);
+    this._setShapeTransform(rect);
+    appendChildNodes(this.clipGroup, rect);
 }
 
 // Creating Gradient and Pattern Styles
@@ -608,4 +900,4 @@ MochiKit.SVGCanvas.__new__(this);
 
 MochiKit.Base._exportSymbols(this, MochiKit.SVGCanvas);
 
-SVGCanvas = MochiKit.SVGCanvas;
+var SVGCanvas = MochiKit.SVGCanvas;
