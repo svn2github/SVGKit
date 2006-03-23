@@ -293,12 +293,14 @@ table.datagrid tbody td, table.datagrid tbody th {
     text-align: left;
     padding: 0em .3em 0em .7em;
     border-bottom: 1px solid #545A65;}
-div.events {
+div#event_view_event_table {
     max-height:192px; /*  max-height = 24 + 14*table_rows */
     overflow:auto}
-div.event_filter {
+div#event_view_event_filter {
     max-height:130px; /*  max-height.event_filter = max_height.events - 62px */
     overflow:auto}
+div#event_view_status_text {
+    color: #BB0000}
 
 .mochi-template { 
     display: none; }

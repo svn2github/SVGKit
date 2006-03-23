@@ -1,14 +1,17 @@
 var EventView = {
     base:  "/event_view/",
     idbase: "event_view_",
-    filterElems: [],
-    controlElems: [],
+    filterElems:     [],
+    controlElems:    [],
 	controlSettings: [],
+    statusElem: null,
+    maxId: 0,
     
-    getFilterElems: function () {
-        var filter   = document.getElementById(EventView.idbase+'filter');
-        EventView.filterElems = filter.getElementsByTagName('input');
+    getElems: function () {
         EventView.controlElems = document.getElementById(EventView.idbase+'controls');
+        EventView.statusElem   = document.getElementById(EventView.idbase+'status_text');
+        var filter             = document.getElementById(EventView.idbase+'filter');
+        EventView.filterElems  = filter.getElementsByTagName('input');
     },
     
     checkAllFilters: function(state) {
@@ -67,10 +70,38 @@ var EventView = {
         );
     },
 
+    setTableHeight: function (rows) {
+        var heightEventTable  = 24 + 14*rows;
+        var heightEventFilter = heightEventTable - 62;
+        updateNodeAttributes(EventView.idbase + "event_table", 
+                             {'style' : {'maxHeight' : heightEventTable + 'px'}});
+        updateNodeAttributes(EventView.idbase + "event_filter", 
+                             {'style' : {'maxHeight' : heightEventFilter + 'px'}});
+    },
+    
+    setTableHeightOnLoad: function (rows) {
+        var cookieTableHeight = Cookie.read("event_view_controls_max_rows")
+        var minTableHeight    = 12;
+        var tableHeight       = Math.max(parseInt(cookieTableHeight), 
+                                         parseInt(minTableHeight))
+        EventView.setTableHeight(tableHeight);
+        log(cookieTableHeight, minTableHeight, tableHeight);
+    },
+    
+    saveCookies: function () {
+        var settings = EventView.controlSettings;
+        forEach(dir(settings),
+            function(setting) {
+                Cookie.create(setting, settings[setting], 30)
+            }
+        );
+    },
+    
 	loadTable: function () {
+        EventView.statusElem.innerHTML ="Loading events for table...";
         //get current control & filter settings 
         EventView.getControlSettings();
-        EventView.getFilterElems();
+        EventView.getElems();
         filters = EventView.getFilterNames();
         //set variables
         var settings = EventView.controlSettings;
@@ -87,7 +118,10 @@ var EventView = {
                                                    filters[i].length);
             }
         }
-        if (checkedFilters == "") {return}
+        if (checkedFilters == "") {
+            EventView.statusElem.innerHTML ="Select query type.";
+            return;
+            }
         var query = "event/getEvents?typeFilter=" + checkedFilters;
         //separate cases for displaying different sets of events
         if (settings[prefix + "sel_recent"] == true) {
@@ -102,7 +136,7 @@ var EventView = {
             var typeQuery = "&sinceEvent=" + EventView.controlSettings[sinceEvent];
             var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
                                      parseInt(EventView.controlSettings[maxElemName2]));
-            log(maxEvents);
+            //log(maxEvents);
         }
         else if (settings[prefix + "sel_since_time"] == true) {
             var sinceDate    = EventView.idbase + "controls_events_time";
@@ -112,28 +146,47 @@ var EventView = {
             var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
                                      parseInt(EventView.controlSettings[maxElemName2])); 
         }
-        else {return}
+        else {
+            EventView.statusElem.innerHTML ="Select event types.";
+            return;
+            }
         var maxResults = "&maxResults=" + maxEvents;
         //construct query string and send to server
+        EventView.statusElem.innerHTML ="Query sent to server.  Awaiting response...";
         query += maxResults + typeQuery;
         sortableManager.loadFromURL(query)
+        //set event table and event filter heights
+        var maxRows = settings[prefix + "max_rows"];
+        EventView.setTableHeight(maxRows);
 	},
     
 	clearTable: function () {
+        sortableManager.data.domains = sortableManager.data.domains.slice(0,0);
+        sortableManager.data.rows = "";
         tab = document.getElementById("sortable_table");
         for (i=tab.rows.length-1;i>0;i--) {
             removeElement(tab.rows[i]);
         }
 	},
     
-
+    //doesn't work yet
+	removeDuplicateRows: function () {
+        tab = document.getElementById("sortable_table");
+        for (i=tab.rows.length-1;i>0;i--) {
+            for (j=i-1; j>0; j--) {
+                if (tab.rows[j].cells == tab.rows[i].cells) {
+                    removeElement(tab.rows[j]);
+                }
+            }
+        }
+	},
     
-    //features to add: highlight new rows, settings stored in cookies, autoload,
-    //                 remove duplicate events?, max visible rows, max rows in table
+    //features to add: highlight new rows, autoload, remove duplicate events?
+			    
 };
-addLoadEvent(EventView.getFilterElems);
+addLoadEvent(EventView.getElems);
 addLoadEvent(EventView.insertCurrentTime);
-
+addLoadEvent(EventView.setTableHeightOnLoad);
 
 processMochiTAL = function (dom, data) {
 
@@ -281,12 +334,11 @@ SortableManager.prototype = {
 
         this.sortkey = "id";
         //this.loadFromURL("event/getEvents?maxResults=50");
-        this.loadFromURL("event/getEvents?typeFilter=RoofEvent&maxResults=200");
+        this.loadFromURL("event/getEvents?typeFilter=RoofEvent&maxResults=1");
     },
-   
-    
+
     "loadFromURL": function (url) {
-        log('loadFromURL', url);
+        //log('loadFromURL', url);
         var d;
         if (this.deferred) {
             this.deferred.cancel();
@@ -300,12 +352,11 @@ SortableManager.prototype = {
         // completed, and pass through the result or error
         d.addBoth(function (res) {
             self.deferred = null; 
-            log('Events received from server.  Inserting into Event View table.');
-            //log(res);
             return res;
         });
         // on success, tag the result with the format used so we can display it
         d.addCallback(function (res) {
+            EventView.statusElem.innerHTML ="Events received from server.  Inserting into table...";
             res.format = format;
             return res;
         });
@@ -323,13 +374,14 @@ SortableManager.prototype = {
     
     "initWithData": function (data) {
         // reformat to [{column:value, ...}, ...] style as the domains key
-        //log("dir(data) = " + dir(data));
-        //log("data.columns = " + data.columns);
-        //log("data.format  = " + data.format);
-        //log("data.rows    = " + data.rows);
         var domains = [];
         var rows = data.rows;
         var cols = data.columns;
+        tab = document.getElementById("sortable_table");
+        idsInTable = [];
+        for (i=1; i<tab.rows.length-1; i++) {
+            idsInTable.push(tab.rows[i].cells[0].innerHTML);
+        }
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i];
             var domain = {};
@@ -337,14 +389,14 @@ SortableManager.prototype = {
                 domain[cols[j]] = row[j];
             }
             domains.push(domain);
-        }
+        }        
         if (this.initial_flag == true) {
             data.domains = domains;
             this.data = data;
         }
         else {
             this.data.domains = this.data.domains.concat(domains);
-            this.data['rows'] += ','+data['rows'];
+            this.data['rows'] += ',' + data['rows'];
         }
         // perform a sort and display based upon the previous sort state,
         // defaulting to an ascending sort if this is the first sort
@@ -352,7 +404,9 @@ SortableManager.prototype = {
         if (typeof(order) == 'undefined') {
             order = false;
         }
+        EventView.statusElem.innerHTML ="Sorting table...";
         this.drawSortedRows(this.sortkey, order, false);
+        EventView.statusElem.innerHTML ="";
     },
    
     "onSortClick": function (name) {
