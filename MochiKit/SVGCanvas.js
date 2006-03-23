@@ -29,17 +29,21 @@ When wouldn't you use this?
 Maybe this should auto-export its methods to the SVG object when included.
 Convenient, but very confusing to users.
 
+TODO:
 * Add other compositing modes, prhaps by calling some getBoundingPath and creating a new <mask>
   <mask id="Mask" maskUnits="userSpaceOnUse"
           x="0" y="0" width="800" height="300">
       <rect x="0" y="0" width="800" height="300" fill="url(#Gradient)"  />
   </mask>
   <text id="Text" x="400" y="200" font-size="100" fill="blue" mask="url(#Mask)" />
-* linearGradient doesn't work in inline mode.
+* linearGradient doesn't work in inline mode. Namespace?
+* repetition parameter on patterns: 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'
 * shadows: rendered from image A, using the current shadow styles, creating image B.
 * arcTo doesn't work here or in Mozilla.
 
-Writing the SVG:
+Writing the SVG:* Patters and gradients and other global <defs> that can be used at any time also
+    get written uppon creation, but in the <defs> so they don't get drawn.
+* Test by issuing commands in a random order and make sure you get the same result for Canvas and SVG.
 * Graphics only get written to the SVG when you do a fill(), stroke() or clip() 
     or things like fillRect() that call one of these.
 * This means that changing things like fillStyle just replace the current fillStyle.
@@ -53,15 +57,9 @@ Writing the SVG:
 * Transformations are cumulative when you're writing a path rather than replacing like fillStyle
    This can get handled in three ways:
     - We can keep a current transformation matrix as a JavaScript array 
-      and apply it explicitly to the numbers inside of a path's d="" attribute.
+      and apply it explicitly to every number inside of a path's d="" attribute.
       Doing a restore() restores the last JavaScript matrix.
-      Advantage: If you draw minute ticks on a clock by (lineTo, rotate, lineTo, rotate...)
-        you just get out a single path with a complicated, but pre-computed d="" attribute.
-        Just a straight-up list of points.        
       Disadvantage: Numbers in d are long decimals, not reflective of the commands you issued.
-    - Minor variation -- keep the path points as the ones give, but accumulate the transformation
-      into a single matrix(a,b,c,d,e,f) transformation on each path.  Still linear.
-      Disadvantage -- still have to group in case of move transform move transform move fill, so not great.
     - We can apply the cumulated transformation to each bit of path as a long string:
       <g fill="red">
           <path d="" transform=transform="translate(0.5, 0.5)"/>
@@ -69,15 +67,17 @@ Writing the SVG:
           <path d="" transform=transform="translate(0.5, 0.5) translate(45, 45) translate(85, 85)"/>
       </g>
       A restore() gets you back the previous long transformation string.
-      Disadvantage:  Until you do a restore(), these strings get longer and longer and
-      must be computed redundantly for each path rendered.  Still have to group.
+      Disadvantage:   It's not consistent with the Canvas API.  Can lineTo, transform, lineTo, fill.
+        Until you do a restore(), these strings get longer and longer and
+        must be computed redundantly for each path rendered.  Still have to group.
     - We can start a new group every time there is a transformation with just
       that additional transform.  Doing a restore() means you go back to adding elements 
       to the group you were in when you did a save.
       Advantage: Every bit of information is written only once and it's exactly the parameters
       you passed.  This includes color information -- only the differences get written
       when you do a fill and then a new group is started.
-      Disadvantage: clock example looks extremely nested:
+      Disadvantage: It's not consistent with the Canvas API.  Can lineTo, transform, lineTo, fill.
+         also, clock example looks extremely nested:
       <g fill="red">
         <path/>
         <g transform="rotate()">
@@ -89,9 +89,6 @@ Writing the SVG:
           </g>
         </g>
       </g>
-      Disadvantage: fillStyle lineTo fill fillStyle lineTo fill fillStyle lineTo fill
-        Can just change the one parameter and emit path path path rather than g(p g(p g( g)))
-        Some threshold for the number of parameters changed before you make a new group
       Disadvantage: Set style and then write path. This just includes current style information
         Then you keep the same style but write another path.  It should really create a group,
         move the first path into it, then add the second path.  DOM manipulations are slow, for
@@ -101,32 +98,24 @@ Writing the SVG:
       Disadvantage: Changing to drawing in a different high-level group, you lose all of your
         transform information.  Maybe that's just what you have to live with.  When you go to a new
         high-level group you probably want to start drawing in the userCoordinates of that group anyway.
-* Patters and gradients and other global <defs> that can be used at any time also
-    get written uppon creation, but in the <defs> so they don't get drawn.
-* Test by issuing commands in a random order and make sure you get the same result for Canvas and SVG.
+        
+        topLevelGroup  // Not included in stack.  When this changes, if stack is not empty it is a warning: save() restore() imbalance.
+        groupAtLastGrphics
+        styleAtLastGrphics
+        singletonPath   // null if we're in a group with two paths already
+        singletonStyleDifferences  // The style of the singleton that we'll have to apply to the group
+        currentGroup
+        currentStyle
 
-topLevelGroup  // Not included in stack.  When this changes, if stack is not empty it is a warning: save() restore() imbalance.
-groupAtLastGrphics
-styleAtLastGrphics
-singletonPath   // null if we're in a group with two paths already
-singletonStyleDifferences  // The style of the singleton that we'll have to apply to the group
-currentGroup
-currentStyle
-
-fillStyle=one
-lineTo
-fill   // creates <path style="one">
-lineTo
-fill  // if there have been no style changes and no transform changes this should be added to d=""
-fillStyle=two
-lineTo 
-fill  // should make <g style="one"> <path/> <path style="two"/> </g>
-fillRect // should make <g style="one"> <path/> <g style="two"> <path/> <rect/> </g> </g>
-
-In this sense, styles and transforms are exactly the same except 
-only differences count for styles whereas every transformation is a difference.
-
-
+        fillStyle=one
+        lineTo
+        fill   // creates <path style="one">
+        lineTo
+        fill  // if there have been no style changes and no transform changes this should be added to d=""
+        fillStyle=two
+        lineTo 
+        fill  // should make <g style="one"> <path/> <path style="two"/> </g>
+        fillRect // should make <g style="one"> <path/> <g style="two"> <path/> <rect/> </g> </g>
 ***/
 
 if (typeof(dojo) != 'undefined') {
@@ -876,7 +865,7 @@ MochiKit.SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy
                               'height':height,
                               'xlink:href':image.src,
                               'viewBox':viewBox});
-    this._setTransformAttribute(img);
+    this._setShapeTransform(img);
     this.svg.append(img);
 }
 
