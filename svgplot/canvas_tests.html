@@ -17,16 +17,15 @@ textarea {
 	font-size: x-small;
 }
 </style>
-<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="MochiKit/MochiKit.js"></script>
 <!--
 <script type="text/javascript" src="interpreter/interpreter.js"></script>
 <script type="text/javascript" src="interpreter/popup.js"></script>
 -->
-<script type="text/javascript" src="../MochiKit/SVG.js" ></script>
-<script type="text/javascript" src="../MochiKit/SVGCanvas.js"></script>
+<script type="text/javascript" src="MochiKit/SVG.js" ></script>
+<script type="text/javascript" src="MochiKit/SVGCanvas.js"></script>
 
 <script type="text/javascript">
-
 
 function drawSpirograph(ctx,R,r,O){
       var x1 = R-O;
@@ -48,12 +47,12 @@ function drawSpirograph(ctx,R,r,O){
 
 var testFunctions = {
     
-    'arctest' : function(ctx) {
+    'arctest' : function(c) {
         log("Doing arctest");
         //     x, y, radius, startAngle, endAngle, anticlockwise
-        ctx.rect(95,95,10,10);
-        ctx.arc(100,100, 25, -0.2 *Math.PI, 0.2 *Math.PI, false);
-        ctx.stroke();
+        c.rect(95,95,10,10);
+        c.arc(100,100, 25, -0.2 *Math.PI, 0.2 *Math.PI, false);
+        c.stroke();
     },
     
     'squares' : function (ctx) {
@@ -167,8 +166,8 @@ var testFunctions = {
     },
     
     'arcs' : function(ctx) {
-        for (i=0;i<4;i++){
-          for(j=0;j<3;j++){
+        for (var i=0;i<4;i++){
+          for(var j=0;j<3;j++){
             ctx.beginPath();
             var x              = 25+j*50;               // x coordinate
             var y              = 25+i*50;               // y coordinate
@@ -733,7 +732,7 @@ var testFunctions = {
         sun.src = 'sun.png';
         moon.src = 'moon.png';
         earth.src = 'earth.png';
-        setInterval( partial(drawSolarSystem, context) ,10000);
+        //setInterval( partial(drawSolarSystem, context) ,10000);
     },
     
     'clock' : function(context) {
@@ -831,7 +830,7 @@ var testFunctions = {
           ctx.restore();
         }
         doClock(context);
-        setInterval( partial(doClock, context) ,2000);
+        //setInterval( partial(doClock, context) ,2000);
     }
     
     /*
@@ -850,7 +849,7 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
     replaceChildNodes(canvasTD, canvas);
     if (canvas.getContext) {
         var ctx = canvas.getContext("2d");
-        testFunction = eval(functionArea.value);
+        var testFunction = eval(functionArea.value);
         ctx.clearRect(0,0,200,200);
         testFunction(ctx);
     }
@@ -869,24 +868,50 @@ function addTests() {
     var table = $('tests');
     var i = 0, start = 0, number = 999;
     for (var test in testFunctions) {
-        if (i>=start && i-start<=number) {
+        if (i>=start && i-start<number) {
             log("doing test", test);
             var canvasSrc = (""+testFunctions[test]).replace(/ +/g, " ");
-            var functionArea, svgSrcArea, button, canvasTD, svgTD;
+            var functionArea, svgSrcArea, button, canvasTD, svgTD, button;
             var tr = TR(null, TD(null, test, BR(null), IMG({'src':test+'.png'}) ), 
                               canvasTD=TD(null), 
                               TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, canvasSrc),
                                        BR(null),
-                                       buton=INPUT({'type':"button", 'value':"Do It"}) ),
+                                       button=INPUT({'type':"button", 'value':"Do It"}) ),
                               svgTD=TD(null),
                               TD(null, svgSrcArea=TEXTAREA({'rows':"16", 'cols':"60", 'wrap':"off"} ,"SVG Source") )
                         );
             appendChildNodes(table, tr);
-            addToCallStack(buton, 'onclick', partial(doTest, canvasTD, svgTD, functionArea, svgSrcArea) );
+            addToCallStack(button, 'onclick', partial(doTest, canvasTD, svgTD, functionArea, svgSrcArea) );
             doTest(canvasTD, svgTD, functionArea, svgSrcArea);
         }
         i++;
     }
+    var compositeTypes = [
+          'source-over','source-in','source-out','source-atop',
+          'destination-over','destination-in','destination-out','destination-atop',
+          'lighter','darker','copy','xor'
+    ];
+    function draw() {
+      for (i=0;i<compositeTypes.length;i++){
+        var label = document.createTextNode(compositeTypes[i]);
+        document.getElementById('lab'+i).appendChild(label);
+        var ctx = document.getElementById('tut'+i).getContext('2d');
+
+        // draw rectangle
+        ctx.fillStyle = "#09f";
+        ctx.fillRect(15,15,70,70);
+
+        // set composite property
+        ctx.globalCompositeOperation = compositeTypes[i];
+        
+        // draw circle
+        ctx.fillStyle = "#f30";
+        ctx.beginPath();
+        ctx.arc(75,75,35,0,Math.PI*2,true);
+        ctx.fill();
+      }
+    }
+    //draw()
 }
 
 addLoadEvent(addTests);
@@ -907,6 +932,29 @@ addLoadEvent(addTests);
 <td align="center"><strong>Canvas Source</strong></td>
 <td align="center"><strong>SVG</strong></td>
 <td align="center"><strong>SVG Source</strong></td></tr>
+</table>
+
+<table>
+<tr>
+  <td><canvas id="tut0" width="125" height="125"></canvas><br/><label id="lab0"></label></td>
+  <td><canvas id="tut1" width="125" height="125"></canvas><br/><label id="lab1"></label></td>
+
+  <td><canvas id="tut2" width="125" height="125"></canvas><br/><label id="lab2"></label></td>
+  <td><canvas id="tut3" width="125" height="125"></canvas><br/><label id="lab3"></label></td>
+</tr>
+<tr>
+  <td><canvas id="tut4" width="125" height="125"></canvas><br/><label id="lab4"></label></td>
+  <td><canvas id="tut5" width="125" height="125"></canvas><br/><label id="lab5"></label></td>
+  <td><canvas id="tut6" width="125" height="125"></canvas><br/><label id="lab6"></label></td>
+  <td><canvas id="tut7" width="125" height="125"></canvas><br/><label id="lab7"></label></td>
+</tr>
+
+<tr>
+  <td><canvas id="tut8" width="125" height="125"></canvas><br/><label id="lab8"></label></td>
+  <td><canvas id="tut9" width="125" height="125"></canvas><br/><label id="lab9"></label></td>
+  <td><canvas id="tut10" width="125" height="125"></canvas><br/><label id="lab10"></label></td>
+  <td><canvas id="tut11" width="125" height="125"></canvas><br/><label id="lab11"></label></td>
+</tr>
 </table>
 
 
