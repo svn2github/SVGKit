@@ -135,14 +135,14 @@ try {
 }
 
 if (typeof(MochiKit.SVGCanvas) == 'undefined') {
-    MochiKit.SVGCanvas = function (widthOrIdOrNode, height, id, type) {
+    MochiKit.SVGCanvas = function (widthOrIdOrNode, height, id) {
         if (typeof(this.__init__)=='undefined' || this.__init__ == null){
             log("You called SVGCanvas() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
             return new MochiKit.SVGCanvas(widthOrIdOrNode, height, id, type);
         }
-        log("constructor got: ", widthOrIdOrNode, height, id, type); 
-        this.__init__(widthOrIdOrNode, height, id, type);
-        return null
+        log("constructor got: ", widthOrIdOrNode, height, id); 
+        this.__init__(widthOrIdOrNode, height, id);
+        return null;
     };
 }
 
@@ -175,16 +175,18 @@ MochiKit.SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, heig
     var isSVG = typeof(widthOrIdOrNode) == 'object' && widthOrIdOrNode.constructor == MochiKit.SVG;
     this.svg = isSVG ? widthOrIdOrNode : new SVG(widthOrIdOrNode, height, id);
     log("Working with svg: ", this.svg, " this: ", this);
-    this.svg.whenReady( bind(this._setDefaults, this) );
+    this.svg.whenReady( bind(this.reset, this, null) );
 }
 
-MochiKit.SVGCanvas.prototype._setDefaults = function() {
+MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
+    if (typeof(startingGroup) == 'undefined' || startingGroup==null)
+        startingGroup = this.svg.svgElement;
     log("_setDefaults with svg: ", this.svg, " this: ", this);
     
-    this._defaultState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", rgba(r, g, b, alpha) (0-255), or from a gradient
+    this._startingState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", rgba(r, g, b, alpha) (0-255), or from a gradient
                             'strokeStyle': "#000000", // Same as above
                             'globalAlpha': 1.0, // Float between 0.0 and 1.0
-                            'globalCompositeOperation': "source-over", // How canvas is displayed relative to background NOT SUPPORTED
+                            'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
                             'lineCap': "butt", // also "round" and "square"
                             'lineJoin': "miter", // also "round" and "bevel"
                             'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
@@ -193,36 +195,29 @@ MochiKit.SVGCanvas.prototype._setDefaults = function() {
                             'shadowColor': null, // color the canvas applies when displaying a shadow (same as two color methods above)
                             'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
                             'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
+                            // SVG Only extensions:
+                            'markerStart' : null,
+                            'markerMid' : null,
+                            'markerEnd' : null,
+                            // Internal State:
                             'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
                             'transformations' : "",  // Applys to all subpaths.
-                            'clipGroup' : this.svg.svgElement,  // When you start, there is no clipping
-                            'currentGroup' : this.svg.svgElement };  // if this is changed, you also have to change the clipGroup
-    this._setState(this, this._defaultState);  // Copy the state above to be accessed with this.fillStyle, etc.
-    //this.setDestination(this.svg.svgElement);  // By default, draw to the top-level element, but can be changed.
-    //this._transformsMakeGroups = false;  // As opposed to explictly performing transformation and only keeping a JS matrix
-    this._stateStack = []; // A state stack
+                            'drawGroup' : startingGroup, // When you start, there is no clipping and you're not in a marker.
+                            'currentGroup' : startingGroup };  // if this is changed, you also have to change the drawGroup
+    this._setState(this, this._startingState);  // Copy the state above to be accessed with this.fillStyle, etc.
+    this._stateStack = []; // A state stack.  The current state is stored as this.fillStyle so it has same Canvas interface.
     log("calling beginPath");
     this.beginPath();  // clears _subpaths, and calls and calls moveTo(0,0)
 }
 
-// Helper methods:
-
 MochiKit.SVGCanvas.prototype._setState = function(dest, src) {
-    var stateKeys = keys(this._defaultState)
+    var stateKeys = keys(this._startingState)
     for (var i=0; i<stateKeys.length; i++) {
         dest[stateKeys[i]] = src[stateKeys[i]];
     }
 }
 
-MochiKit.SVGCanvas.prototype._addPathSegment = function(path, ex, ey) {
-}
-
 // SVG Specific Methods
-
-MochiKit.SVGCanvas.prototype.setDestination = function(node) {
-    // First finish any group you happen to be in.
-    this._destination = node;
-}
 
 MochiKit.SVGCanvas.prototype.text = function(text, x, y) {
 }
@@ -239,27 +234,13 @@ MochiKit.SVGCanvas.prototype.restore = function() {
     this._setState(this, prevState);
 }
 
-/*
-    NOT IMPLIMENTED:
-    For now, you cannot rotate while you're in the middle of drawing a path, as in the stars example.
-    The cumulated rotations get applied to a single path -- not the right way to behave.
-    Not easy to fix without transforming all of the path coordinates explicitly because
-    there's no easy way to anticipate if the end result will be a fill or a stroke, so you can't just emit small paths.
-*/
-MochiKit.SVGCanvas.prototype.moveThanSingleMove = / M [\-0-9eE\.]+,[\-0-9eE\.]+ /;
-
-MochiKit.SVGCanvas.prototype._isPathEmptyOrMove = function(onlyToZero) {
-    if (typeof(onlyToZero)=='boolean' && onlyToZero==true) {
-        return this._subpaths[this._subpaths.length-1] == '' || this._subpaths[this._subpaths.length-1] == ' M 0,0';
-    }
-    else {
-        return !this.moveThanSingleMove.test(this._subpaths[this._subpaths.length-1]);
-    }
+MochiKit.SVGCanvas.prototype._hasOnlyMoveZero = function() {
+    return this._subpaths[this._subpaths.length-1] == '' || this._subpaths[this._subpaths.length-1] == ' M 0,0'
 }
 
 MochiKit.SVGCanvas.prototype.rotate = function(angle) {
     var deg = angle*180/Math.PI;
-    if (this._subpaths.length==1 && this._isPathEmptyOrMove(true) )
+    if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
         this.transformations += "rotate(" + deg + ")";
     else {
         if (this.currentTransformationMatrix==null)
@@ -268,7 +249,7 @@ MochiKit.SVGCanvas.prototype.rotate = function(angle) {
     }
 }
 MochiKit.SVGCanvas.prototype.scale = function(sx, sy) {
-    if (this._subpaths.length==1 && this._isPathEmptyOrMove(true))
+    if (this._subpaths.length==1 && this._hasOnlyMoveZero())
         this.transformations += "scale(" + sx +"," + sy + ")";
     else{
         if (this.currentTransformationMatrix==null)
@@ -277,7 +258,7 @@ MochiKit.SVGCanvas.prototype.scale = function(sx, sy) {
     }
 }
 MochiKit.SVGCanvas.prototype.translate = function(tx, ty) {
-    if (this._subpaths.length==1 && this._isPathEmptyOrMove(true) )
+    if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
         this.transformations += "translate(" + tx +"," + ty + ")";
     else {
         if (this.currentTransformationMatrix==null)
@@ -286,6 +267,7 @@ MochiKit.SVGCanvas.prototype.translate = function(tx, ty) {
     }
 }
 
+// Helpter method
 MochiKit.SVGCanvas.prototype._transformWithCTM = function(x,y) {
     var p = this.svg.svgElement.createSVGPoint()
     p.x = x
@@ -317,10 +299,12 @@ MochiKit.SVGCanvas.prototype.beginPath = function() {
     this.moveTo(0,0);
 }
 
+// Helper Method
+MochiKit.SVGCanvas.prototype.hasDrawing = / M [\-0-9eE\.]+,[\-0-9eE\.]+ /;
 
-MochiKit.SVGCanvas.prototype._pushAndClear = function(addToEnd) {
-    if (!this._isPathEmptyOrMove()) {
-        log("_pushAndClear: pushing it, and clearing current subpath = ", this._subpaths[this._subpaths.length-1]);
+MochiKit.SVGCanvas.prototype._newSubPath = function(addToEnd) {
+    if (this.hasDrawing.test(this._subpaths[this._subpaths.length-1])) {
+        log("_pushAndClear: current sub path = ", this._subpaths[this._subpaths.length-1]), "  making new empty one";
         if (typeof(addToEnd) == 'string')
             this._subpaths[this._subpaths.length-1] += addToEnd;
         this._subpaths.push("");
@@ -339,9 +323,9 @@ MochiKit.SVGCanvas.prototype.moveTo = function(x, y) {
         We don't error check or optimize.
     ***/
     log("moveTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
-    this._pushAndClear();
+    this._newSubPath();
     var p = this._transformWithCTM(x,y);
-    this._subpaths[this._subpaths.length-1] = " M " + p.x + "," + p.y;  // This must match moveThanSingleMove
+    this._subpaths[this._subpaths.length-1] = " M " + p.x + "," + p.y;  // This must pass the hasDrawing RegExp
     this._lastx = p.x;
     this._lasty = p.y;
 }
@@ -355,7 +339,7 @@ MochiKit.SVGCanvas.prototype.closePath = function() {
         SVG handles this. We don't error check or optimize.
     ***/
     log("closePath(): path = ", this._subpaths[this._subpaths.length-1]);
-    this._pushAndClear(" Z");
+    this._newSubPath(" Z");
 }
 
     
@@ -383,6 +367,7 @@ MochiKit.SVGCanvas.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {
     this._lastx = p.x;
     this._lasty = p.y;
 }
+
 MochiKit.SVGCanvas.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
     var cp1 = this._transformWithCTM(cp1x,cp1y);
     var cp2 = this._transformWithCTM(cp2x,cp2y);
@@ -391,6 +376,7 @@ MochiKit.SVGCanvas.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x
     this._lastx = p.x;
     this._lasty = p.y;
 }
+
 MochiKit.SVGCanvas.prototype.rect = function (x, y, w, h) {
     /***
         Does not start a new path.
@@ -399,18 +385,11 @@ MochiKit.SVGCanvas.prototype.rect = function (x, y, w, h) {
         It then calls moveTo with the point (0,0).
     ***/
     log("RECT ", x, y, w, h);
-    log("this._subpaths[this._subpaths.length-1] = ", this._subpaths[this._subpaths.length-1]);
-    var p, q
-    p = this._transformWithCTM(x,y);
-    this._subpaths[this._subpaths.length-1] += " M " + p.x + "," + p.y;
-    q = this._transformWithCTM(x+w,y);
-    this._subpaths[this._subpaths.length-1] += " L " + q.x + "," + q.y;
-    q = this._transformWithCTM(x+w,y+w);
-    this._subpaths[this._subpaths.length-1] += " L " + q.x + "," + q.y;
-    q = this._transformWithCTM(x,y+w);
-    this._subpaths[this._subpaths.length-1] += " L " + q.x + "," + q.y;
-    this._subpaths[this._subpaths.length-1] += " L " + p.x + "," + p.y;
-    log("now this._subpaths[this._subpaths.length-1] = ", this._subpaths[this._subpaths.length-1]);
+    this.moveTo(x,y);
+    this.lineTo(x+w,y);
+    this.lineTo(x+w,y+w);
+    this.lineTo(x,y+w);
+    this.lineTo(x,y);
     this.moveTo(0,0);
 }
 
@@ -475,7 +454,6 @@ MochiKit.SVGCanvas.prototype._distance = function (point1, point2) {
 }
 
 
-
 MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
     /***
     adds an arc to the current path. The arc is given by the circle that 
@@ -490,6 +468,9 @@ MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle,
     Then, the end point is added to the list of points and these last 
     two points are joined by the arc described above. Finally, the 
     current position is set to the end point. 
+    
+    Modification:  Joined to a straight line if the current subpath has
+    more than just a move to (0,0)
     
     On the SVG side, see http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
     ***/
@@ -529,13 +510,14 @@ MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle,
         var s = this._transformWithCTM(sx, sy);
         var e = this._transformWithCTM(ex, ey);
         var org = this._transformWithCTM(0, 0);
+        // Can probably get angle directly from CTM's shear and rotation rather thnan through complicated steps that follow:
         var rx = this._transformWithCTM(radius, 0);
         var ry = this._transformWithCTM(0, radius);
         var radx = this._distance(org, rx);
         var rady = this._distance(org, ry);
         var angle = Math.acos( (rx.x - org.x) / radx ) * 180 / Math.PI;
         if (this._lastx != s.x && this._lasty != s.y) {
-            if (!this._isPathEmptyOrMove(true))
+            if (!this._hasOnlyMoveZero())
                 this.lineTo(sx, sy);
             else if (this._lastx != s.x && this._lasty != s.y)
                 this.moveTo(sx,sy);
@@ -556,13 +538,17 @@ MochiKit.SVGCanvas.prototype._setTransformAttribute = function (node) {
 }
 
 MochiKit.SVGCanvas.prototype._emitPaths = function () {
+    /***
+        Go through the subpath list and pick out only the ones that have drawing content
+        
+    ***/
     var pathcount = this._subpaths.length;
     var paths = [];
     var i;
     
     for (i=0; i<pathcount; i++) {
         log("_emitPaths(): _subpaths.length =", pathcount, "current subpath["+i+"] =", this._subpaths[i]);
-        if (this.moveThanSingleMove.test(this._subpaths[i])) {
+        if (this.hasDrawing.test(this._subpaths[i])) {
             var path = this.svg.PATH({'d':this._subpaths[i]});
             paths.push(path)
         }
@@ -624,11 +610,6 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         setNodeAttribute(node, type, 'url(#'+ style.id +')');
         setNodeAttribute(node, type+'-opacity', this.globalAlpha);
     }
-    /*
-    if (this.clipId != null) {
-        setNodeAttribute(node, 'clip-path', 'url(#'+this.clipId+')' );
-    }
-    */
     
     setNodeAttribute(node, other, 'none');
     setNodeAttribute(node, other+'-opacity', 0);
@@ -643,14 +624,22 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
             setNodeAttribute(node, 'stroke-miterlimit', this.miterLimit);
         setNodeAttribute(node, 'stroke-linecap', this.lineCap);
     }
+    
+    // SVG Only:  Markers
+    if (this.markerStart != null)
+        setNodeAttribute(node, 'marker-start', 'url(#'+this.markerStart+')')
+    if (this.markerMid != null)
+        setNodeAttribute(node, 'marker-start', 'url(#'+this.markerMid+')')
+    if (this.markerEnd != null)
+        setNodeAttribute(node, 'marker-start', 'url(#'+this.markerEnd+')')
 }
 
 MochiKit.SVGCanvas.prototype.stroke = function () {
     var paths = this._emitPaths();
     if (paths != null) {
         this._setGraphicsAttributes(paths, 'stroke');
-        log("this.clipGroup=", this.clipGroup);
-        appendChildNodes(this.clipGroup, paths);
+        log("this.drawGroup=", this.drawGroup);
+        appendChildNodes(this.drawGroup, paths);
     }
 }
 
@@ -663,7 +652,7 @@ MochiKit.SVGCanvas.prototype.fill = function () {
     var paths = this._emitPaths();
     if (paths != null) {
         this._setGraphicsAttributes(paths, 'fill');
-        appendChildNodes(this.clipGroup, paths);
+        appendChildNodes(this.drawGroup, paths);
     }
 }
 
@@ -682,8 +671,8 @@ MochiKit.SVGCanvas.prototype.clip = function () {
         var clipPath = this.svg.CLIPPATH({'id':clipId});  // , 'clipPathUnits':'userSpaceOnUse'  default
         appendChildNodes(clipPath, paths);
         this.svg.append(clipPath);
-        this.clipGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
-        appendChildNodes(this.currentGroup, this.clipGroup);
+        this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
+        appendChildNodes(this.currentGroup, this.drawGroup);
     }
 }
 
@@ -704,7 +693,7 @@ MochiKit.SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
                               'height':h});
     this._setShapeTransform(rect);
     this._setGraphicsAttributes(rect, 'stroke');
-    appendChildNodes(this.clipGroup, rect);
+    appendChildNodes(this.drawGroup, rect);
 }
 
 MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
@@ -714,7 +703,7 @@ MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
                               'height':h});
     this._setShapeTransform(rect);
     this._setGraphicsAttributes(rect, 'fill');
-    appendChildNodes(this.clipGroup, rect);
+    appendChildNodes(this.drawGroup, rect);
 }
 
 MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
@@ -726,10 +715,10 @@ MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
                               'fill-opacity':1.0,
                               'fill-rule':'nonzero'});
     this._setShapeTransform(rect);
-    appendChildNodes(this.clipGroup, rect);
+    appendChildNodes(this.drawGroup, rect);
 }
 
-// Creating Gradient and Pattern Styles
+// Creating Gradient, Pattern, and (SVG Only) Marker Styles
 
 MochiKit.SVGCanvas.Gradient = function(self, svg) {
     /***
@@ -800,40 +789,96 @@ MochiKit.SVGCanvas.prototype.createRadialGradient = function (x0, y0, r0, x1, y1
     return new MochiKit.SVGCanvas.RadialGradient(this.svg, x0, y0, r0, x1, y1, r1);
 }
 
-MochiKit.SVGCanvas.Pattern = function(svg, image, repetition) {
+MochiKit.SVGCanvas.Pattern = function(svg, contents, repetition) {
     /***
-        Firefox doesn't seem to support patterns from images.
+        Firefox doesn't seem to support patterns from images in SVG
+        
+        SVG Only -- contents can be an SVG group.
     ***/
     this.svg = svg;
     this.id = svg.createUniqueID('pattern');
     log('  id=', this.id);
     this.defs = svg.getDefs(true);
+    this.contents = contents;
+    
+    var width = null;
+    var height = null;
+    if (contents.constructor == Image) {
+        log("  img: ", contents.width, contents.height, contents.src);
+        width = contents.width;
+        height = contents.height;
+        contents = this.svg.IMAGE({'x':0, 
+                                   'y':0, 
+                                   'width':width,
+                                   'height': height,
+                                   'xlink:href': contents.src});
+    }
     
     this.pattern = this.svg.PATTERN({'patternUnits':'userSpaceOnUse',
                                      'patternContentUnits':'userSpaceOnUse',
-                                     'width':image.width,
-                                     'height':image.height,
+                                     'width': width,
+                                     'height': height,
                                      'id':this.id});
     log("  pattern: ", this.pattern);
     appendChildNodes(this.defs, this.pattern);
-    this.image = image;
-    log("  img: ", image.width, image.height, image.src);
-    var img = this.svg.IMAGE({'x':0, 
-                              'y':0, 
-                              'width':image.width,
-                              'height':image.height,
-                              'xlink:href':image.src});
-    appendChildNodes(this.pattern, img);
-    //'repeat', 'repeat-x', 'repeat-y', 'no-repeat'
+    appendChildNodes(this.pattern, contents);
 }
 
 MochiKit.SVGCanvas.prototype.createPattern = function (image, repetition) {
     /***
         @param image : Can either be an image element or another canvas.
+          or (SVG Only) an SVG group.
     ***/
     return new MochiKit.SVGCanvas.Pattern(this.svg, image, repetition);
 }
 
+MochiKit.SVGCanvas.prototype._startDefineGroup = function () {
+    /***
+        SVG Only
+        Until endMarker or endPattern are called, all drawing will be done in a group that doesn't get displayed.
+        Reset the transformations, but not the fillStyle, strokeStyle and things like that.
+    ***/
+    this.save();
+    this.currentTransformationMatrix = null;
+    this.transformations = '';
+    this.drawGroup = this.svg.G();
+}
+
+
+MochiKit.SVGCanvas.prototype.startPattern = MochiKit.SVGCanvas.prototype._startDefineGroup
+MochiKit.SVGCanvas.prototype.endPattern = function (repetition) {
+    /***
+        SVG Only
+        returns the pattern object to set strokeStyle or fillStyle to.
+    ***/
+    var pattern = new this.createPattern(this.drawGroup, repetition);
+    this.restore();
+    return pattern;
+}
+
+MochiKit.SVGCanvas.prototype.startMarker = MochiKit.SVGCanvas.prototype._startDefineGroup
+MochiKit.SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */) {
+    /***
+        SVG Only
+        Returns the marker object to be used in markerStart, markerMid, or markerEnd
+    ***/
+    // Note that stroke style and fill properties (including with patterns or gradients) do not affect markers
+    if (typeof(orient) == 'undefined' || orient==null)
+        orient = 'auto';
+
+    var id = svg.createUniqueID('marker');
+    log(' marker id=', this.id);
+    var defs = svg.getDefs(true);
+    
+    var marker = this.svg.MARKER({'orient':orient,  // 'auto'
+                                     'id':this.id});
+    log("  marker: ", this.marker);
+    appendChildNodes(this.defs, this.marker);
+    appendChildNodes(this.marker, this.drawGroup);
+
+    this.restore();
+    return id;
+}
 
 // Drawing an Image
 
