@@ -3,6 +3,7 @@ var State = {
     idbase: "state_",
     stateHash: null,
     currentState: null,
+    callbackList: [],
 
     makeHash: function () {
         // makeHash is function that constructs State.stateHash - a hash table
@@ -21,7 +22,7 @@ var State = {
                     State.stateHash[stateVar] = [];
                 }
                 State.stateHash[stateVar].push(elem);
-                }
+            }
         )
         log("Finished creating State.stateHash.  It has " + 
             keys(State.stateHash).length + " entries.");
@@ -63,7 +64,7 @@ var State = {
         }
     },
 
-    updateWithHash: function () {
+    update: function () {
         log("Updating state.");
         if(State.stateHash == null) {
             log("Getting new hash.");
@@ -72,12 +73,21 @@ var State = {
         var deferred = loadJSONDoc(State.base + "webGetState");
         deferred.addCallback(function (newState) {
             State.processState(newState, State.currentState, 'ExperimentState');
+            for(i in State.callbackList) {
+                State.callbackList[i](newState);
+            }
             State.currentState = newState;
-            callLater(30, State.updateWithHash);
+            callLater(5, State.update);
         });
         deferred.addErrback(function (err) {
             log("Error updating state: " + repr(err));
-            callLater(30, State.updateWithHash);
+            callLater(5, State.update);
         });
     },
+    
+    addStateCallback: function(callback) {
+        State.callbackList[State.callbackList.length] = callback;
+    },
 };
+
+addLoadEvent(State.update);

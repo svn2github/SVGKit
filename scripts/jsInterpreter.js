@@ -323,4 +323,4 @@ window.inspect = function (o) {
 };
     
 jsInterpreterManager = new InterpreterManager();
-
+addLoadEvent(jsInterpreterManager.initialize);

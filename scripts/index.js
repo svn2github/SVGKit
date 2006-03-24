@@ -156,6 +156,4 @@ var Convert = {
 
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);
-addLoadEvent(jsInterpreterManager.initialize);
-addLoadEvent(Cookie.restorePanels); 
-addLoadEvent(State.updateWithHash);
+addLoadEvent(Cookie.restorePanels);
