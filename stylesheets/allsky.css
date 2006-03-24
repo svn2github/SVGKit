@@ -286,6 +286,10 @@ table.datagrid thead th {
 table.datagrid thead th.over {
     background-color: #9FAABF;
     cursor: pointer;}
+table.datagrid tr.over {
+    background-color: #9FAABF;
+    color: #FFFFFF;
+    cursor: pointer;}
 table.datagrid tbody th {
     font-weight: bold;}
 table.datagrid tbody td, table.datagrid tbody th {

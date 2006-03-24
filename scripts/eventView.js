@@ -1,11 +1,16 @@
 var EventView = {
-    base:  "/event_view/",
+    base:  "/event/",
     idbase: "event_view_",
     filterElems:     [],
     controlElems:    [],
 	controlSettings: [],
     statusElem: null,
     maxId: 0,
+    eventDetails: [],
+    eventDetailLock: false,
+    
+    //features to add: drop entries off the bottom of the table if in autoupdate mode,
+    //                 onclick(autoload) set maxId = 0;
     
     getElems: function () {
         EventView.controlElems = document.getElementById(EventView.idbase+'controls');
@@ -71,6 +76,9 @@ var EventView = {
     },
 
     setTableHeight: function (rows) {
+        if (!isInt(rows)) {
+            rows = 12;
+        }
         var heightEventTable  = 24 + 14*rows;
         var heightEventFilter = heightEventTable - 62;
         updateNodeAttributes(EventView.idbase + "event_table", 
@@ -85,7 +93,7 @@ var EventView = {
         var tableHeight       = Math.max(parseInt(cookieTableHeight), 
                                          parseInt(minTableHeight))
         EventView.setTableHeight(tableHeight);
-        log(cookieTableHeight, minTableHeight, tableHeight);
+        //log(cookieTableHeight, minTableHeight, tableHeight);
     },
     
     saveCookies: function () {
@@ -95,6 +103,17 @@ var EventView = {
                 Cookie.create(setting, settings[setting], 30)
             }
         );
+    },
+    
+    autoLoadTable: function () {
+        var prefix   = EventView.idbase + "controls_";
+        var autoLoad = EventView.controlSettings[prefix + "autoload_checkbox"];
+        if (autoLoad == true) {
+            EventView.loadTable();
+        }
+        else {
+            EventView.statusElem.innerHTML = "";        
+        }
     },
     
 	loadTable: function () {
@@ -118,17 +137,27 @@ var EventView = {
                                                    filters[i].length);
             }
         }
+        //if no query type selected, return with message
         if (checkedFilters == "") {
             EventView.statusElem.innerHTML ="Select query type.";
             return;
             }
         var query = "event/getEvents?typeFilter=" + checkedFilters;
-        //separate cases for displaying different sets of events
-        if (settings[prefix + "sel_recent"] == true) {
+        //case 1: load recent events; function called in autoLoad loop
+        if (EventView.maxId > 0 & settings[prefix + "sel_recent"] == true) {
+            var startId     = EventView.maxId + 1;
+            var typeQuery   = "&sinceEvent=" + startId;
+            var maxElemName = EventView.idbase + "controls_max_events";
+            var maxEvents   = EventView.controlSettings[maxElemName];
+        }
+        //case 2: load all recent events
+        else if (settings[prefix + "sel_recent"] == true) {
             var typeQuery = "";
             var maxElemName = EventView.idbase + "controls_max_events";
             var maxEvents = EventView.controlSettings[maxElemName]; 
+            EventView.maxId = 0;
         }
+        //case 3: load n events after id m
         else if (settings[prefix + "sel_since_id"] == true) {
             var sinceEvent   = EventView.idbase + "controls_events_id";
             var maxElemName1 = EventView.idbase + "controls_max_events";
@@ -137,7 +166,9 @@ var EventView = {
             var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
                                      parseInt(EventView.controlSettings[maxElemName2]));
             //log(maxEvents);
+            EventView.maxId = 0;
         }
+        //case 4: load n events after time t
         else if (settings[prefix + "sel_since_time"] == true) {
             var sinceDate    = EventView.idbase + "controls_events_time";
             var maxElemName1 = EventView.idbase + "controls_max_events";
@@ -145,11 +176,18 @@ var EventView = {
             var typeQuery = "&sinceDate=" + EventView.controlSettings[sinceDate];
             var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
                                      parseInt(EventView.controlSettings[maxElemName2])); 
+            EventView.maxId = 0;
         }
+        //case 5: no query type selected.
         else {
             EventView.statusElem.innerHTML ="Select event types.";
+            EventView.maxId = 0;
             return;
-            }
+        }
+        //clear table unless in autoload mode
+        if (!(EventView.maxId > 0 & settings[prefix + "sel_recent"] == true)) {
+            EventView.clearTable();
+        }
         var maxResults = "&maxResults=" + maxEvents;
         //construct query string and send to server
         EventView.statusElem.innerHTML ="Query sent to server.  Awaiting response...";
@@ -169,24 +207,74 @@ var EventView = {
         }
 	},
     
-    //doesn't work yet
-	removeDuplicateRows: function () {
-        tab = document.getElementById("sortable_table");
-        for (i=tab.rows.length-1;i>0;i--) {
-            for (j=i-1; j>0; j--) {
-                if (tab.rows[j].cells == tab.rows[i].cells) {
-                    removeElement(tab.rows[j]);
-                }
-            }
+    highlightRows: function () {
+        tableElem = $("sortable_table");
+        for (i=1; i<tableElem.rows.length; i++) {
+            eventId   = tableElem.rows[i].cells[0].innerHTML;
+            eventType = tableElem.rows[i].cells[2].innerHTML;
+            tableElem.rows[i].onmousedown = ignoreEvent;
+            tableElem.rows[i].onmouseover = EventView.mouseOverFunction;
+            tableElem.rows[i].onmouseout  = EventView.mouseOutFunction;
         }
-	},
+    },
+
+    mouseOverFunction: function () {
+        addElementClass(this, "over");
+        EventView.getEventDetails(this.cells[0].innerHTML, this.cells[2].innerHTML);
+    },
+
+    mouseOutFunction: function () {
+        removeElementClass(this, "over");
+        EventView.clearEventDetails();
+    },
+
+    getEventDetails: function (eventId, eventType) {
+        if (EventView.eventDetailLock == false) {
+            EventView.eventDetailLock = true;
+            var deferred = loadJSONDoc(EventView.base + "getEventDetails?eventId=" + eventId);
+            deferred.addCallback(function (eventDetails) {
+                EventView.loadEventDetails(eventDetails, eventId, eventType);
+                EventView.eventDetails = eventDetails;
+                EventView.eventDetailLock = false;
+            });
+            deferred.addErrback(function (err) {
+                log("Error retreiving details for event " + eventId + ": " + repr(err));
+                EventView.eventDetailLock = false;
+            });
+        }
+    },
     
-    //features to add: highlight new rows, autoload, remove duplicate events?
-			    
+    loadEventDetails: function (eventDetails, eventId, eventType) {
+        var fields     = keys(eventDetails);
+        var tableElem  = $(EventView.idbase + "event_details_table");
+        //var row0       = TR(null, [TH( null, "Event Details" )]);
+        var row1       = TR(null, [TD( null, "Event Type" ), TD( null, eventType )]);
+        var row2       = TR(null, [TD( null, "Id" ),         TD( null, eventId   )]);
+        //tableElem.appendChild(row0);   
+        tableElem.appendChild(row1);   
+        tableElem.appendChild(row2);   
+        for (i=0; i<fields.length; i++) {
+            var fieldTD   = TD( null, fields[i] );
+            var detailsTD = TD( null,  eventDetails[fields[i]] );
+            var row       = TR(null, [fieldTD, detailsTD]);
+            tableElem.appendChild(row);   
+        }
+    },
+    
+    clearEventDetails: function () {
+        var tableElem = $(EventView.idbase + "event_details_table");
+        for (i=1; i<tableElem.childNodes.length; i++) {
+            replaceChildNodes(tableElem.childNodes[i]);
+        }
+        var row0 = TR(null, [TH( null, "Event Details" )]);
+        tableElem.appendChild(row0);   
+    },
+    
 };
 addLoadEvent(EventView.getElems);
 addLoadEvent(EventView.insertCurrentTime);
 addLoadEvent(EventView.setTableHeightOnLoad);
+addLoadEvent(EventView.clearEventDetails);
 
 processMochiTAL = function (dom, data) {
 
@@ -318,7 +406,7 @@ SortableManager.prototype = {
             });
         }
         
-        // set up the data anchors to do loads
+        // set up the data anchors to do loads -- needed any more?
         var anchors = getElementsByTagAndClassName("a", null);
         for (var i = 0; i < anchors.length; i++) {
             var node = anchors[i];
@@ -338,7 +426,6 @@ SortableManager.prototype = {
     },
 
     "loadFromURL": function (url) {
-        //log('loadFromURL', url);
         var d;
         if (this.deferred) {
             this.deferred.cancel();
@@ -407,6 +494,26 @@ SortableManager.prototype = {
         EventView.statusElem.innerHTML ="Sorting table...";
         this.drawSortedRows(this.sortkey, order, false);
         EventView.statusElem.innerHTML ="";
+        //load again, if autoload is set
+        //TO-DO: find highest event id and autoload higher than that
+        //find highest id in previous load
+        var tableElem = $('sortable_table');
+        var maxId = 0;
+        for (i=1; i<tableElem.rows.length; i++) {
+            currentId = parseInt(tableElem.rows[i].cells[0].innerHTML);
+            if (currentId > maxId) {maxId = currentId}
+        }
+        EventView.maxId = maxId;
+        var prefix           = EventView.idbase + "controls_";
+        var autoLoad         = EventView.controlSettings[prefix + "autoload_checkbox"];
+        var autoLoadInterval = EventView.controlSettings[prefix + "autoload_interval"];
+        if (autoLoad == true) {
+            callLater(parseInt(autoLoadInterval), EventView.autoLoadTable)
+            EventView.statusElem.innerHTML ="Autoload every " + autoLoadInterval + " seconds.";
+        }
+        this.initial_flag = false;
+        //set event handlers for event table
+        EventView.highlightRows()
     },
    
     "onSortClick": function (name) {
@@ -414,7 +521,6 @@ SortableManager.prototype = {
         var self = this;
         // on click, flip the last sort order of that column and sort
         return function () {
-            //log('onSortClick', name);
             var order = self.sortState[name];
             if (typeof(order) == 'undefined') {
                 // if it's never been sorted by this column, sort descending
@@ -424,6 +530,7 @@ SortableManager.prototype = {
                 order = !((typeof(order) == 'undefined') ? false : order);
             }
             self.drawSortedRows(name, order, true);
+            EventView.highlightRows()
         };
     },
 
@@ -442,7 +549,7 @@ SortableManager.prototype = {
             col.onclick = this.onSortClick(sortkey);
             col.onmousedown = ignoreEvent;
             col.onmouseover = mouseOverFunc;
-            col.onmouseout = mouseOutFunc;
+            col.onmouseout  = mouseOutFunc;
             // if this is the sorted column
             if (sortkey == key) {
                 sortstyle = sortinfo[1];
@@ -466,13 +573,7 @@ SortableManager.prototype = {
         if (!sortfunc) {
             throw new TypeError("unsupported sort style " + repr(sortstyle));
         }
-        //var domains = this.data.domains;
         var domains = this.data.domains;
-        //log("domains.length="+domains.length);
-        //log("this.data.rows.split(',').length/3="+this.data.rows.split(',').length/this.data.columns.length);
-        if (this.initial_flag == true) {
-            this.initial_flag = false;
-        }
         for (var i = 0; i < domains.length; i++) {
             var domain = domains[i];
             domain.__sort__ = sortfunc(domain[key]);
@@ -483,7 +584,6 @@ SortableManager.prototype = {
         // process every template with the given data
         // and put the processed templates in the DOM
         for (var i = 0; i < this.templates.length; i++) {
-            //log('template', i, template);
             var template = this.templates[i];
             var dom = template.template.cloneNode(true);
             processMochiTAL(dom, this.data);

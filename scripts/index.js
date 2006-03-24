@@ -37,6 +37,18 @@ function makePanel(elem) {
     toggleElementClass("panelInvisible", elem);
 }
 
+function isInt(str) {
+	var i = parseInt (str);
+	if (isNaN (i)) {
+		return false;
+    } 
+	i = i . toString ();
+	if (i != str) {
+		return false;
+    }
+	return true;
+}
+
 var Cookie = {
     panelPrefix: 'panel_',
 
