@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><title>CanvasGraph.js : Unit Tests</title>
+
+
+   
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <link href="plot_tests.css" media="screen" rel="Stylesheet" type="text/css">
+<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
+
+<script type="text/javascript" src="../MochiKit/SVG.js" ></script>
+<script type="text/javascript" src="../MochiKit/SVGCanvas.js"></script>
+
+   <script src="CanvasGraph-0.7.js" type="text/javascript"></script>
+   <script src="UnitTest.js" type="text/javascript"></script>
+<style type="text/css">
+
+table#dynamicTable {
+    margin: 10px auto 10px auto;
+}
+
+table.data td {
+    margin: 5px;
+    padding: 5px;
+    width: 50px;
+}
+
+table.data thead td {
+    background-color: #eee;
+}
+
+table.data thead th {
+    background-color: #eee;
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+    text-align: left;
+}
+
+table.data tbody td {
+    padding: 5px;
+    vertical-align: top;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+table.data {
+    width: 200px;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h3 {
+    font-size: large;
+    color: #666;
+    background-color: #eee;
+    border-bottom: 1px solid #ddd;
+    padding: 3px;
+}
+
+h4 {
+    font-size: medium;
+    margin: 5px;
+}
+
+div.data, div.canvas {
+    float: left;
+    margin: 5px;
+}
+
+div.canvas {
+}
+
+div.ending {
+    clear: both;
+    margin: 10px;
+}
+
+div.unit {
+    border: 1px solid #eee;
+    margin: 10px;
+    padding: 10px;
+}
+
+
+
+</style></head><body>
+    <div id="body">
+    <h1><span>liquidx.net</span></h1>
+
+    <h2>Tests for CanvasGraph</h2>
+    
+    <div id="tests">
+    <h2>
+
+Simple Tests</h2><div class="unit"><div class="data"><table id="test1" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr><tr><td>3</td><td>3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test1canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 50px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 140px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 230px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 320px; font-size: 10px; z-index: 10; color: black;">3</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div><div style="overflow: hidden; position: absolute; top: 133px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">1</div><div style="overflow: hidden; position: absolute; top: 90px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">2</div><div style="overflow: hidden; position: absolute; top: 48px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">3</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test2" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr><tr><td>3</td><td>3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test2canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 5px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 125px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 245px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 365px; font-size: 10px; z-index: 10; color: black;">3</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div><div style="overflow: hidden; position: absolute; top: 119px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">1</div><div style="overflow: hidden; position: absolute; top: 62px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">2</div><div style="overflow: hidden; position: absolute; top: 5px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">3</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test3" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>2</td><td>3</td></tr><tr><td>3</td><td>4</td></tr><tr><td>4</td><td>5</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test3canvas"></canvas><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: left; vertical-align: top; left: 251.219px; top: -0.592042px;">1 (14%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: left; vertical-align: top; left: 305px; top: 85px;">2 (21%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: left; vertical-align: bottom; left: 210px; top: 190px;">3 (29%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: right; vertical-align: bottom; left: 74.408px; top: 43.781px;">4 (36%)</div></div><div class="ending"></div></div><h2>One Value Set</h2><div class="unit"><div class="data"><table id="test4" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test4canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 95px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 275px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div><div style="overflow: hidden; position: absolute; top: 90px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">1</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test5" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test5canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 5px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 365px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div><div style="overflow: hidden; position: absolute; top: 5px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">1</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test6" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test6canvas"></canvas><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: left; vertical-align: bottom; left: 210px; top: 190px;">1 (100%)</div></div><div class="ending"></div></div><h2>Float Values Set</h2><div class="unit"><div class="data"><table id="test7" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test7canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 65px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 185px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 305px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test8" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test8canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 5px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 185px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 365px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test9" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test9canvas"></canvas><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: left; vertical-align: top; left: 301.763px; top: 60.4122px;">0 (42%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: right; vertical-align: bottom; left: 112.5px; top: 177.272px;">1 (33%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: right; vertical-align: bottom; left: 92.8249px; top: 17.8249px;">2 (25%)</div></div><div class="ending"></div></div><h2>Dual Value Set</h2><div class="unit"><div class="data"><table id="test10" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td><td>2</td></tr><tr><td>2</td><td>4</td><td>4</td></tr><tr><td>3</td><td>9</td><td>8</td></tr><tr><td>4</td><td>16</td><td>16</td></tr><tr><td>5</td><td>25</td><td>32</td></tr><tr><td>6</td><td>36</td><td>64</td></tr><tr><td>7</td><td>49</td><td>128</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test10canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 28px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 73px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 118px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 163px; font-size: 10px; z-index: 10; color: black;">3</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 208px; font-size: 10px; z-index: 10; color: black;">4</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 253px; font-size: 10px; z-index: 10; color: black;">5</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 298px; font-size: 10px; z-index: 10; color: black;">6</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 343px; font-size: 10px; z-index: 10; color: black;">7</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div><div style="overflow: hidden; position: absolute; top: 136px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">30</div><div style="overflow: hidden; position: absolute; top: 96px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">60</div><div style="overflow: hidden; position: absolute; top: 57px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">90</div><div style="overflow: hidden; position: absolute; top: 17px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">120</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test11" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td><td>2</td></tr><tr><td>2</td><td>4</td><td>4</td></tr><tr><td>3</td><td>9</td><td>8</td></tr><tr><td>4</td><td>16</td><td>16</td></tr><tr><td>5</td><td>25</td><td>32</td></tr><tr><td>6</td><td>36</td><td>64</td></tr><tr><td>7</td><td>49</td><td>128</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test11canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 5px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 57px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 108px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 160px; font-size: 10px; z-index: 10; color: black;">3</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 211px; font-size: 10px; z-index: 10; color: black;">4</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 263px; font-size: 10px; z-index: 10; color: black;">5</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 314px; font-size: 10px; z-index: 10; color: black;">6</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 365px; font-size: 10px; z-index: 10; color: black;">7</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div><div style="overflow: hidden; position: absolute; top: 136px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">30</div><div style="overflow: hidden; position: absolute; top: 96px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">60</div><div style="overflow: hidden; position: absolute; top: 56px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">90</div><div style="overflow: hidden; position: absolute; top: 16px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">120</div></div><div class="ending"></div></div><h2>Drawing and Clearing</h2><div class="unit"><div class="data"><table id="test12" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test12canvas"></canvas><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 65px; font-size: 10px; z-index: 10; color: black;">0</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 185px; font-size: 10px; z-index: 10; color: black;">1</div><div style="overflow: hidden; position: absolute; text-align: center; width: 50px; top: 187px; left: 305px; font-size: 10px; z-index: 10; color: black;">2</div><div style="overflow: hidden; position: absolute; top: 175px; left: -7px; font-size: 10px; z-index: 10; color: black; text-align: right; width: 30px;">0</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test13" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test13canvas"></canvas></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test14" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test14canvas"></canvas><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: left; vertical-align: top; left: 301.763px; top: 60.4122px;">0 (42%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: right; vertical-align: bottom; left: 112.5px; top: 177.272px;">1 (33%)</div><div style="overflow: hidden; position: absolute; z-index: 11; width: 50px; font-size: 10px; color: rgb(0, 0, 0); text-align: right; vertical-align: bottom; left: 92.8249px; top: 17.8249px;">2 (25%)</div></div><div class="ending"></div></div><div class="unit"><div class="data"><table id="test15" class="data"><thead><tr><td>x</td><td>y</td></tr></thead><tbody><tr><td>0</td><td>0.5</td></tr><tr><td>1</td><td>0.4</td></tr><tr><td>2</td><td>0.3</td></tr></tbody></table></div><div style="position: relative; width: 400px;" class="canvas">
+<object  data="../MochiKit/empty.svg" type="image/svg+xml" style="position: relative; z-index: 1;" height="200" width="400" id="test15canvas"></canvas></div><div class="ending"></div></div></div>
+    
+    <div class="footer">
+    </div>
+
+</div>
+</body></html>
