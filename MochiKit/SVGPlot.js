@@ -305,12 +305,9 @@ MochiKit.SVGPlot.LinePlotDataset.prototype.plot = function() {
                 drawingFunction = canvas.lineTo;
         }
     }
-    if (this.ydata.length > 0)
-        canvas.moveTo(xscale*(this.xdata[0]-this.xmin), yscale*(this.ydata[0]-this.ymin));
-    for (i=1; i<this.ydata.length; i++)
-        canvas.lineTo(xscale*(this.xdata[i]-this.xmin), yscale*(this.ydata[i]-this.ymin))
-    canvas.stroke();
-    return null;
+    var plot = canvas.stroke();
+    // Add our own stuff to the attributes produced.
+    return plot;
 }
 
 

@@ -446,7 +446,7 @@ MochiKit.SVG.prototype.append = function (node) {
     /***
         Convenience method for appending to the root element
     ***/
-    appendChildNodes(this.svgElement, node);
+    this.svgElement.appendChild(node);
 }
 
 MochiKit.SVG.prototype.createUniqueID = function(base) {

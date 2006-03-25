@@ -600,7 +600,7 @@ MochiKit.SVGCanvas.prototype._emitPaths = function () {
         var group = this.svg.G(null);
         this._setPathTransformAttribute(group);
         for (i=0; i<paths.length; i++) {
-            appendChildNodes(group, paths[i]);
+            group.appendChild(paths[i]);
         }
         return group;
     }
@@ -623,7 +623,7 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         style = this.fillStyle;
         other = 'stroke';
     }
-    log('type =', type, 'style = ', style, 'this.strokeStyle=', this.strokeStyle);
+    log('_setGraphicsAttributes(): type =', type, 'style = ', style, 'this.strokeStyle=', this.strokeStyle);
     
     if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'
         var c = Color.fromString(style);
@@ -679,9 +679,10 @@ MochiKit.SVGCanvas.prototype.stroke = function () {
     ***/
     var paths = this._emitPaths();
     if (paths != null) {
+        log("stroke(): this.drawGroup=", this.drawGroup);
         this._setGraphicsAttributes(paths, 'stroke');
-        log("this.drawGroup=", this.drawGroup);
-        appendChildNodes(this.drawGroup, paths);
+        this.drawGroup.appendChild(paths);
+        log("  in stroke(): finished appending child nodes");
     }
     return paths;
 }
@@ -696,21 +697,23 @@ MochiKit.SVGCanvas.prototype.fill = function () {
     ***/
     var paths = this._emitPaths();
     if (paths != null) {
+        log("fill(): this.drawGroup=", this.drawGroup);
         this._setGraphicsAttributes(paths, 'fill');
-        appendChildNodes(this.drawGroup, paths);
+        this.drawGroup.appendChild(paths);
     }
     return paths;
 }
 
 MochiKit.SVGCanvas.prototype._doClip = function(clippingContents) {
+    log("clip() or clipRect(): clippingContents = ", clippingContents);
     if (clippingContents == null)
         return null;
     var clipId = this.svg.createUniqueID('clip');
     var clipPath = this.svg.CLIPPATH({'id':clipId});  // , 'clipPathUnits':'userSpaceOnUse'  default
-    appendChildNodes(clipPath, clippingContents);
+    clipPath.appendChild(clippingContents);
     this.svg.append(clipPath);
     this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
-    appendChildNodes(this.currentGroup, this.drawGroup);
+    this.currentGroup.appendChild(this.drawGroup);
     return clipPath;
 }
 
@@ -739,28 +742,31 @@ MochiKit.SVGCanvas.prototype.clipRect = function(x, y, w, h) {
 }
 
 MochiKit.SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
+    log("strokeRect(): this.drawGroup=", this.drawGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
                               'height':h});
     this._setShapeTransform(rect);
     this._setGraphicsAttributes(rect, 'stroke');
-    appendChildNodes(this.drawGroup, rect);
+    this.drawGroup.appendChild(rect);
     return rect;
 }
 
 MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
+    log("fillRect(): this.drawGroup=", this.drawGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
                               'height':h});
     this._setShapeTransform(rect);
     this._setGraphicsAttributes(rect, 'fill');
-    appendChildNodes(this.drawGroup, rect);
+    this.drawGroup.appendChild(rect);
     return rect;
 }
 
 MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
+    log("clearRect(): this.drawGroup=", this.drawGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
@@ -769,7 +775,7 @@ MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
                               'fill-opacity':1.0,
                               'fill-rule':'nonzero'});
     this._setShapeTransform(rect);
-    appendChildNodes(this.drawGroup, rect);
+    this.drawGroup.appendChild(rect);
     return rect;
 }
 
@@ -793,7 +799,7 @@ MochiKit.SVGCanvas.LinearGradient = function(svg, x0, y0, x1, y1) {
     this.gradientElement = svg.LINEARGRADIENT({'x1':x0, 'y1':y0, 'x2':x1, 'y2':y1, 'id':this.id, 'gradientUnits':'userSpaceOnUse'});
     log("Created gradientElement=", this.gradientElement);
     log("Going to append gradient id=", this.id, " to defs=", this.defs);
-    appendChildNodes(this.defs, this.gradientElement);
+    this.defs.appendChild(this.gradientElement);
 }
 
 MochiKit.SVGCanvas.LinearGradient.prototype.addColorStop = function(offset, color) {
@@ -809,7 +815,7 @@ MochiKit.SVGCanvas.LinearGradient.prototype.addColorStop = function(offset, colo
     var stop = this.svg.STOP({'offset':offset, 
                               'stop-color':c.toHexString(), 
                               'stop-opacity':c.asRGB()['a']});
-    appendChildNodes(this.gradientElement, stop);
+    this.gradientElement.appendChild(stop);
 }
 
 MochiKit.SVGCanvas.LinearGradient.prototype.applyGradient = function() {
@@ -827,7 +833,7 @@ MochiKit.SVGCanvas.RadialGradient = function(svg, x0, y0, r0, x1, y1, r1) {
     this.ratio = r0/r1;
     log("Created gradientElement=", this.gradientElement);
     log("Going to append gradient id=", this.id, " to defs=", this.defs);
-    appendChildNodes(this.defs, this.gradientElement);
+    this.defs.appendChild(this.gradientElement);
 }
 
 MochiKit.SVGCanvas.RadialGradient.prototype.addLinearColorStop = MochiKit.SVGCanvas.LinearGradient.prototype.addColorStop;
@@ -875,8 +881,8 @@ MochiKit.SVGCanvas.Pattern = function(svg, contents, repetition) {
                                      'height': height,
                                      'id':this.id});
     log("  pattern: ", this.pattern);
-    appendChildNodes(this.defs, this.pattern);
-    appendChildNodes(this.pattern, contents);
+    this.defs.appendChild(this.pattern);
+    this.pattern.appendChild(contents);
 }
 
 MochiKit.SVGCanvas.prototype.createPattern = function (image, repetition) {
@@ -928,8 +934,8 @@ MochiKit.SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */) {
     var marker = this.svg.MARKER({'orient':orient,  // 'auto'
                                      'id':this.id});
     log("  marker: ", this.marker);
-    appendChildNodes(this.defs, this.marker);
-    appendChildNodes(this.marker, this.drawGroup);
+    this.defs.appendChild(this.marker);
+    this.marker.appendChild(this.drawGroup);
 
     this.restore();
     return id;
