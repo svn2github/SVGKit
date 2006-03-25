@@ -20,6 +20,10 @@
         <th>
             Observatory Svg
         </th>
+        <td width="10" />
+        <th>
+            PC104 Emulator
+        </th>
     </tr>
     <tr>
         <td style="vertical-align: top">
@@ -201,6 +205,13 @@
                     <input class="smallbutton" type="button" value="Telescope" name="B2" 
                         onclick="ObsSvg.rotateTelescopeDeclination(document.getElementById('Ttele').value)" />
                 </div>
+            </form>
+        </td>
+        <td />
+        <td style="vertical-align: top">
+            <form id="debug_pc140_emulator" action="javascript:void(0);">
+                    <input class="smallbutton" type="button" value="Generate testCoinc" name="testCoinc" 
+                        onclick="Emulator.testCoincidence()" />
             </form>
         </td>
     </tr>

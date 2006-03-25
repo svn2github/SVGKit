@@ -150,9 +150,17 @@ var Convert = {
         var PMTpix = Convert.pix2PMTpix(pixelNum)
         var PNpix = Convert.PMTdict2[PMTpix];
         return PNpix
-    },
-    
+    },  
 }
+
+var Emulator = {
+    //make test coincidence (only works if PC104 emulator is running)
+    testCoincidence: function () {
+        doSimpleXMLHttpRequest("/expt/testCoincidence");
+        log(Test coincidence generated (assuming ));
+    }
+}
+  
 
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);

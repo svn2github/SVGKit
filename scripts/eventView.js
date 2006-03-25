@@ -285,8 +285,9 @@ var EventView = {
         tableElem.appendChild(row2);   
         for (i=0; i<fields.length; i++) {
             var fieldTD   = TD( null, fields[i] );
-            var detailsTD = TD( null,  eventDetails[fields[i]] );
-            var row       = TR(null, [fieldTD, detailsTD]);
+            var detailsTD = TD( null, eventDetails[fields[i]] );
+            var row       = TR( { "style" : {"verticalAlign" : "top"} }, 
+                                [fieldTD, detailsTD]);
             tableElem.appendChild(row);   
         }
     },
@@ -296,7 +297,8 @@ var EventView = {
         for (i=1; i<tableElem.childNodes.length; i++) {
             replaceChildNodes(tableElem.childNodes[i]);
         }
-        var row0 = TR(null, [TH( { "style" : {"width" : "70px"} } , "Event Details" )]);
+        var row0 = TR(null, [TH( { "style" : {"width" : "70px"} }, 
+                                 "Event Details" )]);
         tableElem.appendChild(row0);   
     },
     
