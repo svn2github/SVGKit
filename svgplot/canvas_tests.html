@@ -847,9 +847,9 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
     var ctx;
     var canvas = CANVAS({'width':200, 'height':200});
     replaceChildNodes(canvasTD, canvas);
+    var testFunction = eval(functionArea.value);
     if (canvas.getContext) {
         var ctx = canvas.getContext("2d");
-        var testFunction = eval(functionArea.value);
         ctx.clearRect(0,0,200,200);
         testFunction(ctx);
     }
@@ -870,11 +870,11 @@ function addTests() {
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test", test);
-            var canvasSrc = (""+testFunctions[test]).replace(/ +/g, " ");
+            var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
             var functionArea, svgSrcArea, button, canvasTD, svgTD, button;
             var tr = TR(null, TD(null, test, BR(null), IMG({'src':test+'.png'}) ), 
                               canvasTD=TD(null), 
-                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, canvasSrc),
+                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, plotSrc),
                                        BR(null),
                                        button=INPUT({'type':"button", 'value':"Do It"}) ),
                               svgTD=TD(null),
