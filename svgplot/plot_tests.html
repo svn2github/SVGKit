@@ -20,7 +20,7 @@
 
 <script type="text/javascript">
 
-var POINT_COUNT = 20;
+var POINT_COUNT = 40;
 
 var intsquares = Array(POINT_COUNT); // squares of their position
 for (var i=0; i<POINT_COUNT; i++)
@@ -32,7 +32,7 @@ var trigx = Array(POINT_COUNT);
 var sin = Array(POINT_COUNT);
 var cos = Array(POINT_COUNT);
 for (var i=0; i<POINT_COUNT; i++) {
-    x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/POINT_COUNT;
+    var x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/POINT_COUNT;
     log("in trig x=" + x);
     trigx[i] = x;
     sin[i] = Math.sin(x);
@@ -43,6 +43,9 @@ for (var i=0; i<POINT_COUNT; i++) {
 var testFunctions = {
     
     'simpleLine' : function(p) {
+        var intsquares = Array(POINT_COUNT); // squares of their position
+        for (var i=0; i<POINT_COUNT; i++)
+            intsquares[i] = i*i;
         p.plotLine(intsquares)
     },
     
@@ -56,17 +59,16 @@ var testFunctions = {
     },
     
     'styleLine' : function(p) {
-        p.strokeStyle = 'rgba(255, 0, 255, .5)';
-        p.dasharray = ".5,1,2";  // List the stroke-dasharray explicitly 
-        p.dashoffset=2;
-        //p.setMarkers('Arrow1MStart');
-        p.plotLine(intsquares);
+        p.strokeStyle = "#00E";
+        p.plotLine(trigx, sin);
+        p.strokeStyle = "#E00";
+        p.plotLine(trigx, cos);
         
-        p.dasharray = "";
-        p.strokeStyle = 'rgba(0, 0, 200, .8)';
-        p.plotLine(trigx, sin)
-        p.strokeStyle = 'rgba(200, 0, 0, .8)';
-        p.plotLine(trigx, cos)
+        p.strokeStyle = "rgba(100, 0, 100, .5)";
+        p.lineWidth = '5' 
+        p.dasharray = ".5,1,2";
+        p.dashoffset = 2;
+        p.plotLine(intsquares);
     },
     
     'functionPlot' : function(p) {
@@ -121,7 +123,7 @@ function addTests() {
         if (i>=start && i-start<number) {
             log("doing test", test);
             var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
-            var functionArea, svgSrcArea, button, plotTD, button;
+            var functionArea, plotSrcArea, button, plotTD, button;
             var tr = TR(null, TD(null, test, BR(null), IMG({'src':test+'.png'}) ), 
                               TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, plotSrc),
                                        BR(null),
