@@ -1,19 +1,20 @@
 var EventView = {
-    base:  "/event/",
+    base:   "/event/",
     idbase: "event_view_",
-    filterElems:      [],
-    controlElems:     [],
-    liveEventsButton: [],
-	controlSettings:  [],
-    statusElem:       null,
-    autoLoad:         false, 
-    autoLoadFinished: false, 
-    maxId:            0,
-    eventDetails:     [],
-    eventDetailLock:  false,
+    filterElems:        [],
+    controlElems:       [],
+    liveEventsButton:   [],
+	controlSettings:    [],
+    statusElem:         null,
+    autoLoad:           false, 
+    autoLoadFinished:   false, 
+    maxId:              0,
+    eventDetails:       [],
+    eventDetailLock:    false,
+    stickyEventDetails: 0,
     
     //features to add: drop entries off the bottom of the table if in autoupdate mode,
-    //                 onclick(autoload) set maxId = 0                
+    //                 cache event details,                 
     
     getElems: function () {
         EventView.controlElems      = document.getElementById(EventView.idbase+'controls');
@@ -217,6 +218,7 @@ var EventView = {
         //clear table unless in autoload mode
         if (EventView.autoLoad == false) {
             EventView.clearTable();
+            EventView.stickyEventDetails = false;
         }
         var maxResults = "&maxResults=" + maxEvents;
         //construct query string and send to server
@@ -245,17 +247,38 @@ var EventView = {
             tableElem.rows[i].onmousedown = ignoreEvent;
             tableElem.rows[i].onmouseover = EventView.mouseOverFunction;
             tableElem.rows[i].onmouseout  = EventView.mouseOutFunction;
+            tableElem.rows[i].onclick     = EventView.mouseClickFunction;
         }
     },
 
     mouseOverFunction: function () {
-        addElementClass(this, "over");
-        EventView.getEventDetails(this.cells[0].innerHTML, this.cells[2].innerHTML);
+        if (EventView.stickyEventDetails == 0 ) {
+            addElementClass(this, "over");
+            EventView.getEventDetails(this.cells[0].innerHTML, this.cells[2].innerHTML);
+        }
     },
 
     mouseOutFunction: function () {
-        removeElementClass(this, "over");
-        EventView.clearEventDetails();
+        if (EventView.stickyEventDetails == 0 ) {
+            removeElementClass(this, "over");
+            EventView.clearEventDetails();
+        }
+    },
+
+    mouseClickFunction: function () {
+        //make data shown in Event Details stay there when user clicks on row
+        if      (EventView.stickyEventDetails == 0) {
+            EventView.stickyEventDetails = this.cells[0].innerHTML;
+            log("event stuck :" + EventView.stickyEventDetails);
+            setNodeAttribute(this, "id", EventView.stickyEventDetails);
+            log(this.id);
+        }
+        else if (EventView.stickyEventDetails != 0)  {
+            log("event unstuck: " + EventView.stickyEventDetails);
+            removeElementClass(EventView.stickyEventDetails, "over");
+            EventView.clearEventDetails();
+            EventView.stickyEventDetails = 0;
+        }
     },
 
     getEventDetails: function (eventId, eventType) {
