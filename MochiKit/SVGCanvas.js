@@ -623,7 +623,6 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         style = this.fillStyle;
         other = 'stroke';
     }
-    log("this.strokeStyle =", this.strokeStyle);
     log('type =', type, 'style = ', style, 'this.strokeStyle=', this.strokeStyle);
     
     if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'

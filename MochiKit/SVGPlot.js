@@ -160,8 +160,8 @@ MochiKit.SVGPlot.Frame = function(parentSVGPlot) {
 MochiKit.SVGPlot.Layer = function(parentFrame) {
     log("Constructing Layer parentFrame=", parentFrame);
     this._parentFrame = parentFrame;    
-    log("in Layer _element=", this._element);
     this._element = this._parentFrame._parentSVGPlot.svg.G(null);
+    log("in Layer _element=", this._element);
     log("    _element=", this._element, " this._parentFrame=", this._parentFrame);
     log("     this._parentFrame._element=", this._parentFrame._element);
     this._parentFrame._element.appendChild(this._element);
@@ -210,6 +210,7 @@ MochiKit.SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... *
     }
     for (var data_index=1; data_index<arguments.length; data_index++) {
         // Check for nulls
+        log("Going to call addPlotDataset data_index = ", data_index);
         this._currentFrame._currentLayer.addPlotDataset( new MochiKit.SVGPlot.LinePlotDataset( this._currentFrame._currentLayer,
                                                                     xorydata, 
                                                                     arguments[data_index]) );
@@ -220,7 +221,7 @@ MochiKit.SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
     var POINT_COUNT = 200;
     var xdata = Array(POINT_COUNT);
     var ydata = Array(POINT_COUNT);
-    var temp = {};  // a new object context to set a variable inside and have a function run.
+    var temp = {}; // a new object context to set a variable inside and have a function run. 
     for (var i=0; i<POINT_COUNT; i++) {
         temp[name] = xmin + (xmax-xmin)*i/POINT_COUNT;
         xdata[i] = temp[name];
@@ -237,7 +238,7 @@ MochiKit.SVGPlot.Layer.prototype.getDatasetRect = function() {
 
 
 MochiKit.SVGPlot.Layer.prototype.addPlotDataset = function(plotDataset /* optional */) {
-    MochiKit.SVGPlot._add(this, plotDataset, this._plotDatasets, this._element, this._parentFrame._element, '_currentPlotDataset', MochiKit.SVGPlot.PlotDataset);
+    MochiKit.SVGPlot._add(this, plotDataset, this._plotDatasets, this._element, this._parentFrame._element, '_currentPlotDataset', MochiKit.SVGPlot.LinePlotDataset);
     var canvas = this._parentFrame._parentSVGPlot;
     canvas.save();
     canvas.setGroup(this._parentFrame._element);
@@ -308,7 +309,8 @@ MochiKit.SVGPlot.LinePlotDataset.prototype.plot = function() {
         canvas.moveTo(xscale*(this.xdata[0]-this.xmin), yscale*(this.ydata[0]-this.ymin));
     for (i=1; i<this.ydata.length; i++)
         canvas.lineTo(xscale*(this.xdata[i]-this.xmin), yscale*(this.ydata[i]-this.ymin))
-    return canvas.stroke();
+    canvas.stroke();
+    return null;
 }
 
 
@@ -329,8 +331,6 @@ MochiKit.SVGPlot._add = function (self, object, array, element, parentElement, c
     if (typeof(object)=='undefined' || object==null)
         object = new constructor();
     array.push(object);
-    log("Trying to insert element type=", element.constructor, " into parentElement type=", parentElement.constructor)
-    parentElement.appendChild(element);
     self[currentName] = object;
 }
 
