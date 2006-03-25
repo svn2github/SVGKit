@@ -157,7 +157,7 @@ var Emulator = {
     //make test coincidence (only works if PC104 emulator is running)
     testCoincidence: function () {
         doSimpleXMLHttpRequest("/expt/testCoincidence");
-        log(Test coincidence generated (assuming ));
+        log("Test coincidence generated, if PC104 Emulator is running.");
     }
 }
   
