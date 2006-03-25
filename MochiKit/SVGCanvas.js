@@ -179,33 +179,40 @@ MochiKit.SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, heig
 }
 
 MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
+    /***
+        SVG ONLY used by the constructor, but can also be called to reset the state
+        to have black fills and no transformations.  If this is done, it should be
+        come in between a save() and restore().
+        This can be used to set the drawingGroup if you happen to also want to reset.
+    ***/
     if (typeof(startingGroup) == 'undefined' || startingGroup==null)
         startingGroup = this.svg.svgElement;
     log("_setDefaults with svg: ", this.svg, " this: ", this);
     
     this._startingState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", rgba(r, g, b, alpha) (0-255), or from a gradient
-                            'strokeStyle': "#000000", // Same as above
-                            'globalAlpha': 1.0, // Float between 0.0 and 1.0
-                            'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
-                            'lineCap': "butt", // also "round" and "square"
-                            'lineJoin': "miter", // also "round" and "bevel"
-                            'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
-                            'miterLimit': null, // The canvas divides the length of the miter by the line width. If the result is greater than the miter limit, the style is converted to a bevel.
-                            'shadowBlur': 0, // width, in coordinate space units, that a shadow should cover. Never negative. 
-                            'shadowColor': null, // color the canvas applies when displaying a shadow (same as two color methods above)
-                            'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
-                            'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
-                            // SVG Only extensions:
-                            'markerStart' : null,
-                            'markerMid' : null,
-                            'markerEnd' : null,
-                            // Internal State:
-                            'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
-                            'transformations' : "",  // Applys to all subpaths.
-                            'drawGroup' : startingGroup, // When you start, there is no clipping and you're not in a marker.
-                            'currentGroup' : startingGroup };  // if this is changed, you also have to change the drawGroup
+                              'strokeStyle': "#000000", // Same as above
+                              'globalAlpha': 1.0, // Float between 0.0 and 1.0
+                              'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
+                              'lineCap': "butt", // also "round" and "square"
+                              'lineJoin': "miter", // also "round" and "bevel"
+                              'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
+                              'miterLimit': null, // The canvas divides the length of the miter by the line width. If the result is greater than the miter limit, the style is converted to a bevel.
+                              'shadowBlur': 0, // width, in coordinate space units, that a shadow should cover. Never negative. 
+                              'shadowColor': null, // color the canvas applies when displaying a shadow (same as two color methods above)
+                              'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
+                              'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
+                              // SVG Only extensions:
+                              'markerStart' : null,
+                              'markerMid' : null,
+                              'markerEnd' : null,
+                              // Internal State:
+                              'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
+                              'transformations' : "",  // Applys to all subpaths.
+                              'drawGroup' : startingGroup, // When you start, there is no clipping and you're not in a marker.
+                              'currentGroup' : startingGroup };  // if this is changed, you also have to change the drawGroup
     this._setState(this, this._startingState);  // Copy the state above to be accessed with this.fillStyle, etc.
-    this._stateStack = []; // A state stack.  The current state is stored as this.fillStyle so it has same Canvas interface.
+    if (typeof(this._stateStack)=='undefined' || this._stateStack==null)
+        this._stateStack = []; // A state stack.  The current state is stored as this.fillStyle so it has same Canvas interface.
     log("calling beginPath");
     this.beginPath();  // clears _subpaths, and calls and calls moveTo(0,0)
 }
@@ -530,8 +537,17 @@ MochiKit.SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle,
     }
 }
 
-    
-MochiKit.SVGCanvas.prototype._setTransformAttribute = function (node) {
+   
+MochiKit.SVGCanvas.prototype._setShapeTransform = function(shape) {
+    var m = this.currentTransformationMatrix;
+    // Add the current transformation matrix to the transformation list only if it's not the identity matrix.
+    var transform = m==null ?  '' : ' matrix('+m['a']+','+m['b']+','+m['c']+','+m['d']+','+m['e']+','+m['f']+')'
+    if (transform  != '' || this.transformations != '')
+        setNodeAttribute(shape, 'transform', this.transformations + transform);
+}
+
+
+MochiKit.SVGCanvas.prototype._setPathTransformAttribute = function (node) {
     if (this.transformations != "") {
         setNodeAttribute(node, 'transform', this.transformations);
     }
@@ -559,13 +575,13 @@ MochiKit.SVGCanvas.prototype._emitPaths = function () {
     }
     if (paths.length == 1) {
         // Construct a single path:  <path transform="blah">
-        this._setTransformAttribute(paths[0])
+        this._setPathTransformAttribute(paths[0])
         return paths[0];
     }
     else {
         // Construct a group:  <g transform="blah"> <path> <path> <path> </g>
         var group = this.svg.G(null);
-        this._setTransformAttribute(group);
+        this._setPathTransformAttribute(group);
         for (i=0; i<paths.length; i++) {
             appendChildNodes(group, paths[i]);
         }
@@ -635,12 +651,18 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
 }
 
 MochiKit.SVGCanvas.prototype.stroke = function () {
+    /***
+        strokes each subpath of the current path in turn, using strokeStyle
+        
+        returns SVG ONLY svg path element
+    ***/
     var paths = this._emitPaths();
     if (paths != null) {
         this._setGraphicsAttributes(paths, 'stroke');
         log("this.drawGroup=", this.drawGroup);
         appendChildNodes(this.drawGroup, paths);
     }
+    return paths;
 }
 
 MochiKit.SVGCanvas.prototype.fill = function () {
@@ -648,15 +670,30 @@ MochiKit.SVGCanvas.prototype.fill = function () {
         fills each subpath of the current path in turn, using fillStyle, 
         and using the non-zero winding number rule. Open subpaths are implicitly 
         closed when being filled (without affecting the actual subpaths).
+        
+        returns SVG ONLY svg path element
     ***/
     var paths = this._emitPaths();
     if (paths != null) {
         this._setGraphicsAttributes(paths, 'fill');
         appendChildNodes(this.drawGroup, paths);
     }
+    return paths;
 }
 
-MochiKit.SVGCanvas.prototype.clip = function () {
+MochiKit.SVGCanvas.prototype._doClip = function(clippingContents) {
+    if (clippingContents == null)
+        return null;
+    var clipId = this.svg.createUniqueID('clip');
+    var clipPath = this.svg.CLIPPATH({'id':clipId});  // , 'clipPathUnits':'userSpaceOnUse'  default
+    appendChildNodes(clipPath, clippingContents);
+    this.svg.append(clipPath);
+    this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
+    appendChildNodes(this.currentGroup, this.drawGroup);
+    return clipPath;
+}
+
+MochiKit.SVGCanvas.prototype.clip = function (x, y, width, height) {
     /***
         <g clip-rule="nonzero">
           <clipPath id="MyClip">
@@ -665,25 +702,19 @@ MochiKit.SVGCanvas.prototype.clip = function () {
           <rect clip-path="url(#MyClip)" clip-rule="evenodd" ... />
         </g>
     ***/
-    var paths = this._emitPaths();
-    if (paths != null) {
-        var clipId = this.svg.createUniqueID('clip');
-        var clipPath = this.svg.CLIPPATH({'id':clipId});  // , 'clipPathUnits':'userSpaceOnUse'  default
-        appendChildNodes(clipPath, paths);
-        this.svg.append(clipPath);
-        this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
-        appendChildNodes(this.currentGroup, this.drawGroup);
-    }
+    return this._doClip(this._emitPaths());
 }
 
-
-
-MochiKit.SVGCanvas.prototype._setShapeTransform = function(shape) {
-    var m = this.currentTransformationMatrix;
-    // Add the current transformation matrix to the transformation list only if it's not the identity matrix.
-    var transform = m==null ?  '' : ' matrix('+m['a']+','+m['b']+','+m['c']+','+m['d']+','+m['e']+','+m['f']+')'
-    if (transform  != '' || this.transformations != '')
-        setNodeAttribute(shape, 'transform', this.transformations + transform);
+MochiKit.SVGCanvas.prototype.clipRect = function(x, y, w, h) {
+    /***
+        SVG ONLY: CDefine a simple clip rectangle without drawing a path.
+    ***/
+    var rect = this.svg.RECT({'x':x,
+                              'y':y,
+                              'width':w,
+                              'height':h});
+    this._setShapeTransform(rect);
+    return this._doClip(rect);
 }
 
 MochiKit.SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
@@ -694,6 +725,7 @@ MochiKit.SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
     this._setShapeTransform(rect);
     this._setGraphicsAttributes(rect, 'stroke');
     appendChildNodes(this.drawGroup, rect);
+    return rect;
 }
 
 MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
@@ -704,6 +736,7 @@ MochiKit.SVGCanvas.prototype.fillRect = function (x, y, w, h) {
     this._setShapeTransform(rect);
     this._setGraphicsAttributes(rect, 'fill');
     appendChildNodes(this.drawGroup, rect);
+    return rect;
 }
 
 MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
@@ -716,6 +749,7 @@ MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
                               'fill-rule':'nonzero'});
     this._setShapeTransform(rect);
     appendChildNodes(this.drawGroup, rect);
+    return rect;
 }
 
 // Creating Gradient, Pattern, and (SVG Only) Marker Styles
@@ -914,13 +948,9 @@ MochiKit.SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy
     this.svg.append(img);
 }
 
-// drawImageFromRect
-
 MochiKit.SVGCanvas.__new__ = function (win) {
 
     var m = MochiKit.Base;
-
-    //this.$ = this.getElement;
 
     this.EXPORT_TAGS = {
         ":common": this.EXPORT,
