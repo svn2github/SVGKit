@@ -135,12 +135,16 @@ try {
 }
 
 if (typeof(MochiKit.SVGCanvas) == 'undefined') {
-    MochiKit.SVGCanvas = function (widthOrIdOrNode, height, id) {
+    MochiKit.SVGCanvas = function (widthOrIdOrNode, height, id /* optional */) {
+        if (arguments.length==0) {
+            log('Called SVGCanvas constructor with no arguments.');
+            return;
+        }
         if (typeof(this.__init__)=='undefined' || this.__init__ == null){
             log("You called SVGCanvas() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
             return new MochiKit.SVGCanvas(widthOrIdOrNode, height, id, type);
         }
-        log("constructor got: ", widthOrIdOrNode, height, id); 
+        log("constructor got: ", widthOrIdOrNode, height, id);
         this.__init__(widthOrIdOrNode, height, id);
         return null;
     };
@@ -182,7 +186,7 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
     /***
         SVG ONLY used by the constructor, but can also be called to reset the state
         to have black fills and no transformations.  If this is done, it should be
-        come in between a save() and restore().
+        come between a save() and restore().
         This can be used to set the drawingGroup if you happen to also want to reset.
     ***/
     if (typeof(startingGroup) == 'undefined' || startingGroup==null)
@@ -202,7 +206,9 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
                               'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
                               'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
                               // SVG Only extensions:
-                              'markerStart' : null,
+                              'dasharray' : null,  // a string list "1,2"
+                              'dashoffset' : null, // a number like 3
+                              'markerStart' : null,  // marker group object
                               'markerMid' : null,
                               'markerEnd' : null,
                               // Internal State:
@@ -215,6 +221,15 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
         this._stateStack = []; // A state stack.  The current state is stored as this.fillStyle so it has same Canvas interface.
     log("calling beginPath");
     this.beginPath();  // clears _subpaths, and calls and calls moveTo(0,0)
+}
+
+MochiKit.SVGCanvas.prototype.setGroup = function(group) {
+    /***
+        SVG ONLY
+        should probably come between a save() and restore().
+    ***/
+    this.drawGroup = group;
+    this.currentGroup = group;
 }
 
 MochiKit.SVGCanvas.prototype._setState = function(dest, src) {
@@ -311,13 +326,13 @@ MochiKit.SVGCanvas.prototype.hasDrawing = / M [\-0-9eE\.]+,[\-0-9eE\.]+ /;
 
 MochiKit.SVGCanvas.prototype._newSubPath = function(addToEnd) {
     if (this.hasDrawing.test(this._subpaths[this._subpaths.length-1])) {
-        log("_pushAndClear: current sub path = ", this._subpaths[this._subpaths.length-1]), "  making new empty one";
+        //log("_newSubPath: current sub path = ", this._subpaths[this._subpaths.length-1]), "  making new empty one";
         if (typeof(addToEnd) == 'string')
             this._subpaths[this._subpaths.length-1] += addToEnd;
         this._subpaths.push("");
     }
     else {
-        log("_pushAndClear: didn't push it = ", this._subpaths[this._subpaths.length-1]);
+        //log("_pushAndClear: didn't push it = ", this._subpaths[this._subpaths.length-1]);
     }
 }
 
@@ -329,7 +344,8 @@ MochiKit.SVGCanvas.prototype.moveTo = function(x, y) {
         subpath is removed from the path.
         We don't error check or optimize.
     ***/
-    log("moveTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
+    //log("moveTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
+    //log("moveTo("+x+","+y+")");
     this._newSubPath();
     var p = this._transformWithCTM(x,y);
     this._subpaths[this._subpaths.length-1] = " M " + p.x + "," + p.y;  // This must pass the hasDrawing RegExp
@@ -355,7 +371,8 @@ MochiKit.SVGCanvas.prototype.lineTo = function(x, y) {
         adds the given coordinate (x, y) to the list of points of the subpath, 
         and connects the current position to that point with a straight line.
     ***/
-    log("lineTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
+    //log("lineTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
+    //log("lineTo("+x+","+y+")");
     if (this._subpaths[this._subpaths.length-1] == '') {
         log("lineTo detected no current path. Calling moveTo instead ala Firefox");
         this.moveTo(x, y);
@@ -563,7 +580,7 @@ MochiKit.SVGCanvas.prototype._emitPaths = function () {
     var i;
     
     for (i=0; i<pathcount; i++) {
-        log("_emitPaths(): _subpaths.length =", pathcount, "current subpath["+i+"] =", this._subpaths[i]);
+        //log("_emitPaths(): _subpaths.length =", pathcount, "current subpath["+i+"] =", this._subpaths[i]);
         if (this.hasDrawing.test(this._subpaths[i])) {
             var path = this.svg.PATH({'d':this._subpaths[i]});
             paths.push(path)
@@ -639,6 +656,11 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         if (this.miterLimit != null)
             setNodeAttribute(node, 'stroke-miterlimit', this.miterLimit);
         setNodeAttribute(node, 'stroke-linecap', this.lineCap);
+        // SVG Only:
+        if (this.dasharray)
+            setNodeAttribute(node, 'stroke-dasharray', this.dasharray);
+        if (this.dashoffset != null)
+            setNodeAttribute(node, 'stroke-dashoffset', this.dashoffset);
     }
     
     // SVG Only:  Markers

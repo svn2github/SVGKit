@@ -93,16 +93,24 @@ try {
 }
 
 if (typeof(MochiKit.SVGPlot) == 'undefined') {
-    MochiKit.SVGPlot = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
-        if (typeof(this.__init__)=='undefined' || this.__init__ == null){
-            log("You called SVGPlot() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
-            return new MochiKit.SVGPlot(widthOrIdOrNode, height, id);  // Ends up calling this constructor again, but returning an object.
-        }
-        log("calling SVGPlot.__init__ this = ", this);
-        this.__init__(widthOrIdOrNode, height, id);
-        return null;
-    };
+    MochiKit.SVGPlot = {};
 }
+
+
+MochiKit.SVGPlot = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
+    if (arguments.length>0)
+        this.__init__(widthOrIdOrNode, height, id);
+    if (typeof(this.__init__)=='undefined' || this.__init__ == null) {
+        log("You called SVGPlot() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
+        return new MochiKit.SVGPlot(widthOrIdOrNode, height, id);  // Ends up calling this constructor again, but returning an object.
+    }
+    return null;
+};
+
+// Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
+MochiKit.SVGPlot.prototype = new MochiKit.SVGCanvas();
+MochiKit.SVGPlot.prototype.constructor = MochiKit.SVGPlot;
+MochiKit.SVGPlot.superclass = MochiKit.SVGCanvas.prototype;
 
 MochiKit.SVGPlot.NAME = "MochiKit.SVGPlot";
 MochiKit.SVGPlot.VERSION = "1.2";
@@ -125,32 +133,15 @@ MochiKit.SVGPlot.EXPORT_OK = [
 ];
 
 
-MochiKit.SVGPlot.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
+MochiKit.SVGPlot.prototype.__init__ = function (widthOrIdOrNode, height, id /*optional*/) {
     /***
         Can pass it in an SVG object, or can pass it things that the SVG constructor uses.
     ***/
-    var isSVGCanvas = typeof(widthOrIdOrNode) == 'object' && widthOrIdOrNode.constructor == MochiKit.SVGCanvas;
-    var isSVG = typeof(widthOrIdOrNode) == 'object' && widthOrIdOrNode.constructor == MochiKit.SVG;
-    if (isSVGCanvas) {
-        log("SVGPlot got passed a SVGCanvas");
-        this.canvas = widthOrIdOrNode;
-        this.svg = this.canvas.svg;
-    }
-    else if (isSVG) {
-        log("SVGPlot got passed a SVG");
-        this.svg = widthOrIdOrNode;
-        this.canvas = new SVGCanvas(this.svg);
-    }
-    else {
-        log("SVGPlot got passed parameters to be sent to a constructor.");
-        this.canvas = new SVGCanvas(widthOrIdOrNode, height, id);
-        this.svg = this.canvas.svg;
-    }
-    log("Working with canvas: ", this.canvas, " svg: ", this.svg, " this: ", this);
-    this.svg.whenReady( bind(this.reset, this, null) );
+    MochiKit.SVGPlot.superclass.__init__.call(this, widthOrIdOrNode, height, id);
+    this.svg.whenReady( bind(this.resetPlot, this, null) );
 }
 
-MochiKit.SVGPlot.prototype.reset = function() {
+MochiKit.SVGPlot.prototype.resetPlot = function() {
     log("Constructing SVGPlot in SVGPlot.reset");
     this._currentFrame = new MochiKit.SVGPlot.Frame(this)
     this._frames = [this._currentFrame];
@@ -210,17 +201,51 @@ MochiKit.SVGPlot.YGrid  = function(parent) {}
 MochiKit.SVGPlot.HorizontalLine  = function(parent) {}
 MochiKit.SVGPlot.VerticalLine  = function(parent) {}
 
-MochiKit.SVGPlot.prototype.plotLine = function(xdata /* ydata1, ydata2, ... */) {
+MochiKit.SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
+    if (arguments.length==1) {
+        var xdata = new Array(xorydata.length);  // ydata = xorydata;
+        for (var i=0; i<xorydata.length; i++)
+            xdata[i] = i;
+        this.plotLine(xdata, xorydata);
+    }
     for (var data_index=1; data_index<arguments.length; data_index++) {
         // Check for nulls
         this._currentFrame._currentLayer.addPlotDataset( new MochiKit.SVGPlot.LinePlotDataset( this._currentFrame._currentLayer,
-                                                                    xdata, 
+                                                                    xorydata, 
                                                                     arguments[data_index]) );
     }
 }
 
+MochiKit.SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
+    var POINT_COUNT = 200;
+    var xdata = Array(POINT_COUNT);
+    var ydata = Array(POINT_COUNT);
+    var temp = {};  // a new object context to set a variable inside and have a function run.
+    for (var i=0; i<POINT_COUNT; i++) {
+        temp[name] = xmin + (xmax-xmin)*i/POINT_COUNT;
+        xdata[i] = temp[name];
+        ydata[i] = eval.call(temp, func);
+    }
+    log("Calling plotLine with data");
+    this.plotLine(xdata, ydata);
+}
+
+
+MochiKit.SVGPlot.Layer.prototype.getDatasetRect = function() {
+    return {'x':0, 'y':0, 'width':200, 'height':200};
+}
+
+
 MochiKit.SVGPlot.Layer.prototype.addPlotDataset = function(plotDataset /* optional */) {
     MochiKit.SVGPlot._add(this, plotDataset, this._plotDatasets, this._element, this._parentFrame._element, '_currentPlotDataset', MochiKit.SVGPlot.PlotDataset);
+    var canvas = this._parentFrame._parentSVGPlot;
+    canvas.save();
+    canvas.setGroup(this._parentFrame._element);
+    var rect = this.getDatasetRect();
+    canvas.clipRect(0, 0, rect.width, rect.height);
+    canvas.translate(rect.x, rect.y);
+    plotDataset.plot();
+    canvas.restore();
 }
 
 MochiKit.SVGPlot.prototype.deletePlotDataset = function(plotDataset /*optional*/) {
@@ -228,35 +253,39 @@ MochiKit.SVGPlot.prototype.deletePlotDataset = function(plotDataset /*optional*/
 }
 
 MochiKit.SVGPlot._minmax = function(array) {
-    var max = -99999;
-    var min = 99999;
+    var max = Number.MIN_VALUE;
+    var min = Number.MAX_VALUE;
     for (var i=0; i<array.length; i++) {
         max = array[i]>max ? array[i] : max;
         min = array[i]<min ? array[i] : min;
     }
-    return [min, max]
+    return {'min':min, 'max':max};
 }
 
 
 MochiKit.SVGPlot.LinePlotDataset = function(parentLayer, xdata, ydata) {
-    this.xdata = xdata;
-    this.ydata = ydata;
-    this.autoRange()
     log("Constructing LinePlotDataset parentLayer=", parentLayer);
     this._parentLayer = parentLayer;
-    log("x = ("+this.xmin+","+this.xmax+"), y = ("+this.ymin+","+this.ymax+")  ");
-    this.width = 200;
-    this.height = 200;
+    var rect = parentLayer.getDatasetRect()
+    this.width = rect.width;
+    this.height = rect.height;
+    this.xdata = xdata;
+    this.ydata = ydata;
+    this.autoRange();   // default.
+}
+
+MochiKit.SVGPlot.LinePlotDataset.prototype.plot = function() {
+    /***
+        Designed to work like canvas.stroke() where it just plots its shit into whatever 
+        SVG group happens to be the canvas's currentGroup.
+    ***/
     // Must to scaling by hand to keep line-widths properly sized.
     // At full scale, thick lines get cut off.
     var xscale=this.width/(this.xmax-this.xmin);
     var yscale=this.height/(this.ymax-this.ymin);
     //var svg = this._parentLayer._parentFrame._parentSVGPlot.svg
-    var canvas = this._parentLayer._parentFrame._parentSVGPlot.canvas
+    var canvas = this._parentLayer._parentFrame._parentSVGPlot;
     
-    canvas.reset(this._parentLayer._element);
-    canvas.save();
-    canvas.clipRect(0, 0, this.width, this.height);
     
     // Should really loop through and draw one point off of each side if it exists.
     // Maybe not becuase you can plot arbitrary loopy xy sets and make 
@@ -264,24 +293,32 @@ MochiKit.SVGPlot.LinePlotDataset = function(parentLayer, xdata, ydata) {
     canvas.translate(0,this.height);
     canvas.scale(1,-1);
     canvas.beginPath();
-    if (ydata.length > 0) {
-        canvas.moveTo(xscale*(xdata[0]-this.xmin), yscale*(ydata[0]-this.ymin));
+    // Handle infinite and NaN properly.
+    var drawingFunction = canvas.moveTo;
+    for (i=0; i<this.ydata.length; i++) {
+        var sx = xscale*(this.xdata[i]-this.xmin);
+        var sy = yscale*(this.ydata[i]-this.ymin);
+        if (sx!=Number.NaN  && sx!=Number.MAX_VALYE && sx!=Number.MIN_VALUE &&
+            sy!=Number.NaN && sy!=Number.MAX_VALYE && sy!=Number.MIN_VALUE) {
+                drawingFunction.call(canvas, sx, sy);
+                drawingFunction = canvas.lineTo;
+        }
     }
-    for (i=1; i<ydata.length; i++) {
-        canvas.lineTo(xscale*(xdata[i]-this.xmin), yscale*(ydata[i]-this.ymin))
-    }
-    this._path = canvas.stroke();
-    canvas.restore();
+    if (this.ydata.length > 0)
+        canvas.moveTo(xscale*(this.xdata[0]-this.xmin), yscale*(this.ydata[0]-this.ymin));
+    for (i=1; i<this.ydata.length; i++)
+        canvas.lineTo(xscale*(this.xdata[i]-this.xmin), yscale*(this.ydata[i]-this.ymin))
+    return canvas.stroke();
 }
 
 
 MochiKit.SVGPlot.LinePlotDataset.prototype.autoRange = function() {
     var xrange = MochiKit.SVGPlot._minmax(this.xdata);
-    this.xmin=xrange[0]
-    this.xmax=xrange[1];
+    this.xmin=xrange.min;
+    this.xmax=xrange.max;
     var yrange = MochiKit.SVGPlot._minmax(this.ydata);
-    this.ymin=yrange[0]
-    this.ymax=yrange[1];
+    this.ymin=yrange.min;
+    this.ymax=yrange.max;
 }
 
 MochiKit.SVGPlot._add = function (self, object, array, element, parentElement, currentName, constructor) {
@@ -314,7 +351,6 @@ MochiKit.SVGPlot._remove = function(self, object, array, element, parentElement,
     }
     return object;
 }
-
 
 
 // set add delete replace actions

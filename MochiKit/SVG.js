@@ -205,7 +205,7 @@ MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
     this._redrawId = null;
-    this.newSVGType = 'object'; // Determine a good default dynamically (inline svg, object, or embed)
+    this.newSVGType = 'inline'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
     log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
     this.setBaseURI();
