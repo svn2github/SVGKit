@@ -28,7 +28,7 @@ textarea {
 
 <script type="text/javascript">
 
-var POINT_COUNT = 40;
+var POINT_COUNT = 20;
 
 var intsquares = Array(POINT_COUNT); // squares of their position
 for (var i=0; i<POINT_COUNT; i++)
@@ -49,28 +49,40 @@ for (var i=0; i<POINT_COUNT; i++) {
 
 
 var testFunctions = {
-    /*
+    
     'simpleLine' : function(p) {
         p.plotLine(intsquares)
     },
-    */
+    
     'xyLine' : function(p) {
         p.plotLine(trigx, sin)
-        //p.plotLine(intsquares, intsquares)
-    },
-    
-    'styleLine' : function(p) {
-        p.plotLine(intsquares);
-        p.setColor('rgba(200, 0, 200, .5)');
-        p.setOpacity(0.2);
-        p.setDashes(.5,1,2)  // List the stroke-dasharray explicitly 
-        p.setDashOffset(2)
-        p.setMarkers('Arrow1MStart');
     },
     
     'multiPlot' : function(p) {
         p.plotLine(trigx, sin)
-        p.plotLine(cos)
+        p.plotLine(trigx, cos)
+    },
+    
+    'styleLine' : function(p) {
+        p.strokeStyle = 'rgba(255, 0, 255, .5)';
+        p.dasharray = ".5,1,2";  // List the stroke-dasharray explicitly 
+        p.dashoffset=2;
+        //p.setMarkers('Arrow1MStart');
+        p.plotLine(intsquares);
+        
+        p.dasharray = "";
+        p.strokeStyle = 'rgba(0, 0, 200, .8)';
+        p.plotLine(trigx, sin)
+        p.strokeStyle = 'rgba(200, 0, 0, .8)';
+        p.plotLine(trigx, cos)
+    },
+    
+    'functionPlot' : function(p) {
+        p.plotFunction('Math.atan(x)', 'x', -8, 8);
+    },
+    
+    'trickyFunctionPlot' : function(p) {
+        p.plotFunction('Math.sin(1/x)', 'x', -4, 4);
     },
     
     'axes' : function(p) {
@@ -112,7 +124,7 @@ function doTest(plotTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 0, number = 1;
+    var i = 0, start = 0, number = 5;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test", test);
