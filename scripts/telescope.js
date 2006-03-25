@@ -43,6 +43,10 @@ var Telescope = {
         });
         // TODO: clean up this duplicate code
     },
+    
+    update: function(state) {
+    	ObsSvg.rotateTelescope(state.telescopeState.degrees);
+    },
 
     updateStatus: function() {
         log("Updating status");
@@ -61,3 +65,6 @@ var Telescope = {
     }
 
 };
+
+
+State.addStateCallback(Telescope.update);

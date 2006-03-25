@@ -10,7 +10,7 @@ var ObsSvg = {
         ObsSvg.obsSvgs.push(document.getElementById(name).contentDocument);
         log("Initializing observatory svg " + name);
     },
-
+    
     translateRoof: function (percentOpen) {
         for (i=0; i<ObsSvg.obsSvgs.length; i++) {
             var roof = ObsSvg.obsSvgs[i].getElementById("roof");
@@ -19,16 +19,18 @@ var ObsSvg = {
     },
     
     rotateTelescope: function (degrees) {
-        var transform  = 'translate(535,210) rotate(' + degrees + ') translate(-535,-210)';
+    	// You have to rotate the telescope down from the vertical, 
+	// but we always store and pass in degrees up from the horizontal.
+        var transform  = 'translate(535,210) rotate(' + (90-degrees) + ') translate(-535,-210)';
         
         for (i=0; i<ObsSvg.obsSvgs.length; i++) {
             var telescope = ObsSvg.obsSvgs[i].getElementById("telescope");
             telescope.setAttribute("transform", transform);
         }
     },
-
+    
     rotateTelescopeDeclination: function (declination) {
-        var degrees = 47.5 - declination; // = 90 - (declination - latitude)
+        var degrees  = (declination - 42.5);
         ObsSvg.rotateTelescope(degrees) ;
     },
 
