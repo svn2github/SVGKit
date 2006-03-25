@@ -1,22 +1,26 @@
 var EventView = {
     base:  "/event/",
     idbase: "event_view_",
-    filterElems:     [],
-    controlElems:    [],
-	controlSettings: [],
-    statusElem: null,
-    maxId: 0,
-    eventDetails: [],
-    eventDetailLock: false,
+    filterElems:      [],
+    controlElems:     [],
+    liveEventsButton: [],
+	controlSettings:  [],
+    statusElem:       null,
+    autoLoad:         false, 
+    autoLoadFinished: false, 
+    maxId:            0,
+    eventDetails:     [],
+    eventDetailLock:  false,
     
     //features to add: drop entries off the bottom of the table if in autoupdate mode,
-    //                 onclick(autoload) set maxId = 0;
+    //                 onclick(autoload) set maxId = 0                
     
     getElems: function () {
-        EventView.controlElems = document.getElementById(EventView.idbase+'controls');
-        EventView.statusElem   = document.getElementById(EventView.idbase+'status_text');
-        var filter             = document.getElementById(EventView.idbase+'filter');
-        EventView.filterElems  = filter.getElementsByTagName('input');
+        EventView.controlElems      = document.getElementById(EventView.idbase+'controls');
+        EventView.statusElem        = document.getElementById(EventView.idbase+'status_text');
+        EventView.liveEventsButton  = document.getElementById(EventView.idbase+'controls_live_events_button');
+        var filter                  = document.getElementById(EventView.idbase+'filter');
+        EventView.filterElems       = filter.getElementsByTagName('input');
     },
     
     checkAllFilters: function(state) {
@@ -77,19 +81,21 @@ var EventView = {
 
     setTableHeight: function (rows) {
         if (!isInt(rows)) {
-            rows = 12;
+            rows = 10;
         }
         var heightEventTable  = 24 + 14*rows;
-        var heightEventFilter = heightEventTable - 62;
-        updateNodeAttributes(EventView.idbase + "event_table", 
-                             {'style' : {'maxHeight' : heightEventTable + 'px'}});
+        var heightEventFilter = heightEventTable - 48;
         updateNodeAttributes(EventView.idbase + "event_filter", 
                              {'style' : {'maxHeight' : heightEventFilter + 'px'}});
+        updateNodeAttributes(EventView.idbase + "event_table", 
+                             {'style' : {'maxHeight' : heightEventTable + 'px'}});
+        updateNodeAttributes(EventView.idbase + "event_details", 
+                             {'style' : {'maxHeight' : heightEventTable + 'px'}});
     },
     
     setTableHeightOnLoad: function (rows) {
         var cookieTableHeight = Cookie.read("event_view_controls_max_rows")
-        var minTableHeight    = 12;
+        var minTableHeight    = 10;
         var tableHeight       = Math.max(parseInt(cookieTableHeight), 
                                          parseInt(minTableHeight))
         EventView.setTableHeight(tableHeight);
@@ -106,18 +112,26 @@ var EventView = {
     },
     
     autoLoadTable: function () {
-        var prefix   = EventView.idbase + "controls_";
-        var autoLoad = EventView.controlSettings[prefix + "autoload_checkbox"];
-        if (autoLoad == true) {
+        var prefix = EventView.idbase + "controls_";
+        var button = $(prefix + "live_events_button");
+        //start autoload
+        if (EventView.autoLoad == false) {
+            swapElementClass(EventView.liveEventsButton, "smallbutton", "smallbutton_depressed");
+            EventView.autoLoad = true;
+            EventView.maxId    = 0;
+            EventView.clearTable();
             EventView.loadTable();
         }
-        else {
-            EventView.statusElem.innerHTML = "";        
+        //stop autoload
+        else if (EventView.autoLoad == true) {
+            swapElementClass(EventView.liveEventsButton, "smallbutton_depressed", "smallbutton");
+            EventView.autoLoad         = false;
+            EventView.autoLoadFinished = true;
+            EventView.maxId            = 0;
         }
     },
     
 	loadTable: function () {
-        EventView.statusElem.innerHTML ="Loading events for table...";
         //get current control & filter settings 
         EventView.getControlSettings();
         EventView.getElems();
@@ -132,66 +146,82 @@ var EventView = {
             if (EventView.filterElems[i].checked == true) {
                 if (checkedFilters == "") {comma = "" ;}
                 else                      {comma = ",";}
-                checkedFilters += comma + 
-                                  filters[i].slice(EventView.idbase.length, 
-                                                   filters[i].length);
+                checkedFilters += comma + filters[i].slice(EventView.idbase.length, 
+                                                           filters[i].length);
             }
         }
         //if no query type selected, return with message
         if (checkedFilters == "") {
-            EventView.statusElem.innerHTML ="Select query type.";
+            EventView.statusElem.innerHTML ="Select event types in filter.";
+            if (EventView.autoLoad == true) {
+                EventView.autoLoad = false;
+                swapElementClass(EventView.liveEventsButton, "smallbutton_depressed", "smallbutton");
+            }   
             return;
             }
-        var query = "event/getEvents?typeFilter=" + checkedFilters;
-        //case 1: load recent events; function called in autoLoad loop
-        if (EventView.maxId > 0 & settings[prefix + "sel_recent"] == true) {
+        //case 1: autoLoad continuting (loadEvent was called in autoload loop)
+        if (parseInt(EventView.maxId) > 0 & EventView.autoLoad == true) { 
+            //log("case 1.");
             var startId     = EventView.maxId + 1;
             var typeQuery   = "&sinceEvent=" + startId;
             var maxElemName = EventView.idbase + "controls_max_events";
             var maxEvents   = EventView.controlSettings[maxElemName];
         }
-        //case 2: load all recent events
+        //case 2: autoLoad was just disabled (loadEvent was called in autoload loop)
+        else if (EventView.autoLoadFinished == true) {
+            //log("case 2.");
+            EventView.autoLoadFinished = false;
+            return;
+        }
+        //case 3: autoLoad just started (loadEvent was called in autoLoadEvent) 
+        else if (EventView.autoLoadFinished == false & EventView.autoLoad == true) {
+            //log("case 3.");
+            var typeQuery = "";
+            var maxElemName = EventView.idbase + "controls_max_events";
+            var maxEvents = EventView.controlSettings[maxElemName]; 
+        }
+        //case 4: load all recent events (called by UI button)
         else if (settings[prefix + "sel_recent"] == true) {
+            //log("case 4.");
             var typeQuery = "";
             var maxElemName = EventView.idbase + "controls_max_events";
             var maxEvents = EventView.controlSettings[maxElemName]; 
             EventView.maxId = 0;
         }
-        //case 3: load n events after id m
+        //case 5: load n events after id m (called by UI button)
         else if (settings[prefix + "sel_since_id"] == true) {
+            //log("case 5.");
             var sinceEvent   = EventView.idbase + "controls_events_id";
-            var maxElemName1 = EventView.idbase + "controls_max_events";
-            var maxElemName2 = EventView.idbase + "controls_num_events_id";
             var typeQuery = "&sinceEvent=" + EventView.controlSettings[sinceEvent];
-            var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
-                                     parseInt(EventView.controlSettings[maxElemName2]));
+            var maxElemName = EventView.idbase + "controls_max_events";
+            var maxEvents = EventView.controlSettings[maxElemName]; 
             //log(maxEvents);
             EventView.maxId = 0;
         }
-        //case 4: load n events after time t
+        //case 6: load n events after time t (called by UI button)
         else if (settings[prefix + "sel_since_time"] == true) {
+            //log("case 6.");
             var sinceDate    = EventView.idbase + "controls_events_time";
-            var maxElemName1 = EventView.idbase + "controls_max_events";
-            var maxElemName2 = EventView.idbase + "controls_num_events_time";
             var typeQuery = "&sinceDate=" + EventView.controlSettings[sinceDate];
-            var maxEvents = Math.min(parseInt(EventView.controlSettings[maxElemName1]),
-                                     parseInt(EventView.controlSettings[maxElemName2])); 
+            var maxElemName = EventView.idbase + "controls_max_events";
+            var maxEvents = EventView.controlSettings[maxElemName]; 
             EventView.maxId = 0;
         }
-        //case 5: no query type selected.
+        //case 7: no query type selected in UI
         else {
-            EventView.statusElem.innerHTML ="Select event types.";
+            //log("case 7.");
+            EventView.statusElem.innerHTML = "Select query type (Recent, etc.).";
             EventView.maxId = 0;
             return;
         }
         //clear table unless in autoload mode
-        if (!(EventView.maxId > 0 & settings[prefix + "sel_recent"] == true)) {
+        if (EventView.autoLoad == false) {
             EventView.clearTable();
         }
         var maxResults = "&maxResults=" + maxEvents;
         //construct query string and send to server
-        EventView.statusElem.innerHTML ="Query sent to server.  Awaiting response...";
-        query += maxResults + typeQuery;
+        EventView.statusElem.innerHTML ="Query sent to server...";
+        var query = "event/getEvents?typeFilter=" + checkedFilters + maxResults + typeQuery;
         sortableManager.loadFromURL(query)
         //set event table and event filter heights
         var maxRows = settings[prefix + "max_rows"];
@@ -266,7 +296,7 @@ var EventView = {
         for (i=1; i<tableElem.childNodes.length; i++) {
             replaceChildNodes(tableElem.childNodes[i]);
         }
-        var row0 = TR(null, [TH( null, "Event Details" )]);
+        var row0 = TR(null, [TH( { "style" : {"width" : "70px"} } , "Event Details" )]);
         tableElem.appendChild(row0);   
     },
     
@@ -435,6 +465,8 @@ SortableManager.prototype = {
         // keep track of the current deferred, so that we can cancel it
         this.deferred = d;
         var self = this;
+        // save cookies while waiting for response
+        EventView.saveCookies();
         // on success or error, remove the current deferred because it has
         // completed, and pass through the result or error
         d.addBoth(function (res) {
@@ -505,15 +537,16 @@ SortableManager.prototype = {
         }
         EventView.maxId = maxId;
         var prefix           = EventView.idbase + "controls_";
-        var autoLoad         = EventView.controlSettings[prefix + "autoload_checkbox"];
         var autoLoadInterval = EventView.controlSettings[prefix + "autoload_interval"];
-        if (autoLoad == true) {
-            callLater(parseInt(autoLoadInterval), EventView.autoLoadTable)
-            EventView.statusElem.innerHTML ="Autoload every " + autoLoadInterval + " seconds.";
+        if (EventView.autoLoad == true) {
+            callLater(parseInt(autoLoadInterval), EventView.loadTable)
+            //EventView.statusElem.innerHTML ="Autoload every " + autoLoadInterval + " seconds.";
         }
         this.initial_flag = false;
         //set event handlers for event table
+        EventView.statusElem.innerHTML ="Adding eventListeners.";
         EventView.highlightRows()
+        EventView.statusElem.innerHTML ="";
     },
    
     "onSortClick": function (name) {

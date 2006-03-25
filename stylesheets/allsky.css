@@ -15,15 +15,22 @@ div.panelTitle {
     background-color: #545A65}
 div.progressbar_inner {
     background-color: #545A65}
-.smallbutton {
+.smallbutton { 
     background-image: url(/static/images/titlebg.gif)}
+.smallbutton_depressed{
+    background-image: url(/static/images/titleDepressedbg.gif)}
 select {
     background-color: #313439}
 input.smallinput {
     background-color: #545A65}
 input.textbox:focus {
     background-color: #FFFEE3}
-
+table.datagrid thead th { 
+    background-color: #545A65}
+table.datagrid thead th.over ,
+table.datagrid tr.over {
+    background-color: #9FAABF}
+ 
 /* start COLORS - borders  */
 div#container_outer { 
     border: solid #545A65 2px}
@@ -35,12 +42,24 @@ div#container_inner {
     border-right:  2px solid #2B2D31;
     border-bottom: 2px solid #2B2D31;
     border-left:   2px solid #545A65}
+.smallbutton_depressed {
+    border-top:    2px solid #2B2D31;
+    border-right:  2px solid #545A65;
+    border-bottom: 2px solid #545A65;
+    border-left:   2px solid #2B2D31}
 select {
     border: 1px solid #545A65}
 input.smallinput {
     border: 1px solid #2B2D31}
+input.textbox {
+    border: 1px solid #CCCCCC}
 .progressbar_outer {
     border: 2px solid #222325}
+div#interpreter_area {
+    border: 1px solid #CCCCCC}
+table.datagrid tbody td, 
+table.datagrid tbody th {
+    border-bottom: 1px solid #545A65}
 
 /* start COLORS - fonts */
 div#body { 
@@ -73,6 +92,8 @@ div#body {
     color: #9FAABF}
 .smallbutton { 
     color: #C6C6C6}
+.smallbutton_depressed { 
+    color: #00BB00}
 div.panelTitle a:link, 
 div.panelTitle a:visited, 
 div.panelTitle a:active, 
@@ -86,6 +107,12 @@ div#interpreter_area {
     color: #000000}
 input.smallinput {
     color: #C6C6C6}	
+table.datagrid thead th { 
+    color: #FFFFFF}
+table.datagrid tr.over {
+    color: #FFFFFF}
+div#event_view_status_text {
+    color: #BB0000}
 /* end COLORS */
 
 /* start BODY */
@@ -104,7 +131,7 @@ div#container_inner {
     position: relative;
     left:           166px;
     width:         1062px;
-    min-height:     900px;
+    min-height:     800px;
     padding-bottom:  10px;
     margin-top:     115px;
     text-align: left}
@@ -223,7 +250,7 @@ table.program tr{
 table.program th {
     font-weight: bold;
     text-decoration: underline}
-.smallbutton {
+.smallbutton, .smallbutton_depressed{
     font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
     font-size: x-small;
     margin:  0px;
@@ -251,14 +278,12 @@ div.progressbar_inner {
 /* start JavaScript Interpreter  */  
 input.textbox {
     font-family: Monaco, "lucida console", Courier, monospace;
-    border: 1px solid #CCCCCC;
     font-size: 0.8em; 
     padding: 2px 4px;
     margin-top: 0.3em;
     width: 1000px}
 div#interpreter_area {
     display: block;
-    border: 1px solid #CCCCCC;
     padding: 2px 4px;
     margin-top: .3em;
     width: 1000px;
@@ -272,40 +297,31 @@ div#interpreter_output {
 
 /* start event table  */  
 table.datagrid {
-    border-collapse: collapse;}
+    border-collapse: collapse}
 table.datagrid thead th { 
     text-align: left;
-    background-color: #545A65;
     background-repeat: no-repeat;
-    color: white;
     font-weight: bold;
     padding: .3em .7em;
     font-size: small;
     padding-right: 5px;
     background-repeat: no-repeat;}
 table.datagrid thead th.over {
-    background-color: #9FAABF;
     cursor: pointer;}
 table.datagrid tr.over {
-    background-color: #9FAABF;
-    color: #FFFFFF;
     cursor: pointer;}
 table.datagrid tbody th {
     font-weight: bold;}
 table.datagrid tbody td, table.datagrid tbody th {
     font-size: x-small;
     text-align: left;
-    padding: 0em .3em 0em .7em;
-    border-bottom: 1px solid #545A65;}
+    padding: 0em .3em 0em .7em}
 div#event_view_event_table {
-    max-height:192px; /*  max-height = 24 + 14*table_rows */
+    max-height:164px; /*  max-height = 24 + 14*table_rows */
     overflow:auto}
 div#event_view_event_filter {
-    max-height:130px; /*  max-height.event_filter = max_height.events - 62px */
+    max-height:116px; /*  max-height.event_filter = max_height.events - 48px */
     overflow:auto}
-div#event_view_status_text {
-    color: #BB0000}
-
 .mochi-template { 
     display: none; }
 .mochi-example { 
