@@ -89,9 +89,8 @@ var PMT = {
             //calculate value for pixel
             if      (chip == "SETI" | chip == "Astro")  {
                 var PN         = Convert.pix2PN(pixelNum) ;
-                var ES         = "ExperimentState.pulsenet";
-                var stateVar   = ES + chip + "_State[" + PN + "]." + stateParam;
-                var stateValue = State.currentState[stateVar];
+                var chipName   = "pulsenet" + chip + "_State";
+                var stateValue = State.currentState[chipName][PN][stateParam];
             }
             else if (chip == "SuC") {
                 var stateValue = Convert.pix2SuC(pixelNum);
