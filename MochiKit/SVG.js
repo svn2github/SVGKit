@@ -4,7 +4,6 @@ MochiKit.SVG 1.2
 
 See <http://mochikit.com/> for documentation, downloads, license, etc.
 
-(c) 2005 Bob Ippolito.  All rights Reserved.
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
     http://www.sitepoint.com/article/oriented-programming-2
@@ -17,6 +16,12 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     Also, transmogrify <object> tags into <embed> tags automatically,
     perhaps using <!–[if IE]> and before the content loads.
     
+    This should work if included in an SVG to for inline scripting.
+    
+    Do I want to do anything with events or just let the DOM and MochiKit handle them?
+    
+    toXML needs to output case-sensitive tags and attributes.
+    
     Problem of divs loading and unloading, especially with multiple writeln() in the interpreter.
     Perhaps on unload, save xml and then restore on a load.
     Can't draw anything until it's loaded.  Really annoying in the interpreter.
@@ -26,6 +31,9 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
      * Interactivity requires SVG, but initial static content should have static fallback
      * Best effort to have it work on Firefox, Opera, Safari, IE+ASV, Batik
      * Text sucks -- different settings/browsers render it in vastly differens sizes.
+    
+    Add getURL and setURL to non-ASP based renders like
+    http://jibbering.com/2002/5/dynamic-update-svg.html
 ***/
 
 if (typeof(dojo) != 'undefined') {
@@ -205,14 +213,16 @@ MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
     this._redrawId = null;
-    this.newSVGType = 'inline'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
+    this.newSVGType = 'embed'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
     log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
     this.setBaseURI();
     if (typeof(widthOrIdOrNode) == 'object' || typeof(widthOrIdOrNode) == 'string') {  // Not <object> but a JS object
+        log("__init__ got object, hopefully <embed> or <object>. Trying to grabSVG on it.");
         this.grabSVG(widthOrIdOrNode);
     }
     else {
+        log("Going to createSVG()");
         this.createSVG(widthOrIdOrNode, height, id, type)
     }
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
@@ -356,11 +366,8 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
         attrs['id'] = id;
     }
     
-    attrs['width'] = width;
-    attrs['height'] = height;
-    
     var finishSettingProps = function (svg) {
-        svg.svgElement = svg.svgDocument.rootElement;
+        svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
         svg.setSize(width, height);
     }
     
@@ -374,7 +381,7 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
         attrs['xmlns'] = 'http://www.w3.org/2000/svg';      // for <circle> tags
         this.svgDocument = document;
         this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
-        this.htmlElement = this.svgElement;   // When you move it around in HTML, you want to move the <svg> directly.
+        this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly.
     }
     else if (this.newSVGType=='object') {
         attrs['data'] = this._mochiKitBaseURI + this._svgEmptyName;
@@ -382,6 +389,9 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
         this.htmlElement = createDOM('object', attrs, this._errorText);
         var svg = this;  // Define svg in context of function below.
         this.whenReady( function (event) {
+            // IE doesn't have contentDocument
+            // IE would have to use some sort of SVG pool of objects
+            // that add themselves to a list uppon load.
             svg.svgDocument = svg.htmlElement.contentDocument;
             finishSettingProps(svg);
         } );
@@ -390,9 +400,16 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
         attrs['src'] = this._mochiKitBaseURI + this._svgEmptyName;
         attrs['type'] = this._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
+        log("Going to createDOM('embed')");
         this.htmlElement = createDOM('embed', attrs );
         var svg = this;
         this.whenReady( function (event) {
+            // IE doesn't load the embed when you include it in the DOM tree.
+            // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
+            // and move them around. This seems to work in IE.
+            // width=0, height=0 works in Firefox, but not IE.
+            log("new embed: svg.htmlElement = " + svg.htmlElement) ;
+            log("new embed: Going to svg.htmlElement.getSVGDocumen() )") ;
             svg.svgDocument = svg.htmlElement.getSVGDocument();
             finishSettingProps(svg);
         } );
@@ -422,21 +439,23 @@ MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
         htmlElement = MochiKit.DOM.getElement(htmlElement);
     }
     this.htmlElement = htmlElement;
-    log("embed  htmlElement = ", htmlElement);
+    log("htmlElement = ", htmlElement);
     var tagName = htmlElement.tagName.toLowerCase();
-    log("embed  tagName = ", tagName);
-    log("embed  htmlElement.getSVGDocument = ", typeof(htmlElement.getSVGDocument));
+    log("tagName = ", tagName);
     if (tagName == 'svg')  { // Inline
         this.svgDocument = document;
         this.svgElement = htmlElement;
     }
+    // IE Bug: <object> SVGs display, but have no property to access their contents.
     else if (tagName == 'object' && htmlElement.contentDocument) {
         this.svgDocument = htmlElement.contentDocument;
-        this.svgElement = this.svgDocument.rootElement;
+        this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
     }
-    else if (tagName == 'embed' && typeof(htmlElement.getSVGDocument) != 'unknown') {
+    // IE Bug:  htmlElement.getSVGDocument is nothing, but htmlElement.getSVGDocument() works.
+    else if (tagName == 'embed' /* && typeof(htmlElement.getSVGDocument) != 'unknown' */) {
+        log("embed typeof(htmlElement.getSVGDocument) = " + typeof(htmlElement.getSVGDocument));
         this.svgDocument = htmlElement.getSVGDocument();
-        this.svgElement = this.svgDocument.rootElement;
+        this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
         log("embed  this.svgDocument = ", this.svgDocument);
         log("embed  this.svgElement = ", this.svgElement);
     }
@@ -560,6 +579,11 @@ MochiKit.SVG.__new__ = function () {
     m.nameFunctions(this);
 }
 MochiKit.SVG.__new__(this);
+
+MochiKit.SVG.prototype.circle = function() {
+    var c = this.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} );
+    this.append(c);
+}
 
 MochiKit.Base._exportSymbols(this, MochiKit.SVG);
 

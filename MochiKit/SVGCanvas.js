@@ -4,7 +4,6 @@ MochiKit.SVGCanvas 1.2
 
 See <http://mochikit.com/> for documentation, downloads, license, etc.
 
-(c) 2005 Bob Ippolito.  All rights Reserved.
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
 Why would you want this?
