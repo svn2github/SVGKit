@@ -335,6 +335,13 @@ MochiKit.SVGCanvas.prototype._newSubPath = function(addToEnd) {
     }
 }
 
+/*
+Optimize path output: not repeating vector graphics commands 
+(e.g. two consecutive lines could be specified as "L30 762L 40 563"
+but would be output as "L30 762 40 563", removing the unnecessary 
+repetition of the L command).
+*/
+
 MochiKit.SVGCanvas.prototype.moveTo = function(x, y) {
     /***
         method sets the current position to the given coordinate and creates 

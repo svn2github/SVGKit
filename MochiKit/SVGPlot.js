@@ -20,6 +20,7 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
          Grid[]  // The cartesian or polar grid or checkerboard, displayed or not displayed.
          XAxis[], YAxis[], XLabels[] XTicks[], YTicks[] // Normally you want one or none, but ability to have an array of them for related axes like both deg C and deg F.
          Dataset[] // If you have multiple line plots that all use the same axes, they get listed here.  Also area accumulations get listed here
+           Range (not all functions/data get plotted over their full x-range.)
            Data, Label, Color, ColorFunction
            Decorations[] // like arrows pointing to specific places on the plot.
    This is all represented in the XML structure of the SVG with custom namespace to completly reconstruct these objects uppon load like Inkscape
@@ -29,6 +30,11 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     Write quickly with small script, but have ability to modify tree later.
    Select layer by color.
    in a histogram, you want steps and not column plot.
+   
+   Another concept.  Rather than heirarchial, since single plots are the common case, maybe
+   there should just be links to things like Axes rather than beging continaed.
+   In a long array of plots, they could all be linked to the same axis rather than be
+   contained in it.  This way when the axis changes, the plots do too.
    
    
 // When you call something, it sets up reasonable defaults for everything else.
@@ -72,6 +78,20 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
      -- Drag on axes to zoom
           * always from origin?  For date plots this is dumb.
           * zoom uniformly to keep axis ratios fixed.
+          
+   Passing Parameters:
+     -- Stack-based state method like Canvas
+     -- Explicitly with each function like Mathematica
+             plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )
+     -- Create objects and set properties with setter functions (so that they're updated.)
+     * properties are nice for stack-based, but bad for object-based unless you're 
+         in Python where you can capture the setting or willing to register callbacks
+         that check if the current state is different than it was when it was drawn
+         Periodic updates aren't so bad.  element['width']=10 does it this way.
+     * Defaults are hard to deal wtih.  Should axes, ticks, and labels start up on
+         automatically?  Sure.  Then there's a difference between setting the current
+         ones and adding new ones.  When you change a parameter, does it affect the current
+         axes or just the drawing of the new axes?         
 ***/
 
 

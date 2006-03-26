@@ -34,6 +34,9 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     
     Add getURL and setURL to non-ASP based renders like
     http://jibbering.com/2002/5/dynamic-update-svg.html
+    
+    SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
+    1999 and here we are SEVEN years later and even I just learned about the standard.
 ***/
 
 if (typeof(dojo) != 'undefined') {
