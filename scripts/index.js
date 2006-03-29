@@ -2,17 +2,45 @@ function roundPanelCorners() {
     roundClass("div", "panel", {bgColor: "#000000"});
 }
 
+function topTimeFunc() {       
+    topTimeRefresh = window.setTimeout( "topTimeFunc()", 1000 );       
+    var dateToday = new Date();       
+    $('top_time').innerHTML= toISOTimestamp(dateToday);
+}
+
+var TopBar = {
+    /* Function to update state variables in the top toolbar.  
+       Gets called by an addStateCallback at the bottom of the file.*/
+    update: function (newstate) {
+        //get the state variables
+        myvals = [];
+        myvals["shutter"]      = newstate.shutterState.position;
+        myvals["shutter"]      = myvals["shutter"].substring(0,1).toUpperCase() + 
+                                 myvals["shutter"].substring(1,myvals['shutter'].length);
+        myvals["telescopeDeg"] = newstate.telescopeState.degrees 
+        myvals["telescope"]    = parseFloat(myvals["telescopeDeg"]) + 42.5 //convert to declination
+        myvals["telescope"]    = myvals["telescope"].toPrecision(3) + "° dec";
+        myvals["temperature"]  = newstate.weatherStationState.temperature + "° F";
+        myvals["humidity"]     = newstate.weatherStationState.humidity + "%";
+        myvals["cloudCover"]   = newstate.webCloudCoverState.cloudCover + "%";
+        //replace the state variables in the top toolbar
+        myvars = ["shutter", "telescope", "temperature", "humidity", "cloudCover"];
+        forEach(myvars,
+            function (myvar) {
+                elem = getElement("top_" + myvar);
+                if (elem) {
+                    replaceChildNodes(elem, SPAN(null, myvals[myvar]));
+                }
+            }
+        );
+    },
+}
+
 function loadClearSkyClock() {
     var dateToday = new Date();
     var myImg = IMG( {'src':'http://cleardarksky.com/csk/getcsk.php?id=OkRdgObMA'} );
     replaceChildNodes('img_skyclock', myImg);
     $('timestamp_skyclock').innerHTML= toISOTimestamp(dateToday);
-}
-
-function topTimeFunc() {       
-    topTimeRefresh = window.setTimeout( "topTimeFunc()", 1000 );       
-    var dateToday = new Date();       
-    $('top_time').innerHTML= toISOTimestamp(dateToday);
 }
 
 function togglePanel(elem,source,sourcetype) {
@@ -38,6 +66,7 @@ function makePanel(elem) {
 }
 
 function isInt(str) {
+    //function that returns true if str is an integer, and false otherwise
 	var i = parseInt (str);
 	if (isNaN (i)) {
 		return false;
@@ -160,8 +189,9 @@ var Emulator = {
         log("Test coincidence generated, if PC104 Emulator is running.");
     }
 }
-  
 
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);
 addLoadEvent(Cookie.restorePanels);
+
+State.addStateCallback(TopBar.update);
