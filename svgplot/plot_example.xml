@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svgplot
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:svgplot="http://www.svgplot.org"
+   width="300"
+   height="300"
+   version="1.0">
+   
+   <plotBox width="200" height="100">
+      <plotCanvas xrange="-4 4" yrange="-2 2" >
+         <yAxis linerange="-1.5 1.5" stroke-thickness="2" stroke-color="red" stroke-dashing="1 2 1" />
+         <yTicks position="-2 -1 0 1 2" length="2" />
+         <yTicks spacing=".2" length="1" />
+         <yLables spacing=".5"></yLabels>
+         <xLables>
+            <label x="-3.14"/><latex>$-pi$</latex></label>
+            <label x="-1.7"/><latex>$-pi/2$</latex></label>
+            <label x="0"/><latex>$0$</latex></label>
+            <label x="-1.7"/><latex>$pi/2$</latex></label>
+            <label x="3.14"/><latex>$pi$</latex></label>
+         </xLabels>
+         <plotArea background="light-grey">
+            <function func="sin(x)" xmin="-3.14" xmax="3.14" stroke-style="black" stroke-thickness="2" />
+            <line xdata="1 2 3 4 5 6" ydata="1 4 9 25 36" stroke-style="red" />
+            <scatter xdata="1 2 3 4 5 6" ydata="1 4 9 25 36" stroke-style="blue" />
+         </plotArea>
+      </plotCanvas>  <!-- Another one that's 10x as big laid right on top -->
+      <plotCanvas xrange="-40 40" yrange="-20 20" >
+         <yAxis linerange="-15 15" stroke-thickness="2" stroke-color="red" stroke-dashing="1 2 1" />
+         <yTicks position="-20 -10 0 10 20" length="2" />
+         <yTicks spacing="2" length="1" />
+         <yLables spacing="5"></yLabels>
+         <xLables>
+            <label x="-31.4"/><latex>$-10 pi$</latex></label>
+            <label x="-17"/><latex>$-5 pi$</latex></label>
+            <label x="0"/><latex>$0$</latex></label>
+            <label x="-17"/><latex>$5 pi$</latex></label>
+            <label x="31.4"/><latex>$10 pi$</latex></label>
+         </xLabels>
+         <plotArea background="light-grey">
+            <function func="5 sin(x/5)" xmin="-3.14" xmax="3.14" stroke-style="black" stroke-thickness="2" />
+         </plotArea>
+      </plotCanvas>
+   </plotBox>
+   <!-- When an array of plots share the same x-range and x-axis, you need to define it elsewhere. -->
+</svgplot>
