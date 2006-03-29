@@ -20,7 +20,7 @@ var ObsSvg = {
     
     rotateTelescope: function (degrees) {
     	// You have to rotate the telescope down from the vertical, 
-	// but we always store and pass in degrees up from the horizontal.
+	    // but we always store and pass in degrees up from the horizontal.
         var transform  = 'translate(535,210) rotate(' + (90-degrees) + ') translate(-535,-210)';
         
         for (i=0; i<ObsSvg.obsSvgs.length; i++) {
@@ -30,7 +30,7 @@ var ObsSvg = {
     },
     
     rotateTelescopeDeclination: function (declination) {
-        var degrees  = (declination - 42.5);
+        var degrees  = (parseFloat(declination) + 42.5);
         ObsSvg.rotateTelescope(degrees) ;
     },
 
