@@ -11,7 +11,7 @@ function topTimeFunc() {
 var TopBar = {
     /* Function to update state variables in the top toolbar.  
        Gets called by an addStateCallback at the bottom of the file.*/
-    update: function (newstate) {
+        update: function (newstate) {
         //get the state variables
         myvals = [];
         myvals["shutter"]      = newstate.shutterState.position;
@@ -113,6 +113,7 @@ var Cookie = {
                 cookieArray[i] = cookieArray[i].substring(1, cookieArray[i].length);
             }
             var pair = cookieArray[i].split('=');
+            //log(pair[0] + " = " + pair[1]);
             if (pair[0].substring(0, Cookie.panelPrefix.length) == Cookie.panelPrefix) {
                 if (pair[1] == "true") {
                     togglePanel(pair[0].substring(Cookie.panelPrefix.length, pair[0].length));
@@ -187,7 +188,7 @@ var Emulator = {
     testCoincidence: function () {
         doSimpleXMLHttpRequest("/expt/testCoincidence");
         log("Test coincidence generated, if PC104 Emulator is running.");
-    }
+    },
 }
 
 addLoadEvent(roundPanelCorners);
