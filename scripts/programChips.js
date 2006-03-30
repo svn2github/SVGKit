@@ -27,7 +27,7 @@ var ProgramChips = {
         }
         else {
             query_vref = queryString(getElement(this.idbase+'PulseNetDACForm'+vref));
-            ProgramChips.command('programDACPulseNet?vref='+vref+'&'+query_vref);         
+            ProgramChips.command('programDAC?chip=Pulsenet&vref='+vref+'&'+query_vref);         
         }
     },
     
