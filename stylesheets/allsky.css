@@ -250,6 +250,8 @@ table.program tr{
 table.program th {
     font-weight: bold;
     text-decoration: underline}
+ol.program {
+    font-size: x-small;}
 .smallbutton, .smallbutton_depressed{
     font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
     font-size: x-small;
