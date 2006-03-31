@@ -18,16 +18,29 @@ var ProgramChips = {
         });
     },
 
-    setPNDAC: function(vref) {
-        if (vref == 'all') {
-            ProgramChips.setPNDAC('bias');
-            for (i = 0; i <= 6; i++) {
-                ProgramChips.setPNDAC(i);
+    setDAC: function(target, voltage, side) {
+        if (target == 'pulsenet') {
+            if (voltage == 'all') {
+                ProgramChips.setDAC('pulsenet', 'bias');
+                for (i = 0; i <= 6; i++) {
+                    ProgramChips.setDAC('pulsenet', i);
+                }
+            }
+            else {
+                query_vref = queryString(getElement(this.idbase+'PulseNetDACForm'+voltage));
+                ProgramChips.command('programDAC?chip=Pulsenet&channel='+voltage+'&'+query_vref);
             }
         }
-        else {
-            query_vref = queryString(getElement(this.idbase+'PulseNetDACForm'+vref));
-            ProgramChips.command('programDAC?chip=Pulsenet&vref='+vref+'&'+query_vref);         
+        else if (target == 'pmt') {
+            if (voltage == 'all') {
+                for (i = 0; i <= 7; i++) {
+                    ProgramChips.setDAC('pmt', i, side);
+                }
+            }
+            else {
+                query_vref = queryString(getElement(this.idbase+'PMTDACForm'+voltage+side));
+                ProgramChips.command('programDAC?chip='+side+'&channel='+voltage+'&'+query_vref);
+            }
         }
     },
     

@@ -191,6 +191,13 @@ var Emulator = {
     },
 }
 
+var Telemetry = {
+    getAllTelemetry: function () {
+        doSimpleXMLHttpRequest("/expt/getAllTelemetry");
+        log("Requested telemetry from all uCs.");
+    },
+}
+
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);
 addLoadEvent(Cookie.restorePanels);

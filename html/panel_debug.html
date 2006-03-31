@@ -12,6 +12,10 @@
         <th>
             PC104 Emulator
         </th>
+        <td width="10" />
+        <th>
+            Telemetry
+        </th>
     </tr>
     <tr>
         <td style="vertical-align: top">
@@ -37,7 +41,8 @@
                         </tr>
                         <tr>
                             <td>
-                                <input class="smallinput" id="update_interval_error" name="update_interval_error" 
+                                <input class="smallinput" id="update_interval_error" 
+                                       name="update_interval_error" 
                                        type="text" value="10" size="2" />
                             </td>
                             <td>
@@ -75,6 +80,13 @@
                     <input class="smallbutton" type="button" value="Generate testCoinc" name="testCoinc" 
                         onclick="Emulator.testCoincidence()" />
             </form>
+        </td>
+        <td />
+        <td style="vertical-align:top">
+            <button class="smallbutton" type="submit" 
+                    onclick="Telemetry.getAllTelemetry()">
+                Get Telemetry
+            </button>
         </td>
     </tr>
 </table>
