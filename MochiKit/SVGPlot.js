@@ -658,13 +658,16 @@ MochiKit.SVGPlot.prototype._layoutScale = function (scale, type) {
     var tick_below = 0;
     var ticks = this._getCommand(scale, 'ticks');
     for (var j=0; j<ticks.length; j++) {
-        ticks[j].setAttributeNS(plotNS, 'offset', sizes.above);
         var length = parseFloat( ticks[j].getAttributeNS(plotNS, 'length') );
         var tick_position = ticks[j].getAttributeNS(plotNS, 'position');
-        if (tick_position=='top' || tick_position=='right')
+        if (tick_position=='top' || tick_position=='right') {
+            ticks[j].setAttributeNS(plotNS, 'offset', sizes.above);
             tick_above = Math.max(tick_above, length);
-        if (tick_position=='bottom' || tick_position=='left')
+        }
+        if (tick_position=='bottom' || tick_position=='left') {
+            ticks[j].setAttributeNS(plotNS, 'offset', sizes.below);
             tick_below = Math.max(tick_below, length);
+        }
     }
     sizes.above += tick_above;
     sizes.below += tick_below;
@@ -807,13 +810,13 @@ MochiKit.SVGPlot.prototype._renderScale = function (scale, length, type) {
         for (var k=0; k<locations.length; k++) {
             var scaled = length_scale*(locations[k]-range[0]);
             if (position=='top')
-                path += ' M '+scaled+' '+offset+'v '+(length);
+                path += ' M '+scaled+' '+(offset)+'v '+(length);
             else if (position=='bottom')
-                path += ' M '+scaled+' '+offset+'v '+(-length);
+                path += ' M '+scaled+' '+(-offset)+'v '+(-length);
             else if (position=='right')
                 path += ' M '+offset+' '+(-scaled)+'h '+(length);
             else if (position=='left')
-                path += ' M '+offset+' '+(-scaled)+'h '+(-length);
+                path += ' M '+(-offset)+' '+(-scaled)+'h '+(-length);
         }
         ticks[j].appendChild( this.svg.PATH({'d':path}) );
         log("ticks apending path:", path); 
@@ -827,13 +830,13 @@ MochiKit.SVGPlot.prototype._renderScale = function (scale, length, type) {
         var bbox = stubs[j].getBBox();
         var scaled = length_scale*(location-range[0]);
         if (position=='top')
-            stubs[j].setAttribute('transform', 'translate('+(scaled-bbox.width/2)+', '+(-offset)+')');
+            stubs[j].setAttribute('transform', 'translate('+(scaled-bbox.width/2-1)+', '+(-offset)+')');
         else if (position=='bottom')
-            stubs[j].setAttribute('transform', 'translate('+(scaled-bbox.width/2)+', '+(offset+bbox.height)+')');
+            stubs[j].setAttribute('transform', 'translate('+(scaled-bbox.width/2-1)+', '+(offset+bbox.height)+')');
         else if (position=='right')
-            stubs[j].setAttribute('transform', 'translate('+(offset)+', '+(-scaled+bbox.height/2)+')');
+            stubs[j].setAttribute('transform', 'translate('+(offset-1)+', '+(-scaled+bbox.height/2)+')');
         else if (position=='left')
-            stubs[j].setAttribute('transform', 'translate('+(-offset-bbox.width)+', '+(-scaled+bbox.height/2)+')');
+            stubs[j].setAttribute('transform', 'translate('+(-offset-bbox.width-1)+', '+(-scaled+bbox.height/2)+')');
         
             //stubs[j].setAttribute('transform', 'translate('+(-offset-bbox.width)+', '+(-scaled+bbox.height/2)+')');
     }
