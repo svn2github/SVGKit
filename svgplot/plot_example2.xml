@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<!-- http://www.mathworks.com/access/helpdesk/help/techdoc/learn_matlab/learn_matlab.html  -->
+<!-- http://www.sitepoint.com/article/xml-javascript-mozilla/2  -->
+<!-- http://asymptote.sourceforge.net/doc/graph.html -->
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:plot="http://www.svgplot.org"
+   width="300"
+   height="300"
+   version="1.0"
+   plot:layout="2 1" >
+   
+   <g plot:cmd="box">
+      <g plot:cmd="function" plot:func="sin(x)" plot:xmin="-3.14" plot:xmax="3.14" plot:stroke-style="black" plot:stroke-thickness="2">sin(x)</g>
+   </g>
+   <g plot:cmd="box">
+      <g plot:cmd="function" plot:func="cos(x)" plot:xmin="-3.14" plot:xmax="3.14" plot:stroke-style="black" plot:stroke-thickness="2">cos(x)</g>
+   </g>
+   
+   <g plot:cmd="box" plot:width="200"plot:height="100" plot:float="true" plot:x="20" plot:y="20" plot:background="#EEE" plot:plotBackground="#CCC">
+      <g plot:cmd="title" float="true" location="top"><text>Jason Graph</text></g>
+      <g plot:cmd="ledgend" float="true" x="100" y="100" />
+      <g plot:cmd="xscale" range="-4 4" position="bottom" type="linear">
+         <g plot:cmd="axis" stroke-thickness="2" stroke-color="black" />
+         <g plot:cmd="ticks" location="-3.14 -1.7 0 1.7 3.14" length="2" position="bottom" />
+         <g plot:cmd="grids" location="-3.14 -1.7 0 1.7 3.14" length="2" position="bottom" />
+         <g plot:cmd="stub" location="-3.14" position="bottom"><text>-pi</text></g>
+         <g plot:cmd="stub" location="-1.7" position="bottom"><text>-pi/2</text></g>
+         <g plot:cmd="stub" location="0" position="bottom"><text>0</text></g>
+         <g plot:cmd="stub" location="-1.7" position="bottom"><text>pi/2</text></g>
+         <g plot:cmd="stub" location="3.14" position="bottom"><text>pi</text></g>
+      </g>
+      <g plot:cmd="yscale" range="-2 2 16 37" position="left" type="linear">  <!-- Broken axes include multiple ranges -->
+         <g plot:cmd="axis" linerange="-1.5 1.5" stroke-thickness="2" stroke-color="red" stroke-dashing="1 2 1" />
+         <g plot:cmd="ticks" location="-2 -1 0 1 2" length="2" />
+         <g plot:cmd="ticks" spacing=".2" length="1" />
+         <g plot:cmd="stubs" spacing=".5" />
+      </g>
+      <g plot:cmd="function" func="sin(x)" xmin="-3.14" xmax="3.14" stroke-style="black" stroke-thickness="2">sin(x)</g>
+      <g plot:cmd="line" xdata="1 2 3 4 5 6" ydata="1 4 9 16 25 36" stroke-style="red" />
+      <g plot:cmd="scatter" xdata="1 2 3 4 5 6" ydata="1 4 9 16 25 36" stroke-style="blue" />
+   </g>
+   
+   <!-- When an array of plots share the same x-range and x-axis, you need to define it elsewhere. -->
+</svg>

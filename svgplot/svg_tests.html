@@ -191,7 +191,10 @@ function drawBowtie(ctx, fillStyle) {
         type="image/svg+xml"
         pluginspage="http://www.adobe.com/svg/viewer/install/"></embed>
 
-
+<object id="text-test" data="text-test2.svg" width="200" height="200 type="image/svg+xml">
+    You can't display SVG.
+</object>
+        
 </div>
 
 
@@ -200,10 +203,10 @@ function drawBowtie(ctx, fillStyle) {
 
 <ul>
 <li>Grab an embed, object, iframe, inline and manipulate it
-<li>Insert a new embed, object, iframe, inline from a file
-<li>Insert a new embed, object, iframe, inline and manipulate it.
-<li>Grab an embed, object, iframe, inline from a pool and move it, resize it, manipuate it.
 <li>Manipulate self-registered SVGs.
+<li>Insert a new (embed, object, iframe, inline) from a file
+<li>Insert a new (embed, object, iframe, inline) and manipulate it.
+<li>Grab an (embed, object, iframe, inline) from a pool by ID and move it, resize it, manipuate it.
 </ul>
 
 <form id="interpreter_form" action="javascript:void(0);">
@@ -216,45 +219,6 @@ function drawBowtie(ctx, fillStyle) {
 </form>
 <p>MochiKit Logger: <a href="javascript:MochiKit.Logging.logger.debuggingBookmarklet()">
 javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a>
-<div>
-    Notes:
-    <ul>
-        <li>
-            To continue code on the next line, end it with
-            <tt>//</tt>
-        </li>
-        <li>
-            <tt>function name() {}</tt> syntax might not end up in
-            window scope, so use <tt>name = function () {}</tt>
-            syntax instead
-        </li>
-        <li>
-            If you want to stuff something into the output window
-            other than the <tt>repr(...)</tt> of the expression
-            result, use the <tt>writeln(...)</tt> function.
-            It accepts anything that MochiKit.DOM does, so you can
-            even put styled stuff in there!
-        </li>
-        <li>
-            Use <tt>clear()</tt> to clear the interpreter window.
-        </li>
-        <li>
-            You can use <tt>blockOn(aDeferred)</tt> to wait on a
-            Deferred.  This expression must be used by itself, so
-            the value must be obtained from <tt>_</tt> or
-            <tt>last_exc</tt>.  Typing any expression will
-            cancel the Deferred.
-        </li>
-        <li>
-            Up and down arrow keys work as a rudimentary history
-        </li>
-        <li>
-            <tt>_</tt> is the value of the last expression
-            that was not <tt>undefined</tt>, <tt>last_exc</tt> is
-            the value of the last unhandled exception.
-        </li>
-    </ul>
-</div>
 
 </body>
 </html>

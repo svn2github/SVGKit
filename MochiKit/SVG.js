@@ -37,7 +37,39 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     
     SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
     1999 and here we are SEVEN years later and even I just learned about the standard.
+    
 ***/
+
+function importXML(file, onloadCallback) {
+    // http://www.sitepoint.com/article/xml-javascript-mozilla/2
+    // http://www-128.ibm.com/developerworks/web/library/wa-ie2mozgd/
+    // http://www.quirksmode.org/dom/importxml.html
+    var xmlDoc;
+    var moz = (typeof document.implementation != 'undefined') && 
+            (typeof document.implementation.createDocument != 'undefined');
+    var ie = (typeof window.ActiveXObject != 'undefined');
+
+    if (moz) {
+        //var parser = new DOMParser(); 
+        //xmlDoc = parser.parseFromString(xmlString, "text/xml"); 
+        xmlDoc = document.implementation.createDocument("", "", null);
+        if (onloadCallback)
+            xmlDoc.onload = onloadCallback;
+    }
+    else if (ie) {
+        xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+        xmlDoc.async = false;
+        //xmlDoc.loadXML(xmlString)
+        //while(xmlDoc.readyState != 4) {};
+        if (onloadCallback) {
+            xmlDoc.onreadystatechange = function () {
+    			if (xmlDoc.readyState == 4) onloadCallback()
+    		};
+        }
+    }
+    xmlDoc.load(file);  // Same for both, surprisingly.
+    return xmlDoc;
+}
 
 if (typeof(dojo) != 'undefined') {
     dojo.provide("MochiKit.SVG");
@@ -211,12 +243,18 @@ MochiKit.SVG.prototype.getDefs = function(createIfNeeded /* = false */) {
 }
 
 MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/, type /*optional*/) {
+    // TODO:  Make thse work right.
+    // __init__(node)                      Already have an HTML element
+    // __init__(id)                        Have the id for an HTML element
+    // __init__(filename, id, type)        Create a new HTML element that references filename and has id
+    // __init__(width, height, id, type)   Create a new SVG from scratch with width, height, and id
+    
     // The following are described at http://www.w3.org/TR/SVG/struct.html
     this.htmlElement = null;   // the <object> or <embed> html element the SVG lives in, otherwise null
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
     this._redrawId = null;
-    this.newSVGType = 'embed'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
+    this.newSVGType = 'object'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
     log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
     this.setBaseURI();
@@ -334,7 +372,18 @@ MochiKit.SVG.prototype.setSize = function(width, height) {
     }
 }
 
+
 MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id /* optional */) {
+    if (typeof(width) == "undefined" || width == null) {
+        width = 100;
+    }
+    if (typeof(height) == "undefined" || height == null) {
+        height = 100;
+    }
+    this.loadSVG(this._svgEmptyName, width, height, id)
+}
+
+MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, height /* = from file */, id /* optional */) {
     /***
 
         Create a new HTML DOM element of specified type ('object', 'embed', or 'svg')
@@ -354,11 +403,13 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
     ***/
     var dom = MochiKit.DOM;
     
+    // TODO If it is new, default width and height are 100.  If it's from a file, defaults come from the file.
+    //      You can still set the width and height if you want the thing to scroll.
     if (typeof(width) == "undefined" || width == null) {
-        width = 100;
+        //width = 100;
     }
     if (typeof(height) == "undefined" || height == null) {
-        height = 100;
+        //height = 100;
     }
     if (typeof(id) == "undefined" || id == null) {
         id = null;
@@ -385,9 +436,10 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
         this.svgDocument = document;
         this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
         this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly.
+        // TODO Load SVG from file inline
     }
     else if (this.newSVGType=='object') {
-        attrs['data'] = this._mochiKitBaseURI + this._svgEmptyName;
+        attrs['data'] = this._mochiKitBaseURI + filename;
         attrs['type'] = this._svgMIME;
         this.htmlElement = createDOM('object', attrs, this._errorText);
         var svg = this;  // Define svg in context of function below.
@@ -400,7 +452,7 @@ MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id
         } );
     }
     else if (this.newSVGType=='embed') {
-        attrs['src'] = this._mochiKitBaseURI + this._svgEmptyName;
+        attrs['src'] = this._mochiKitBaseURI + filename;
         attrs['type'] = this._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
         log("Going to createDOM('embed')");
@@ -437,12 +489,12 @@ MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
         
         @param htmlElement: either an id string or a dom element ('object', 'embed', 'svg)
     ***/
-    log("grabSVG htmlElement = ", htmlElement);
+    log("grabSVG htmlElement (node or id) = ", htmlElement);
     if (typeof(htmlElement) == 'string') {
         htmlElement = MochiKit.DOM.getElement(htmlElement);
     }
     this.htmlElement = htmlElement;
-    log("htmlElement = ", htmlElement);
+    log("htmlElement (node) = ", htmlElement);
     var tagName = htmlElement.tagName.toLowerCase();
     log("tagName = ", tagName);
     if (tagName == 'svg')  { // Inline
@@ -566,11 +618,6 @@ MochiKit.SVG.prototype.deleteEverything = function() {
     /***
         Deletes everything including definitions
     ***/
-}
-
-MochiKit.SVG.prototype.test = function() {
-    var circ = this.CIRCLE({'cx':30,'cy':30,'r':10});
-    this.append(circ);
 }
 
 MochiKit.SVG.__new__ = function () {

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+      
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Some JavaScript SVG Plot Examples</title>
+
+<link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
+
+<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="interpreter/interpreter.js"></script>
+
+<script type="text/javascript" src="../MochiKit/SVG.js" ></script>
+<script type="text/javascript" src="../MochiKit/SVGCanvas.js" ></script>
+<script type="text/javascript" src="../MochiKit/SVGPlot.js" ></script>
+<!--
+<script type="text/javascript" src="../MochiKit/SVGCanvas.js" ></script>
+-->
+<script type="text/javascript">
+f = function () {
+    p = new SVGPlot('plot')
+    g = p.svg.svgDocument.getElementById('myg')
+    //p._renderLinePlot(g, g, 300, 300, [-1,7], [0,37])
+    //p._renderLinePlot(g, g, 300, 300, [0,7], [1,37])
+    b = p.svg.svgDocument.getElementById('mybox')
+    //p._getCommand(b, 'xscale')
+    p._renderBox(b)
+    p.svg.svgElement.forceRedraw()
+    log(p.svg.toXML())
+}
+</script>
+
+</head>
+
+<body>
+
+<div id="mydiv">
+
+<object id="plot" data="plot_buildup.svg" width="400" height="300" type="image/svg+xml">
+    You can't display SVG.
+</object>
+
+</div>
+
+<div id="codediv"></div>
+
+
+<form id="interpreter_form" action="javascript:void(0);">
+    <div>
+        <div id="interpreter_area">
+            <div id="interpreter_output"></div>
+        </div>
+        <input id="interpreter_text" name="input_text" type="text" class="textbox" size="100" />
+    </div>
+</form>
+<p>MochiKit Logger: <a href="javascript:MochiKit.Logging.logger.debuggingBookmarklet()">
+javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a>
+
+</body>
+</html>
