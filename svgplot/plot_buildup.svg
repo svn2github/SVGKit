@@ -16,6 +16,7 @@
             <g plot:cmd="ticks" plot:locations="0 1 2 3 4 5 6 7" plot:length="5" plot:position="bottom" stroke="blue" />
             <g plot:cmd="ticks" plot:locations="0 1 2 3 4 5 6 7" plot:length="5" plot:position="top" stroke="red"/>
             <g plot:cmd="grids" plot:locations="0 1 2 3 4 5 6 7" />
+            <g plot:cmd="label" plot:position="bottom" plot:location="4"><text>Time (ns)</text></g>
             <g plot:cmd="stub" plot:location="0" plot:position="bottom"><text>0</text></g>
             <g plot:cmd="stub" plot:location="1" plot:position="bottom"><text>1</text></g>
             <g plot:cmd="stub" plot:location="2" plot:position="top"><text>2</text></g>
