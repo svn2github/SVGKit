@@ -25,35 +25,44 @@ var setiProgram = {
     },
     
     setCoincMask: function() {
-        for (i = 0; i < 8; i++) {
+        for (uCno = 0; uCno < 1;uCno++) {
+            // daughterboard are numbered opposite to uCs
+            DBno = 7 - uCno;
             checked = []; checked_cap = [];
-            for (j = 0; j < 4; j++) {
-                k = 4*i+j;
-                checked[j] = getElement(document.forms[this.idbase].elements['PN'+k+'_coincMask']).checked;
-                if (checked[j] == true) {checked_cap[j] = '1';}
-                else                    {checked_cap[j] = '0';}
+            for (asicNo = 0; asicNo < 4; asicNo++) {
+                // PulseNet number (0-31) defined
+                // Note: asicNo (0-3) is PulseNet address on a given daughterboard (DBno)
+                PNno = 4*DBno + asicNo
+                //log("pulsenet = " + PNno)
+                checked[asicNo] = getElement(document.forms[this.idbase].elements['PN'+PNno+'_coincMask']).checked;
+                if (checked[asicNo] == true) {checked_cap[asicNo] = 'True';}
+                else                         {checked_cap[asicNo] = 'False';}
             }
-            setiProgram.command('setCoincMask?uCno='+i+
-                                '&pulseNet0='+checked_cap[0]+'&pulseNet1='+checked_cap[1]+
-                                '&pulseNet2='+checked_cap[2]+'&pulseNet3='+checked_cap[3]); 
+            var pnMask = checked_cap[0] + ',' + checked_cap[1] + ',' +
+                         checked_cap[2] + ',' + checked_cap[3];
+            setiProgram.command('setCoincMask?uCno=' + uCno + '&pnMask=' + pnMask); 
         }
     },
     
     program: function (option) {
-        for (i = 7; i >= 0; i--) {
-            i_reverse = 7-i;
-            for (j = 0; j < 4; j++) {
-                k = 4*i_reverse + j
-                if (getElement(document.forms[this.idbase].elements['PN'+k+'_program']).checked == true) {
+        for (uCno = 0; uCno < 1; uCno++) {
+            // see definitions of DBno, asicNo, and PNno above in setCoincMask()
+            DBno = 7 - uCno;
+            for (asicNo = 0; asicNo < 4; asicNo++) {
+                PNno = 4*DBno + asicNo
+                if (getElement(document.forms[this.idbase].elements['PN'+PNno+'_program']).checked == true) {
                     if (option == 'reset') {
-                        setiProgram.command('resetASIC?uCno=' + i + '&asicno=' + j);
+                        setiProgram.command('resetASIC?uCno=' + uCno + '&asicno=' + asicNo);
                     }
                     else if (option == 'program') {
                         thresh    = getElement(document.forms[this.idbase].elements['thresh']).value;
                         veto      = getElement(document.forms[this.idbase].elements['veto']).value;
                         clockhalf = getElement(document.forms[this.idbase].elements['clockhalf']).value;
-                        setiProgram.command('setiConfigASIC?uCno=' + i + '&asicno=' + j + 
-                                            '&threshold=' + thresh + '&veto=' + veto + '&halfclock=' + clockhalf);
+                        setiProgram.command('setiConfigASIC?uCno=' + uCno + 
+                                            '&asicno='             + asicNo + 
+                                            '&threshold='          + thresh + 
+                                            '&veto='               + veto + 
+                                            '&halfclock='          + clockhalf);
                     }
                 }
             }
