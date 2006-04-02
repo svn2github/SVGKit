@@ -2,7 +2,8 @@ var Weather = {
 
     loadClearSkyClock: function() {
         var dateToday = new Date();
-        var myImg = IMG( {'src':'http://cleardarksky.com/csk/getcsk.php?id=OkRdgObMA'} );
+        var url = 'http://cleardarksky.com/csk/getcsk.php?id=OkRdgObMA';
+        var myImg = new IMG( {'src': url} );
         if (myImg) {
             replaceChildNodes('img_skyClock', myImg);
             $('timestamp_skyClock').innerHTML= toISOTimestamp(dateToday);
@@ -11,7 +12,8 @@ var Weather = {
 
     loadRadarImage: function () {
         var dateToday = new Date();
-        var myImg = IMG( {'src':'http://sirocco.accuweather.com/nx_mosaic_640x480c/SIR/inmaSIRNE.gif'} );
+        var url = 'http://sirocco.accuweather.com/nx_mosaic_640x480c/SIR/inmaSIRNE.gif';
+        var myImg = new IMG( {'src': url} );
         if (myImg) {
             updateNodeAttributes(myImg, {'width' : '320px'});
             replaceChildNodes('img_radarImage', myImg);
