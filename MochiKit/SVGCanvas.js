@@ -210,6 +210,7 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
                               'markerStart' : null,  // marker group object
                               'markerMid' : null,
                               'markerEnd' : null,
+                              'applyStyles' : true,  // Apply the styles to a given SVG element or let them be inherited.
                               // Internal State:
                               'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
                               'transformations' : "",  // Applys to all subpaths.
@@ -620,6 +621,9 @@ MochiKit.SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         type is 'stroke' or 'fill'  (not 'clip')
     ***/
 
+    if (this.applyStyles==false)
+        return;
+    
     var style, other;
     if (type=='stroke') {
         style = this.strokeStyle;
