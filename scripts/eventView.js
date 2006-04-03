@@ -296,6 +296,16 @@ var EventView = {
             });
         }
     },
+
+    getEventWithCallback: function (eventId, callback) {
+        var deferred = loadJSONDoc(EventView.base + "getEventDetails?eventId=" + eventId);
+        deferred.addCallback(function (eventDetails) {
+            callback(eventDetails, eventId);
+        });
+        deferred.addErrback(function (err) {
+            log("Error retreiving details for event " + eventId + ": " + repr(err));
+        });
+    },
     
     loadEventDetails: function (eventDetails, eventId, eventType) {
         var fields     = keys(eventDetails);

@@ -192,7 +192,7 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
         startingGroup = this.svg.svgElement;
     log("_setDefaults with svg: ", this.svg, " this: ", this);
     
-    this._startingState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", rgba(r, g, b, alpha) (0-255), or from a gradient
+    this._startingState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", "rgba(r, g, b, alpha)" where rgb in (0-255), or from a gradient
                               'strokeStyle': "#000000", // Same as above.  Affects SVG's 'stroke', 'stroke-opacity', gradient and marker
                               'globalAlpha': 1.0, // Float between 0.0 and 1.0
                               'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED

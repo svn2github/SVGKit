@@ -111,13 +111,16 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     -- Render the plot
     
   TODO
+    -- Major overhaul to move scale into one thing and have axes, ticks, stubs, and plots be inside of it.
+        floating axes, drawing on the graph, the plots.  The idea of "most recent axis switch" is bullshit and not SVG-like.
+        you can have an xrange and yrange no matter how many scales you have doing different things (right and left, for eg)
     -- Make all lits both comma or space seperated like in SVG.
     -- Markers (though this is really more of a Canvas thing)
     -- Scatter plot is line plot with transparent stroke, but with markers?
     -- Ticks pick up color of a graph. Ticks should be colored if explicitly created, not if auto-created.
     -- Grid lines like ticks.  Extended ticks?
     -- Tests with multiple boxes and box layout.
-    -- Be able to draw using lineTo and things using plot coordinates, not screen coordinates.
+    -- Be able to draw using lineTo and things using plot coordinates, not screen coordinates. 
 ***/
 
 
@@ -281,6 +284,7 @@ MochiKit.SVGPlot.prototype.addScale = function(type /* x or y */, range /* ='aut
         box = this._currentBox;
     var scale = this.createScale(type, range, position, scale_type, add_default_elements);
     box.insertBefore(scale, box.firstChild);  // TODO The second scale is always y, yet it gets inserted before x here.
+    this.render(); // TODO Move this down
     return scale;
 }
 
@@ -319,6 +323,63 @@ MochiKit.SVGPlot.prototype.addDefaultScaleElements = function(scale, type) {
     this.addStubs(null, null, null, type, scale)
 }
 
+
+
+// Axis
+
+
+MochiKit.SVGPlot.prototype.setXAxis = function(scale) {
+    return this.setAxis('x', scale)
+}
+
+MochiKit.SVGPlot.prototype.setYAxis = function(locations, position /* = 'left' */, length /* = 2 */, scale) {
+    return this.setAxis('y', scale)
+}
+
+MochiKit.SVGPlot.prototype.setAxis = function(type, scale) {
+    if (typeof(scale) == 'undefined' || scale==null)
+        scale = this._getLastCommand(this._currentBox, type+'scale');
+    
+    this.removeAxis(type, scale);
+    
+    return this.addAxis(type, scale);
+}
+
+MochiKit.SVGPlot.prototype.removeXAxis = function(scale) {
+    this.removeAxis('x', scale);
+}
+
+MochiKit.SVGPlot.prototype.removeYAxis = function(scale) {
+    this.removeAxis('y', scale);
+}
+
+MochiKit.SVGPlot.prototype.removeAxis = function(type, scale) {
+    if (typeof(scale) == 'undefined' || scale==null)
+        scale = this._getLastCommand(this._currentBox, type+'scale');
+    
+    this.removeCommand(scale, 'axis');
+    this.render();
+}
+
+MochiKit.SVGPlot.prototype.addAxis = function(type, scale) {
+    if (typeof(scale) == 'undefined' || scale==null)
+        scale = this._getLastCommand(this._currentBox, type+'scale');
+    var axis = this.createAxis()
+    scale.appendChild(axis);
+    this.render(); // TODO Move this down
+    return axis;
+}
+
+MochiKit.SVGPlot.prototype.createAxis = function() {
+    var plotNS = MochiKit.SVGPlot.plotNS
+    
+    var axis = this.svg.G(null);
+    axis.setAttributeNS(plotNS, 'cmd', "axis");
+    this._setGraphicsAttributes(axis, 'stroke');
+    return axis;
+}
+
+
 // Ticks
 
 MochiKit.SVGPlot.prototype.setXTicks = function(locations, position /* = 'bottom' */, length /* = 2 */, scale) {
@@ -343,7 +404,7 @@ MochiKit.SVGPlot.prototype.removeXTicks = function(scale) {
 }
 
 MochiKit.SVGPlot.prototype.removeYTicks = function(scale) {
-    this.removeYTicks('y', scale);
+    this.removeTicks('y', scale);
 }
 
 MochiKit.SVGPlot.prototype.removeTicks = function(type, scale) {
@@ -375,8 +436,7 @@ MochiKit.SVGPlot.prototype.createTicks = function(locations, position, length) {
     // TODO Make these default parameters somewhere.
     if (locations!='auto')
         locations = this._arrayToString(locations);
-    var ticks = this.svg.G({'stroke':'black',
-                              'stroke-width':0.5});
+    var ticks = this.svg.G(null);
     ticks.setAttributeNS(plotNS, 'cmd', "ticks");
     ticks.setAttributeNS(plotNS, 'locations', locations);
     ticks.setAttributeNS(plotNS, 'length', length);  
@@ -584,6 +644,10 @@ MochiKit.SVGPlot.prototype.createLabel = function(label, location, position) {
 // Rendering and Layout
 
 MochiKit.SVGPlot.prototype.render = function () {
+    /***
+        This can be called many times recursively and will just set a flag.
+        It ends when a render is complete and there are no pending requests.
+    ***/
     if ( !this._rendering==true ) {
         this._rendering = true;
         do {
@@ -746,12 +810,14 @@ MochiKit.SVGPlot.prototype.setAutoRange = function(box, scale, include_zero /* =
     if (max<0.0 && (-max<total*MochiKit.SVGPlot._autoRangeMarginFactor ||
                       (typeof(include_zero) != 'undefined' && include_zero == true) ) )
         max = 0.0;
-    // If neither one lies on the origin, give them a little extra room.
+    // If neither one lies on the origin, give them a little extra room.  TODO Make this an option
+    /*
     if (min!=0.0)
         min = min - total * MochiKit.SVGPlot._autoRangeMarginFactor;
     if (max!=0.0)
         max = max + total * MochiKit.SVGPlot._autoRangeMarginFactor;
-        
+    */
+    
     var range_str = min+' '+max;
     scale.setAttributeNS(plotNS, 'autoRange', range_str);
     return range_str;
@@ -798,6 +864,7 @@ MochiKit.SVGPlot.prototype._layoutScale = function (scale, type) {
 
     var sizes = {'above':0, 'below':0};
     
+    // Axes
     var axes = this._getCommand(scale, 'axis');
     var axis_thickness = 0;
     for (var j=0; j<axes.length; j++) {
@@ -806,7 +873,6 @@ MochiKit.SVGPlot.prototype._layoutScale = function (scale, type) {
     }
     sizes.above += axis_thickness/2;
     sizes.below += axis_thickness/2;
-    log('_layoutScale after axes: sizes.below =', sizes.below, ' sizes.above =', sizes.above);
     
     // Add up the space that ticks take up, but only if they are not covering the graph.
     var tick_above = 0;
@@ -872,8 +938,10 @@ MochiKit.SVGPlot.prototype._renderScales = function (scales, left, right, top, b
     for (var i=0; i<scales.length; i++) {
         var position = scales[i].getAttributeNS(plotNS, 'position');
         var offset = parseFloat( scales[i].getAttributeNS(plotNS, 'offset') );
-        var translate_x = 1;
-        var translate_y = 1;
+        if (typeof(offset)=='undefined' || offset==null)
+            offset = 0;  // Usually this means the scale is floating on the graph.
+        var translate_x = 0;
+        var translate_y = 0;
         if (position=='top')
             translate_y = top-offset;
         else if (position=='bottom')
@@ -883,7 +951,13 @@ MochiKit.SVGPlot.prototype._renderScales = function (scales, left, right, top, b
         else if (position=='right')
             translate_x = right+offset;
         else {
-            // Axis is on the graph
+            position = parseFloat(position);
+            var range = this._getScaleRange(scales[i]);
+            var factor = (position-range[0])/(range[1]-range[0]);
+            if (type=='x')
+                translate_y = bottom-factor*(bottom-top)
+            else if (type=='y')
+                translate_x = left+factor*(right-left)
         }
         var length;
         if (type=='x') {
@@ -898,8 +972,6 @@ MochiKit.SVGPlot.prototype._renderScales = function (scales, left, right, top, b
             log("ERROR Bad type passed to _renderScales");
             return
         }
-        log("_renderScales position =", position, 'offset = ', offset, 
-                'tx = ', translate_x, 'ty = ', translate_y, '(', left, right, top, bottom, ')');
         scales[i].setAttribute('transform', 'translate('+translate_x+', '+translate_y+')');
         this._renderScale(scales[i], length, type);
     }

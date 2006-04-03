@@ -105,6 +105,11 @@ var testFunctions = {
         p.removeYStubs()
     },
     
+    'scales' : function(p) {
+        p.plotLine(trigx, sin)
+        p.addScale('x', null, 0.5, null, null, true)
+    },
+    
     'dependentaxes' : function(p) {
         // Temperature
     },
@@ -129,7 +134,7 @@ function doTest(plotTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 7, number = 1;
+    var i = 0, start = 8, number = 1;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test", test);
