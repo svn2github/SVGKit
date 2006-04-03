@@ -31,12 +31,16 @@ var TRIG_XMAX = 2*Math.PI;
 var trigx = Array(POINT_COUNT);
 var sin = Array(POINT_COUNT);
 var cos = Array(POINT_COUNT);
+var tan = Array(POINT_COUNT);
+var atan = Array(POINT_COUNT);
 for (var i=0; i<POINT_COUNT; i++) {
     var x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/POINT_COUNT;
     log("in trig x=" + x);
     trigx[i] = x;
     sin[i] = Math.sin(x);
     cos[i] = Math.cos(x);
+    tan[i] = Math.tan(x);
+    atan[i] = Math.atan(x);
 }
 
 
@@ -68,7 +72,7 @@ var testFunctions = {
         p.lineWidth = '5' 
         p.dasharray = ".5,1,2";
         p.dashoffset = 2;
-        //p.plotLine(intsquares);
+        p.plotLine(trigx, atan);
     },
     
     'functionPlot' : function(p) {
@@ -79,18 +83,18 @@ var testFunctions = {
         p.plotFunction('Math.sin(1/x)', 'x', -4, 4);
     },
     
-    'axes' : function(p) {
+    'decorations' : function(p) {
         p.plotLine(trigx, sin)
-        p.setXAxis([-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI], ['-2pi', '-pi', '0', 'pi', '2pi'])
-        p.setYAxis('zero')
-    },
-    
-    'ticks' : function(p) {
-        p.plotLine(trigx, sin)
-        p.setXTicks(Math.PI)
-        p.setXAxis([-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI], ['-2pi', '-pi', '0', 'pi', '2pi'])
-        p.addYAxis('zero')
-        p.setYTicks()
+        var locations = [-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI]
+        p.setXTicks(locations)
+        p.setXStubs(locations, ['-2pi', '-pi', '0', 'pi', '2pi'])
+        locations = [-1, -0.5, 0, 0.5, 1]
+        p.setYTicks(locations)
+        p.setYStubs(locations)
+        p.fontSize = 10;
+        p.setXLabel("Phase (ns)")
+        p.setYLabel("Voltage (V)")
+        //p.setYAxis('zero')
     },
     
     'dependentaxes' : function(p) {
@@ -118,7 +122,7 @@ function doTest(plotTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 0, number = 5;
+    var i = 0, start = 0, number = 7;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test", test);
