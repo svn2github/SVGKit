@@ -59,7 +59,6 @@ var State = {
             }
             else {
                 for(var i = 0; i < elts.length; i++) {
-                    log("Updating " + path);
                     elts[i].innerHTML = obj;
                 }
             }
@@ -67,7 +66,6 @@ var State = {
     },
 
     update: function () {
-        log("Updating state.");
         if(State.stateHash == null) {
             log("Getting new hash.");
             State.makeHash();
