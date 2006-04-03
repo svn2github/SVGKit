@@ -193,7 +193,7 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
     log("_setDefaults with svg: ", this.svg, " this: ", this);
     
     this._startingState =   {'fillStyle': "#000000",  // Can be: "#RRGGBB", rgba(r, g, b, alpha) (0-255), or from a gradient
-                              'strokeStyle': "#000000", // Same as above
+                              'strokeStyle': "#000000", // Same as above.  Affects SVG's 'stroke', 'stroke-opacity', gradient and marker
                               'globalAlpha': 1.0, // Float between 0.0 and 1.0
                               'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
                               'lineCap': "butt", // also "round" and "square"
@@ -210,6 +210,14 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
                               'markerStart' : null,  // marker group object
                               'markerMid' : null,
                               'markerEnd' : null,
+                              // 'font' : null, // SVG's font, which is shorthand for all of the below:
+                              'fontFamily' : null,  // SVG's font-family="Verdana" 
+                              'fontSize' : null,    // SVG's font-size="45"
+                              'fontWeight' : null,  // SVG's font-weight= 	normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit
+                              'fontStyle' : null,    // SVG's font-style = normal | italic | oblique |  inherit
+                              'fontVariant' : null,    // SVG's font-variant= normal | small-caps |  inherit
+                              'fontStretch' : null,  // SVT's font-stretch = normal | wider | narrower | ultra-condensed | extra-condensed | condensed | semi-condensed | semi-expanded | expanded | extra-expanded | ultra-expanded | inherit
+                              'textAnchor' : null, // 'text-anchor' start | middle | end | inherit (defaults to start.  null implicitly means inherit)
                               'applyStyles' : true,  // Apply the styles to a given SVG element or let them be inherited.
                               // Internal State:
                               'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
@@ -230,6 +238,8 @@ MochiKit.SVGCanvas.prototype.setGroup = function(group) {
     ***/
     this.drawGroup = group;
     this.currentGroup = group;
+    this.transformations = "";
+    this.currentTransformationMatrix = null;
 }
 
 MochiKit.SVGCanvas.prototype._setState = function(dest, src) {
@@ -237,11 +247,6 @@ MochiKit.SVGCanvas.prototype._setState = function(dest, src) {
     for (var i=0; i<stateKeys.length; i++) {
         dest[stateKeys[i]] = src[stateKeys[i]];
     }
-}
-
-// SVG Specific Methods
-
-MochiKit.SVGCanvas.prototype.text = function(text, x, y) {
 }
 
 //Canvas State Methods
@@ -787,6 +792,35 @@ MochiKit.SVGCanvas.prototype.clearRect = function (x, y, w, h) {
     this._setShapeTransform(rect);
     this.drawGroup.appendChild(rect);
     return rect;
+}
+
+
+// SVG Only text
+
+MochiKit.SVGCanvas.prototype.text = function(text, x /* =0 */ , y /* =0 */) {
+    log("text(): this.drawGroup=", this.drawGroup);
+    var text = this.svg.TEXT(null, text);
+    if (x!=null)                   setNodeAttribute(node, 'x', x);
+    if (y!=null)                   setNodeAttribute(node, 'y', y);
+    this._setShapeTransform(text);
+    this._setGraphicsAttributes(text, 'fill');
+    this._setFontAttributes(text);
+    this.drawGroup.appendChild(text);
+    return text;
+}
+
+MochiKit.SVGCanvas.prototype._setFontAttributes = function(node) {
+    if (this.applyStyles==false)
+        return;
+    // Often these are null, so set them in a way that nothing will actually get set if you pass null.
+    if (this.font!=null)          setNodeAttribute(node, 'font', this.font);
+    if (this.fontFamily!=null)    setNodeAttribute(node, 'font-family', this.fontFamily);
+    if (this.fontSize!=null)      setNodeAttribute(node, 'font-size', this.fontSize);
+    if (this.fontWeight!=null)    setNodeAttribute(node, 'font-weight', this.fontWeight);
+    if (this.fontStyle!=null)     setNodeAttribute(node, 'font-style', this.fontStyle);
+    if (this.fontVariant!=null)   setNodeAttribute(node, 'font-variant', this.fontVariant);
+    if ( this.fontStretch!=null)  setNodeAttribute(node, 'font-stretch', this.fontStretch);
+    if (this.textAnchor!=null)    setNodeAttribute(node, 'text-anchor', this.textAnchor);
 }
 
 // Creating Gradient, Pattern, and (SVG Only) Marker Styles
