@@ -111,9 +111,13 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     -- Render the plot
     
   TODO
-    -- Make all lits both comma or space seperated like in SVG. 
+    -- Make all lits both comma or space seperated like in SVG.
+    -- Markers (though this is really more of a Canvas thing)
+    -- Scatter plot is line plot with transparent stroke, but with markers?
     -- Ticks pick up color of a graph. Ticks should be colored if explicitly created, not if auto-created.
     -- Grid lines like ticks.  Extended ticks?
+    -- Tests with multiple boxes and box layout.
+    -- Be able to draw using lineTo and things using plot coordinates, not screen coordinates.
 ***/
 
 
@@ -329,9 +333,25 @@ MochiKit.SVGPlot.prototype.setTicks = function(locations, position, length, type
     if (typeof(scale) == 'undefined' || scale==null)
         scale = this._getLastCommand(this._currentBox, type+'scale');
     
-    this.removeCommand(scale, 'ticks');
+    this.removeTicks(type, scale);
     
     return this.addTicks(locations, position, length, type, scale);
+}
+
+MochiKit.SVGPlot.prototype.removeXTicks = function(scale) {
+    this.removeTicks('x', scale);
+}
+
+MochiKit.SVGPlot.prototype.removeYTicks = function(scale) {
+    this.removeYTicks('y', scale);
+}
+
+MochiKit.SVGPlot.prototype.removeTicks = function(type, scale) {
+    if (typeof(scale) == 'undefined' || scale==null)
+        scale = this._getLastCommand(this._currentBox, type+'scale');
+    
+    this.removeCommand(scale, 'ticks');
+    this.render();
 }
 
 MochiKit.SVGPlot.prototype.addTicks = function(locations, position, length, type, scale) {
@@ -380,10 +400,26 @@ MochiKit.SVGPlot.prototype.setStubs = function(locations, labels, position, type
     if (typeof(scale) == 'undefined' || scale==null)
         scale = this._getLastCommand(this._currentBox, type+'scale');
     
-    this.removeCommand(scale, 'stub');
-    this.removeCommand(scale, 'stubs');
+    this.removeStubs(type, scale);
     
     return this.addStubs(locations, labels, position, type, scale);
+}
+
+MochiKit.SVGPlot.prototype.removeXStubs = function(scale) {
+    this.removeStubs('x', scale);
+}
+
+MochiKit.SVGPlot.prototype.removeYStubs = function(scale) {
+    this.removeStubs('y', scale);
+}
+
+MochiKit.SVGPlot.prototype.removeStubs = function(type, scale) {
+    if (typeof(scale) == 'undefined' || scale==null)
+        scale = this._getLastCommand(this._currentBox, type+'scale');
+        
+    this.removeCommand(scale, 'stub');
+    this.removeCommand(scale, 'stubs');
+    this.render();
 }
 
 MochiKit.SVGPlot.prototype.addXStubs = function(locations, labels /* = toString(locations) */, position /* = 'bottom' */, scale) {

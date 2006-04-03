@@ -97,6 +97,14 @@ var testFunctions = {
         //p.setYAxis('zero')
     },
     
+    'ticks' : function(p) {
+        p.plotLine(trigx, sin)
+        p.setXTicks(trigx)
+        p.setYTicks(sin)
+        p.removeXStubs()
+        p.removeYStubs()
+    },
+    
     'dependentaxes' : function(p) {
         // Temperature
     },
@@ -104,7 +112,6 @@ var testFunctions = {
     'independentaxes' : function(p) {
         // Population & GDP over time.
     }
-    
 };
 
 function doTest(plotTD, functionArea, svgSrcArea) {
@@ -122,7 +129,7 @@ function doTest(plotTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 0, number = 7;
+    var i = 0, start = 7, number = 1;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test", test);
