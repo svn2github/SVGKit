@@ -52,12 +52,14 @@ var State = {
         }
         else {
             // primitive
+            if(obj == oldObj) return; // do nothing if it hasn't changed
             elts = State.stateHash[path];
             if(typeof(elts) == "undefined" || elts == null) {
                 //log("Unused state: " + path + " (" + obj + ")");
             }
             else {
                 for(var i = 0; i < elts.length; i++) {
+                    log("Updating " + path);
                     elts[i].innerHTML = obj;
                 }
             }
