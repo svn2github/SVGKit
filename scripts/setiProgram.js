@@ -25,7 +25,7 @@ var setiProgram = {
     },
     
     setCoincMask: function() {
-        for (uCno = 0; uCno < 1;uCno++) {
+        for (uCno = 0; uCno < 8;uCno++) {
             // daughterboard are numbered opposite to uCs
             DBno = 7 - uCno;
             checked = []; checked_cap = [];
@@ -45,7 +45,7 @@ var setiProgram = {
     },
     
     program: function (option) {
-        for (uCno = 0; uCno < 1; uCno++) {
+        for (uCno = 0; uCno < 8; uCno++) {
             // see definitions of DBno, asicNo, and PNno above in setCoincMask()
             DBno = 7 - uCno;
             for (asicNo = 0; asicNo < 4; asicNo++) {
