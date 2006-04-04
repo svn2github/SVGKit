@@ -819,7 +819,7 @@ MochiKit.SVGCanvas.prototype._setFontAttributes = function(node) {
     if (this.fontWeight!=null)    setNodeAttribute(node, 'font-weight', this.fontWeight);
     if (this.fontStyle!=null)     setNodeAttribute(node, 'font-style', this.fontStyle);
     if (this.fontVariant!=null)   setNodeAttribute(node, 'font-variant', this.fontVariant);
-    if ( this.fontStretch!=null)  setNodeAttribute(node, 'font-stretch', this.fontStretch);
+    if (this.fontStretch!=null)   setNodeAttribute(node, 'font-stretch', this.fontStretch);
     if (this.textAnchor!=null)    setNodeAttribute(node, 'text-anchor', this.textAnchor);
 }
 
