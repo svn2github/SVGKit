@@ -51,15 +51,18 @@ var testFunctions = {
         for (var i=0; i<POINT_COUNT; i++)
             intsquares[i] = i*i;
         p.plotLine(intsquares)
+        p.render()
     },
     
     'xyLine' : function(p) {
         p.plotLine(trigx, sin)
+        p.render()
     },
     
     'multiPlot' : function(p) {
         p.plotLine(trigx, sin)
         p.plotLine(trigx, cos)
+        p.render()
     },
     
     'styleLine' : function(p) {
@@ -73,28 +76,39 @@ var testFunctions = {
         p.dasharray = ".5,1,2";
         p.dashoffset = 2;
         p.plotLine(trigx, atan);
+        p.render()
     },
     
     'functionPlot' : function(p) {
         p.plotFunction('Math.atan(x)', 'x', -8, 8);
+        p.render()
     },
     
     'trickyFunctionPlot' : function(p) {
         p.plotFunction('Math.sin(1/x)', 'x', -4, 4);
+        p.render()
     },
     
     'decorations' : function(p) {
-        p.plotLine(trigx, sin)
+        p.strokeStyle = "#888";
+        p.fillStyle = "#888";
+        p.addBox();
+        p.addBoxDefaults();
         var locations = [-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI]
         p.setXTicks(locations)
         p.setXStubs(locations, ['-2pi', '-pi', '0', 'pi', '2pi'])
         locations = [-1, -0.5, 0, 0.5, 1]
         p.setYTicks(locations)
         p.setYStubs(locations)
-        p.fontSize = 10;
-        p.setXLabel("Phase (ns)")
-        p.setYLabel("Voltage (V)")
-        //p.setYAxis('zero')
+        p.fontSize = '10';
+        p.fontFamily="Verdana, Arial, Helvetica, Sans"
+        p.setXLabel("Time (ns)");
+        p.setYLabel("Voltage (V)");
+        p.strokeStyle = 'rgba(255, 50, 50, 0.5)';
+        p.plotLine(trigx, sin);
+        p.strokeStyle = 'rgba(50, 50, 255, 0.5)';
+        p.plotLine(trigx, cos);
+        p.render();
     },
     
     'ticks' : function(p) {
@@ -103,11 +117,24 @@ var testFunctions = {
         p.setYTicks(sin)
         p.removeXStubs()
         p.removeYStubs()
+        p.render()
     },
     
     'scales' : function(p) {
         p.plotLine(trigx, sin)
         p.addScale('x', null, 0.5, null, null, true)
+        p.render()
+    },
+    
+    'scalestyles' : function(p) {
+        p.fillStyle = "#950";
+        p.addBox();
+        p.addBoxDefaults();
+        p.strokeStyle = "rgba(255,0,0,.5)";
+        p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.strokeStyle = "rgba(0,0,255,.5)";
+        p.plotFunction("Math.cos(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.render();
     },
     
     'dependentaxes' : function(p) {
@@ -134,9 +161,10 @@ function doTest(plotTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 8, number = 1;
+    var i = 0, start = 0, number = 20;
+    var onlyDraw = 'decorations';
     for (var test in testFunctions) {
-        if (i>=start && i-start<number) {
+        if (i>=start && i-start<number && onlyDraw==''|| onlyDraw!='' && onlyDraw==test) {
             log("doing test", test);
             var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
             var functionArea, plotSrcArea, button, plotTD, button;

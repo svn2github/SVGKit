@@ -83,16 +83,21 @@ var SetiEvent = {
         var plot = new SVGPlot(530, 100);
         
         function plotFunction(p, time_ns, left, right, voltages) {
+            p.strokeStyle = "#C6C6C6";
+            p.fillStyle = "#C6C6C6";
+            p.addBox();
+            p.addBoxDefaults();
+            p.setYTicks(voltages);
+            p.setYStubs(voltages);
+            p.fontSize = '10px';
+            p.fontFamily="Helvetica, Geneva, Arial, SunSans-Regular, sans-serif"
+            p.setXLabel("Time (ns)");
+            p.setYLabel("Voltage (V)");
             p.strokeStyle = 'rgba(255, 50, 50, 0.5)';
             p.plotLine(time_ns, left);
             p.strokeStyle = 'rgba(50, 50, 255, 0.5)';
             p.plotLine(time_ns, right);
-            p.strokeStyle = '#FFF';
-            p.setYTicks(voltages);
-            p.setYStubs(voltages);
-            p.setXLabel("Time (ns)");
-            p.setYLabel("Voltage (V)");
-            p._doBoxLayout();
+            p.render();
         }
         
         var container = getElement("coinc_plot");

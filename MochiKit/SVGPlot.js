@@ -121,6 +121,10 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     -- Grid lines like ticks.  Extended ticks?
     -- Tests with multiple boxes and box layout.
     -- Be able to draw using lineTo and things using plot coordinates, not screen coordinates. 
+    -- CSS Colors and Fonts
+    -- Move stubs to fit on plot or make plot bigger to accomodate stubs
+    -- Is the converting back and forth to strings too slow?
+    -- Is the simple DOM manipuation in the plot namespace too slow?
 ***/
 
 
@@ -181,6 +185,11 @@ MochiKit.SVGPlot.EXPORT_OK = [
 ];
 
 
+MochiKit.SVGPlot.plotNS = "http://www.svgplot.org";
+MochiKit.SVGPlot.defaultAxisStrokeWidth = 1;
+MochiKit.SVGPlot.defaultMargins = 1;
+
+
 MochiKit.SVGPlot.prototype.__init__ = function (widthOrIdOrNode, height, id /*optional*/) {
     /***
         Can pass it in an SVG object, or can pass it things that the SVG constructor uses.
@@ -210,7 +219,7 @@ MochiKit.SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... *
         this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
     }
     if (this._currentBox == null)
-        this._currentBox = this.addBox();
+        this._currentBox = this.addBox('float', null, null, null, null, true);
     var xdata_str = this._arrayToString(xorydata);
     var lineplotElement = null;
     for (var data_index=1; data_index<arguments.length; data_index++) {
@@ -222,7 +231,6 @@ MochiKit.SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... *
         lineplotElement.setAttributeNS(plotNS, 'ydata', ydata_str);
         this._setGraphicsAttributes(lineplotElement, 'stroke');
         this._currentBox.appendChild(lineplotElement);
-        this.render(); // TODO Move this down
     }
     return lineplotElement;
 }
@@ -239,19 +247,21 @@ MochiKit.SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
     }
     log("Calling plotLine with data");
     return this.plotLine(xdata, ydata);
+    // Maybe this should be in a <plotFunction> <plotLine/> <plotFunction>
 }
 
 
 // Box
 
 
-MochiKit.SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */)  {
-    var box = this.createBox(x, y, width, height);
+MochiKit.SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */, add_default_elements /* =false */ )  {
+    var box = this.createBox(layout, x, y, width, height, add_default_elements);
     this.svg.svgElement.appendChild(box);
+    this._currentBox = box;
     return box;
 }
 
-MochiKit.SVGPlot.prototype.createBox = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
+MochiKit.SVGPlot.prototype.createBox = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */, add_default_elements /* =false */ ) {
     var plotNS = MochiKit.SVGPlot.plotNS;
     
     if (typeof(layout) == 'undefined' || layout==null)
@@ -265,14 +275,23 @@ MochiKit.SVGPlot.prototype.createBox = function(layout /* ='float' */, x /* =0 *
     if (typeof(height) == 'undefined' || height==null)
         height = this.svg.svgElement.getAttribute('height');
 
-    var box = this.svg.G({'stroke-width':2});   // TODO some default parameters
+    var box = this.svg.G();   // TODO some default parameters
     box.setAttributeNS(plotNS, 'cmd', 'box');
     box.setAttributeNS(plotNS, 'layout', layout);
     box.setAttributeNS(plotNS, 'x', x);
     box.setAttributeNS(plotNS, 'y', y);
     box.setAttributeNS(plotNS, 'width', width);
     box.setAttributeNS(plotNS, 'height', height);
+    if (add_default_elements == true)
+        this.addBoxDefaults(box);
     return box;
+}
+
+MochiKit.SVGPlot.prototype.addBoxDefaults = function(box /* currentBox */) {
+    if (typeof(box) == 'undefined' || box==null)
+        box = this._currentBox;
+    this.addScale('x', null, null, null, box, true);
+    this.addScale('y', null, null, null, box, true);
 }
 
 // Scale
@@ -284,7 +303,6 @@ MochiKit.SVGPlot.prototype.addScale = function(type /* x or y */, range /* ='aut
         box = this._currentBox;
     var scale = this.createScale(type, range, position, scale_type, add_default_elements);
     box.insertBefore(scale, box.firstChild);  // TODO The second scale is always y, yet it gets inserted before x here.
-    this.render(); // TODO Move this down
     return scale;
 }
 
@@ -304,21 +322,17 @@ MochiKit.SVGPlot.prototype.createScale = function(type /* x or y */, range /* ='
     scale.setAttributeNS(plotNS, 'type', scale_type);
     
     if (add_default_elements == true)
-        this.addDefaultScaleElements(scale, type);
+        this.addScaleDefaults(scale, type);
     
     return scale;
 }
 
-MochiKit.SVGPlot.prototype.addDefaultScaleElements = function(scale, type) {
+MochiKit.SVGPlot.prototype.addScaleDefaults = function(scale, type) {
     var plotNS = MochiKit.SVGPlot.plotNS
     
     // Axis options:  auto, include_zero = true, auto number=10, auto increment=5, 
-    var axis = this.svg.G({'stroke-width':1,
-                             'stroke':'black',
-                             'stroke-opacity':1});   // TODO some default parameters
-    axis.setAttributeNS(plotNS, 'cmd', "axis");
     var scale_cmd = scale.getAttributeNS(plotNS, 'cmd');  // TODO remove this.
-    scale.appendChild(axis);
+    this.addAxis(type, scale);
     this.addTicks(null, null, null, type, scale)
     this.addStubs(null, null, null, type, scale)
 }
@@ -358,7 +372,6 @@ MochiKit.SVGPlot.prototype.removeAxis = function(type, scale) {
         scale = this._getLastCommand(this._currentBox, type+'scale');
     
     this.removeCommand(scale, 'axis');
-    this.render();
 }
 
 MochiKit.SVGPlot.prototype.addAxis = function(type, scale) {
@@ -366,7 +379,6 @@ MochiKit.SVGPlot.prototype.addAxis = function(type, scale) {
         scale = this._getLastCommand(this._currentBox, type+'scale');
     var axis = this.createAxis()
     scale.appendChild(axis);
-    this.render(); // TODO Move this down
     return axis;
 }
 
@@ -412,7 +424,6 @@ MochiKit.SVGPlot.prototype.removeTicks = function(type, scale) {
         scale = this._getLastCommand(this._currentBox, type+'scale');
     
     this.removeCommand(scale, 'ticks');
-    this.render();
 }
 
 MochiKit.SVGPlot.prototype.addTicks = function(locations, position, length, type, scale) {
@@ -422,7 +433,6 @@ MochiKit.SVGPlot.prototype.addTicks = function(locations, position, length, type
         position = position = (type=='x') ? 'bottom' : 'left'
     var ticks = this.createTicks(locations, position, length)
     scale.appendChild(ticks);
-    this.render(); // TODO Move this down
     return ticks;
 }
 
@@ -479,7 +489,6 @@ MochiKit.SVGPlot.prototype.removeStubs = function(type, scale) {
         
     this.removeCommand(scale, 'stub');
     this.removeCommand(scale, 'stubs');
-    this.render();
 }
 
 MochiKit.SVGPlot.prototype.addXStubs = function(locations, labels /* = toString(locations) */, position /* = 'bottom' */, scale) {
@@ -497,7 +506,6 @@ MochiKit.SVGPlot.prototype.addStubs = function(locations, labels, position, type
         position = (type=='x') ? 'bottom' : 'left'
     var stubs = this.createStubs(locations, labels, position)
     scale.appendChild(stubs);
-    this.render(); // TODO Move this down
     return stubs;
 }
 
@@ -609,13 +617,11 @@ MochiKit.SVGPlot.prototype.addLabel = function(label, location, position, type, 
         position = (type=='x') ? 'bottom' : 'left'
     labelElement = this.createLabel(label, location, position)
     scale.appendChild(labelElement);
-    this.render(); // TODO Move this down
     return labelElement;
 }
 
 MochiKit.SVGPlot.prototype.createLabel = function(label, location, position) {
     var plotNS = MochiKit.SVGPlot.plotNS
-    this.prettyNumber(locations[i])
     if (typeof(location) == 'undefined' || location==null)
         location = '50%';
 
@@ -623,7 +629,7 @@ MochiKit.SVGPlot.prototype.createLabel = function(label, location, position) {
     labelElement.setAttributeNS(plotNS, 'cmd', 'label');
     labelElement.setAttributeNS(plotNS, 'location', location);
     labelElement.setAttributeNS(plotNS, 'position', position);
-    this._setGraphicsAttributes(labelElement, 'stroke');
+    this._setGraphicsAttributes(labelElement, 'fill');
     this._setFontAttributes(labelElement);
     
     this.save();
@@ -648,6 +654,8 @@ MochiKit.SVGPlot.prototype.render = function () {
         This can be called many times recursively and will just set a flag.
         It ends when a render is complete and there are no pending requests.
     ***/
+    this._doBoxLayout();
+    /*
     if ( !this._rendering==true ) {
         this._rendering = true;
         do {
@@ -659,6 +667,7 @@ MochiKit.SVGPlot.prototype.render = function () {
     else {
         this._renderAgain = true;
     }
+    */
 }
 
 MochiKit.SVGPlot.prototype._doBoxLayout = function () {
@@ -1143,11 +1152,6 @@ MochiKit.SVGPlot.prototype._minmax = function(array) {
     }
     return {'min':min, 'max':max};
 }
-
-MochiKit.SVGPlot.plotNS = "http://www.svgplot.org";
-MochiKit.SVGPlot.defaultAxisStrokeWidth = 1;
-MochiKit.SVGPlot.defaultMargins = 1;
-
 MochiKit.SVGPlot.prototype._setAttrWithDefault = function (node, attr, value) {
    // If the given attribute is not set, set it to value
    var plotNS = MochiKit.SVGPlot.plotNS
@@ -1210,6 +1214,7 @@ MochiKit.SVGPlot.prototype.resetPlot = function() {
     // SVGCanvas already has a reset()
     log("Constructing SVGPlot in SVGPlot.reset");
     this._currentBox = null;
+    //this.fontFamily = "Verdana, Arial, Helvetica, Sans";
     this.fontFamily = "Bitstream Vera Sans";
     this.fontSize = '7px';
 }
