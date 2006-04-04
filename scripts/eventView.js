@@ -290,18 +290,43 @@ INFO: Updating state.
     },
 
     mouseClickFunction: function () {
-        //make data shown in Event Details stay there when user clicks on row
+        // make data shown in Event Details stay there when user clicks on row
         if      (EventView.stickyEventDetails == 0) {
-            EventView.stickyEventDetails = this.cells[0].innerHTML;
-            log("event stuck :" + EventView.stickyEventDetails);
-            setNodeAttribute(this, "id", EventView.stickyEventDetails);
-            log(this.id);
+            // plot coincidence in SETI event viewer
+            if (this.cells[2].innerHTML == "Coincidence") {
+                eventId = this.cells[0].innerHTML;
+                EventView.addCoincidencePlot(eventId);
+            }
+            // show detail in event viewer details column
+            else {
+                EventView.stickyEventDetails = this.cells[0].innerHTML;
+                log("Event details stuck in event viewer:" + EventView.stickyEventDetails);
+                setNodeAttribute(this, "id", EventView.stickyEventDetails);
+                log(this.id);
+            }
         }
         else if (EventView.stickyEventDetails != 0)  {
-            log("event unstuck: " + EventView.stickyEventDetails);
+            log("Event details unstuck in event viewer: " + EventView.stickyEventDetails);
             removeElementClass(EventView.stickyEventDetails, "over");
             EventView.clearEventDetails();
             EventView.stickyEventDetails = 0;
+        }
+    },
+    
+    addCoincidencePlot: function (eventId) {
+        // function that opens a coincidence plot in the SETI event panel
+        log("Generating coincidence plot for event id", eventId);
+        setiEventPanelName = 'seti_event_history';
+        setiEventPanel     = getElement(setiEventPanelName);
+        // if the seti event panel isn't visible, open it 
+        // and create the plot when the panel and it's javascript have loaded
+        if (hasElementClass(setiEventPanel, "panelInvisible")) {
+            addPanel(setiEventPanelName);
+            addToCallStack(setiEventPanel, 'onload', SetiEvent.createPlotId(eventId));
+        }
+        // otherwise just create the plot
+        else {
+            SetiEvent.createPlotId(eventId)
         }
     },
 

@@ -43,6 +43,15 @@ function loadClearSkyClock() {
     $('timestamp_skyclock').innerHTML= toISOTimestamp(dateToday);
 }
 
+function addPanel(elem) {
+    newElem = getElement(elem);
+    if (newElem != null) {
+        if (hasElementClass(newElem, "panelInvisible")) {
+            togglePanel(elem);
+        }
+    }
+}
+
 function togglePanel(elem,source,sourcetype) {
     makePanel(elem);
     toggleMenuItem(elem);
