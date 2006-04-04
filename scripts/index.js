@@ -80,6 +80,7 @@ function isInt(str) {
 
 var Cookie = {
     panelPrefix: 'panel_',
+    controlPrefix: 'event_view_controls_',
 
     create: function (name,value,days) {
     	if (days) {
@@ -107,7 +108,7 @@ var Cookie = {
     },
 
     erase: function (name) {
-    	Cookie.create(name,"",-1);
+    	Cookie.create(name, "", -1);
     },    
 
     restorePanels: function () {
@@ -117,12 +118,30 @@ var Cookie = {
                 cookieArray[i] = cookieArray[i].substring(1, cookieArray[i].length);
             }
             var pair = cookieArray[i].split('=');
+            //log(pair[0]);
             if (pair[0].substring(0, Cookie.panelPrefix.length) == Cookie.panelPrefix) {
                 if (pair[1] == "true") {
                     togglePanel(pair[0].substring(Cookie.panelPrefix.length, pair[0].length));
                 }
             }
+            /*
+            else if (pair[0].substring(0, Cookie.controlPrefix.length) == Cookie.controlPrefix) {
+                log(pair[0]);
+                elem = getElement(pair[0]);
+                if (elem.type == "radio" | elem.type == "checkbox") {
+                    elem.checked = pair[1];
+                }
+                else if (elem.type == "text") {
+                    elem.value = pair[1];
+                }
+            }
+            */
         }
+    },
+    
+    restoreSettings: function () {
+        getAllTelemetry
+        //
     },
 
 }    

@@ -100,17 +100,41 @@ var EventView = {
         var tableHeight       = Math.max(parseInt(cookieTableHeight), 
                                          parseInt(minTableHeight))
         EventView.setTableHeight(tableHeight);
-        //log(cookieTableHeight, minTableHeight, tableHeight);
     },
     
     saveCookies: function () {
         var settings = EventView.controlSettings;
         forEach(dir(settings),
             function(setting) {
+                log("cookie saved for ", setting, "[", settings[setting], "]")
                 Cookie.create(setting, settings[setting], 30)
             }
         );
     },
+    
+    applyCookies: function() {
+        var settings = EventView.controlSettings;
+        forEach(dir(settings),
+            function(setting) {
+                log($(setting).value);
+                log(setting, " = ", Cookie.read(setting));
+            }
+        );
+    },
+    
+    
+    /*
+INFO: cookie saved for event_view_controls_autoload_interval [ 5 ]
+INFO: cookie saved for event_view_controls_events_id [ 100 ]
+INFO: cookie saved for event_view_controls_events_time [ 2006-04-03 17:30:28 ]
+INFO: cookie saved for event_view_controls_max_events [ 50 ]
+INFO: cookie saved for event_view_controls_max_rows [ 10 ]
+INFO: cookie saved for event_view_controls_sel_recent [ true ]
+INFO: cookie saved for event_view_controls_sel_since_id [ false ]
+INFO: cookie saved for event_view_controls_sel_since_time [ false ]
+INFO: Updating state.
+    
+    */
     
     autoLoadTable: function () {
         var prefix = EventView.idbase + "controls_";
