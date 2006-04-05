@@ -34,7 +34,7 @@ var cos = Array(POINT_COUNT);
 var tan = Array(POINT_COUNT);
 var atan = Array(POINT_COUNT);
 for (var i=0; i<POINT_COUNT; i++) {
-    var x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/POINT_COUNT;
+    var x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/(POINT_COUNT-1);
     log("in trig x=" + x);
     trigx[i] = x;
     sin[i] = Math.sin(x);
@@ -122,7 +122,6 @@ var testFunctions = {
     
     'scales' : function(p) {
         p.plotLine(trigx, sin)
-        p.addScale('x', null, 0.5, null, null, true)
         p.render()
     },
     
@@ -148,7 +147,7 @@ var testFunctions = {
 
 function doTest(plotTD, functionArea, svgSrcArea) {
     var plot
-    plot = new MochiKit.SVGPlot(200, 200);
+    plot = new SVGPlot(220, 220);
     var setSVGSrc = function (svg, textarea) {
         replaceChildNodes(textarea, svg.toXML());
     }
@@ -162,7 +161,7 @@ function addTests() {
     log("getting table");
     var table = $('tests');
     var i = 0, start = 0, number = 20;
-    var onlyDraw = 'decorations';
+    var onlyDraw = '';
     for (var test in testFunctions) {
         if (i>=start && i-start<number && onlyDraw==''|| onlyDraw!='' && onlyDraw==test) {
             log("doing test", test);
