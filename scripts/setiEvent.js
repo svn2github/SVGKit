@@ -54,6 +54,7 @@ var SetiEvent = {
         var voltages = [dac.vref[0], dac.bias, 
                         dac.vref[1], dac.vref[2], dac.vref[3], 
                         dac.vref[4], dac.vref[5], dac.vref[6] ];
+        log(voltages);
         //var voltages = [1.7, 1.5, 1.4, 1.3, 1.1, 0.9, 0.7, 0.5];  // vref[0],  bias, vref[1], vref[2] ... vref[6]
         var length = Math.min(left.length, right.length);
         var time_ns = Array(length);
@@ -101,7 +102,7 @@ var SetiEvent = {
                         TD( null, timeStampText )]
                      );
         var row4 = TR( null, 
-                       [TD( null, "PMT Pixel pair:" ), 
+                       [TD( null, "Pixel pair:" ), 
                         TD( null, pixelPairSpan )]
                      );
         var row5 = TR( null, 
