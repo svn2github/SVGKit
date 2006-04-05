@@ -14,17 +14,32 @@ var TopBar = {
         update: function (newstate) {
         //get the state variables
         myvals = [];
-        myvals["shutter"]      = newstate.shutterState.position;
-        myvals["shutter"]      = myvals["shutter"].substring(0,1).toUpperCase() + 
-                                 myvals["shutter"].substring(1,myvals['shutter'].length);
-        myvals["telescopeDeg"] = newstate.telescopeState.degrees 
-        myvals["telescope"]    = parseFloat(myvals["telescopeDeg"]) + 42.5 //convert to declination
-        myvals["telescope"]    = myvals["telescope"].toPrecision(3) + "° dec";
-        myvals["temperature"]  = newstate.weatherStationState.temperature + "° F";
-        myvals["humidity"]     = newstate.weatherStationState.humidity + "%";
-        myvals["cloudCover"]   = newstate.webCloudCoverState.cloudCover + "%";
+        myvals["instrumentMode"] = newstate.instrumentState.mode;
+        tempState = newstate.temperatureTelemetryState;
+        myvals["instTemp"]       = 0.;
+        for (i=0; i<8; i++) {
+            myvals["instTemp"]   = Math.max(myvals["instTemp"], 
+                                            parseInt(tempState[i].temperature))
+        }
+        myvals["instHumidity"]   = newstate.humidityTelemetryState.humidity
+        myvals["instrument"]     = myvals["instrumentMode"] + "  -  " + 
+                                   myvals["instTemp"] + "°F / " + 
+                                   myvals["instHumidity"] + "%";
+        myvals["shutter"]        = newstate.shutterState.position;
+        myvals["shutter"]        = myvals["shutter"].substring(0,1).toUpperCase() + 
+                                   myvals["shutter"].substring(1,myvals['shutter'].length);
+        myvals["telescopeDeg"]   = newstate.telescopeState.degrees 
+        // TO-DO: add declination (it will depend on time, of course)
+        myvals["telescope"]      = parseFloat(myvals["telescopeDeg"]) + 42.5 //convert to declination
+        myvals["telescope"]      = myvals["telescope"].toPrecision(3) + "° dec";
+        myvals["temperature"]    = newstate.weatherStationState.temperature + "°F";
+        myvals["humidity"]       = newstate.weatherStationState.humidity + "%";
+        myvals["environment"]    = newstate.weatherStationState.temperature + "°F / " + 
+                                   newstate.weatherStationState.humidity + "%";
+        myvals["cloudCover"]     = newstate.webCloudCoverState.cloudCover + "%";
         //replace the state variables in the top toolbar
-        myvars = ["shutter", "telescope", "temperature", "humidity", "cloudCover"];
+        myvars = ["instrument", "shutter", "telescope", 
+                  "environment", "cloudCover"];
         forEach(myvars,
             function (myvar) {
                 elem = getElement("top_" + myvar);
