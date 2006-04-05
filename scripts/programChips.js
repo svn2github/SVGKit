@@ -38,8 +38,9 @@ var ProgramChips = {
                 }
             }
             else {
+                uCno = 7 - voltage; // daughterboards and uCs are numbered oppositely
                 query_vref = queryString(getElement(this.idbase+'PMTDACForm'+voltage+side));
-                ProgramChips.command('programDAC?chip='+side+'&channel='+voltage+'&'+query_vref);
+                ProgramChips.command('programDAC?chip='+side+'&channel='+uCno+'&'+query_vref);
             }
         }
     },
