@@ -122,12 +122,7 @@ var testFunctions = {
         p.render()
     },
     
-    'scales' : function(p) {
-        p.plotLine(trigx, sin)
-        p.render()
-    },
-    
-    'scalestyles' : function(p) {
+    'axisstyles' : function(p) {
         p.fillStyle = "#950";
         p.addBox();
         p.addBoxDefaults();
@@ -138,13 +133,88 @@ var testFunctions = {
         p.render();
     },
     
+        
+    'floatingaxes' : function(p) {
+        p.addBox();
+        p.addRange();
+        p.addXAxis(-.6)
+        p.addXAxisDefaults()
+        p.addYAxis(-4)
+        p.addYAxisDefaults()
+        p.strokeStyle = "rgba(255,0,0,.5)";
+        p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.strokeStyle = "rgba(0,0,255,.5)";
+        p.plotFunction("Math.cos(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.render();
+    },
+    
     'dependentaxes' : function(p) {
-        // Temperature
+        p.addBox()
+        p.addRange(-10, 10, -7, 7)
+        var colors = ['#990000', '#009900', '#000099'];
+        for (var i=0; i<3; i++) {
+            p.strokeStyle = colors[i];
+            p.fillStyle = colors[i];
+            p.addXAxis('top')
+            p.addXTicks('auto', 'top')
+            p.addXStubs('auto', 'auto', 'top')
+            p.addXTicks([-5, 0, 5], 'bottom')
+            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addXAxis('bottom')
+            p.addXTicks('auto', 'top')
+            p.addXStubs('auto', 'auto', 'top')
+            p.addXTicks([-5, 0, 5], 'bottom')
+            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addYAxis('right')
+            p.addYTicks('auto', 'left')
+            p.addYStubs('auto', 'auto', 'left')
+            p.addYTicks([-5, 0, 5], 'right')
+            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.addYAxis('left')
+            p.addYTicks('auto', 'left')
+            p.addYStubs('auto', 'auto', 'left')
+            p.addYTicks([-5, 0, 5], 'right')
+            p.addYStubs([-5, 0, 5], 'auto', 'right')
+        }
+        p.strokeStyle = "rgba(255,0,0,.5)";
+        p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.strokeStyle = "rgba(0,0,255,.5)";
+        p.plotFunction("Math.cos(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.render();
     },
     
     'independentaxes' : function(p) {
-        // Population & GDP over time.
+        p.addBox()
+        var colors = ['#990000', '#009900', '#000099'];
+        for (var i=0; i<3; i++) {
+            p.strokeStyle = colors[i];
+            p.fillStyle = colors[i];
+            p.addRange(-i*3-1, i*3+1, -i*3-1, i*3+1)
+            p.addXAxis('top')
+            p.addXTicks('auto', 'top')
+            p.addXStubs('auto', 'auto', 'top')
+            p.addXTicks([-5, 0, 5], 'bottom')
+            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addXAxis('bottom')
+            p.addXTicks('auto', 'top')
+            p.addXStubs('auto', 'auto', 'top')
+            p.addXTicks([-5, 0, 5], 'bottom')
+            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addYAxis('right')
+            p.addYTicks('auto', 'left')
+            p.addYStubs('auto', 'auto', 'left')
+            p.addYTicks([-5, 0, 5], 'right')
+            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.addYAxis('left')
+            p.addYTicks('auto', 'left')
+            p.addYStubs('auto', 'auto', 'left')
+            p.addYTicks([-5, 0, 5], 'right')
+            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        }
+        p.render();
     }
+    
 };
 
 function doTest(plotTD, functionArea, svgSrcArea) {
