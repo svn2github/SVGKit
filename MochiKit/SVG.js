@@ -122,7 +122,7 @@ MochiKit.SVG.EXPORT = [
     "appendNode",
     "createSVG",
     "grabSVG",
-    //"A",
+    "A",
     "ALTGLYPH",
     "ALTGLYPHDEF",
     "ALTGLYPHITEM",
@@ -213,9 +213,15 @@ MochiKit.SVG.EXPORT_OK = [
 MochiKit.SVG.prototype._svgMIME = 'image/svg+xml';
 MochiKit.SVG.prototype._svgEmptyName = 'empty.svg';
 MochiKit.SVG.prototype._mochiKitBaseURI = '';
-MochiKit.SVG.prototype._errorText = "You can't display SVG. Download Firefox." ;
+MochiKit.SVG.prototype._errorText = "You can't display SVG. Download Firefox 1.5." ;
 
 MochiKit.SVG.prototype.setBaseURI = function() {
+    /***
+        To create an empty SVG using <object> or <embed> you need to give the tag
+        a valid SVG file, so an empty one lives in the same directory as the JavaScript.
+        This function finds that directory and sets the _mochiKitBaseURI variable
+        for future use.
+    ***/
     var scripts = document.getElementsByTagName("script");
     for (var i = 0; i < scripts.length; i++) {
         var src = scripts[i].getAttribute("src");
@@ -229,6 +235,15 @@ MochiKit.SVG.prototype.setBaseURI = function() {
 }
 
 MochiKit.SVG.prototype.getDefs = function(createIfNeeded /* = false */) {
+    /***
+        Return the <defs> tag inside of the SVG document where definitions
+        like gradients and markers are stored.
+        
+        @param createIfNeeded -- If this is true, a <defs> element will be created if
+                                none already exists.
+                                
+        @returns the defs element.  If createIfNeeded is false, this my return null
+    ***/
     var defs = this.svgDocument.getElementsByTagName('defs');
     if (defs.length>0)
         return defs[0];
@@ -242,29 +257,38 @@ MochiKit.SVG.prototype.getDefs = function(createIfNeeded /* = false */) {
     return defs;
 }
 
-MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/, type /*optional*/) {
+MochiKit.SVG.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // TODO:  Make thse work right.
+    // __init__()                          For JavaScript included in an SVG.
     // __init__(node)                      Already have an HTML element
-    // __init__(id)                        Have the id for an HTML element
-    // __init__(filename, id, type)        Create a new HTML element that references filename and has id
+    // __init__(id)                        Have the id for an HTML element (if your id ends in .svg, pass in the node)
+    // __init__(filename, id, type)        Create a new HTML element that references filename (ends in .svg)
     // __init__(width, height, id, type)   Create a new SVG from scratch with width, height, and id
     
     // The following are described at http://www.w3.org/TR/SVG/struct.html
     this.htmlElement = null;   // the <object> or <embed> html element the SVG lives in, otherwise null
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
-    this._redrawId = null;
+    this._redrawId = null;   // The reference that SVG's suspendRedraw returns.  Needed to cancel suspension.
     this.newSVGType = 'object'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
     //log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
     this.setBaseURI();
-    if (typeof(widthOrIdOrNode) == 'object' || typeof(widthOrIdOrNode) == 'string') {  // Not <object> but a JS object
-        //log("__init__ got object, hopefully <embed> or <object>. Trying to grabSVG on it.");
-        this.grabSVG(widthOrIdOrNode);
+    if (typeof(p1)=='undefined' || p1==null) {
+        // Inside of an SVG.
+        
+    }
+    else if (typeof(p1) == 'string') {
+        if (p1.length>5 && p1.substr(-4).toLowerCase()=='.svg')
+            this.loadSVG(p1, p2, p3, p4, p5);
+        else
+            this.grabSVG(p1);
+    }
+    else if (typeof(p1) == 'object') {  // Not <object> but a JS object
+        this.grabSVG(p1);
     }
     else {
-        //log("Going to createSVG()");
-        this.createSVG(widthOrIdOrNode, height, id, type)
+        this.createSVG(p1, p2, p3, p4)
     }
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
@@ -353,6 +377,16 @@ MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=
 };
 
 MochiKit.SVG.prototype.whenReady = function (func) {
+    /***
+        Calls func when the SVG is ready.
+        If you create or try to use an SVG inside of <embed> or <object>, the
+        SVG file must be loaded.  The browser does this asynchronously, and 
+        you can't do anything to the SVG unti it's been loaded.
+        If the file already loaded or you're working with an imbeded SVG, func
+        will get called instantly.
+        If it hasn't loaded yet, func will get added to the elemen's onload 
+        event callstack.
+    ***/
     if (this.svgElement != null && this.svgDocument != null) {
         func();
     }
@@ -363,8 +397,19 @@ MochiKit.SVG.prototype.whenReady = function (func) {
 }
 
 MochiKit.SVG.prototype.setSize = function(width, height) {
-    setNodeAttribute(this.svgElement, 'width', width);
-    setNodeAttribute(this.svgElement, 'height', height);
+    /***
+        Sets the size of the svgElement and any 
+        htmlElement that contains it.  If no size is given, it's assumed you
+        want to set the size of the HTML element based on the size of the SVG.
+    ***/
+    if (typeof(width)=='undefined' || width==null)
+        width = getNodeAttribute(this.svgElement, 'width')
+    else
+        setNodeAttribute(this.svgElement, 'width', width);
+    if (typeof(height)=='undefined' || height==null)
+        height = getNodeAttribute(this.svgElement, 'height')
+    else
+        setNodeAttribute(this.svgElement, 'height', height);
     if (this.htmlElement != null && this.htmlElement != this.svgElement) {
         // For inline images, this was just accomplished above.
         setNodeAttribute(this.htmlElement, 'width', width);
@@ -373,17 +418,15 @@ MochiKit.SVG.prototype.setSize = function(width, height) {
 }
 
 
-MochiKit.SVG.prototype.createSVG = function (width /*=100*/, height /*=100*/, id /* optional */) {
-    if (typeof(width) == "undefined" || width == null) {
-        width = 100;
-    }
-    if (typeof(height) == "undefined" || height == null) {
-        height = 100;
-    }
+MochiKit.SVG.prototype.createSVG = function (width, height, id /* optional */, type /* =default */) {
+    /***
+        Loads a blank SVG and sets its size and the size of any HTML
+        element it lives in to the given width and height.
+    ***/
     this.loadSVG(this._svgEmptyName, width, height, id)
 }
 
-MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, height /* = from file */, id /* optional */) {
+MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, height /* = from file */, id /* optional */, type /* =default */) {
     /***
 
         Create a new HTML DOM element of specified type ('object', 'embed', or 'svg')
@@ -405,25 +448,16 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
     
     // TODO If it is new, default width and height are 100.  If it's from a file, defaults come from the file.
     //      You can still set the width and height if you want the thing to scroll.
-    if (typeof(width) == "undefined" || width == null) {
-        //width = 100;
-    }
-    if (typeof(height) == "undefined" || height == null) {
-        //height = 100;
-    }
+
     if (typeof(id) == "undefined" || id == null) {
         id = null;
     }
     
-    var attrs = {'width':width, 'height':height};
     if (id != null) {
         attrs['id'] = id;
     }
     
-    var finishSettingProps = function (svg) {
-        svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
-        svg.setSize(width, height);
-    }
+    var attrs = {};
     
     if (this.newSVGType=='inline') {
         /*  Make sure html tag has SVG namespace support?
@@ -431,11 +465,13 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
                   xmlns:svg="http://www.w3.org/2000/svg"
                   xml:lang="en">
         */
-        attrs['xmlns:svg'] = 'http://www.w3.org/2000/svg';  // for <svg:circle ...> tags
-        attrs['xmlns'] = 'http://www.w3.org/2000/svg';      // for <circle> tags
+        attrs['xmlns:svg'] = 'http://www.w3.org/2000/svg';  // for <svg:circle ...> type tags
+        attrs['xmlns'] = 'http://www.w3.org/2000/svg';      // for <circle> type tags
+        attrs['width'] = 'width';
+        attrs['height'] = 'height';
         this.svgDocument = document;
         this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
-        this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly.
+        this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
         // TODO Load SVG from file inline
     }
     else if (this.newSVGType=='object') {
@@ -443,13 +479,15 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         attrs['type'] = this._svgMIME;
         this.htmlElement = createDOM('object', attrs, this._errorText);
         var svg = this;  // Define svg in context of function below.
-        this.whenReady( function (event) {
+        function finishLoad(svg, width, height, event) {
             // IE doesn't have contentDocument
             // IE would have to use some sort of SVG pool of objects
             // that add themselves to a list uppon load.
             svg.svgDocument = svg.htmlElement.contentDocument;
-            finishSettingProps(svg);
-        } );
+            svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
+            svg.setSize(width, height);
+        }
+        this.whenReady( partial(finishLoad, svg, width, height) );
     }
     else if (this.newSVGType=='embed') {
         attrs['src'] = this._mochiKitBaseURI + filename;
@@ -458,7 +496,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         //log("Going to createDOM('embed')");
         this.htmlElement = createDOM('embed', attrs );
         var svg = this;
-        this.whenReady( function (event) {
+        function finishLoad(svg, width, height, event) {
             // IE doesn't load the embed when you include it in the DOM tree.
             // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
             // and move them around. This seems to work in IE.
@@ -466,8 +504,10 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
             //log("new embed: svg.htmlElement = " + svg.htmlElement) ;
             //log("new embed: Going to svg.htmlElement.getSVGDocumen() )") ;
             svg.svgDocument = svg.htmlElement.getSVGDocument();
-            finishSettingProps(svg);
-        } );
+            svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
+            svg.setSize(width, height);
+        }
+        this.whenReady( partial(finishLoad, svg, width, height) );
     }
 }
 
@@ -478,7 +518,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
 
 MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
     /***
-        Given an HTML element (or it's id) that refers to an SVG, 
+        Given an HTML element (or its id) that refers to an SVG, 
         get the SVGDocument object.
         If htmlElement is an 'object' use contentDocument.
         If htmlElement is an 'embed' use getSVGDocument().
@@ -507,7 +547,7 @@ MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
     }
     // IE Bug:  htmlElement.getSVGDocument is nothing, but htmlElement.getSVGDocument() works.
-    else if (tagName == 'embed' /* && typeof(htmlElement.getSVGDocument) != 'unknown' */) {
+    else if (tagName == 'embed' /* && typeof(htmlElement.getSVGDocument) != 'undefined' */) {
         //log("embed typeof(htmlElement.getSVGDocument) = " + typeof(htmlElement.getSVGDocument));
         this.svgDocument = htmlElement.getSVGDocument();
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
@@ -518,12 +558,19 @@ MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
 
 MochiKit.SVG.prototype.append = function (node) {
     /***
-        Convenience method for appending to the root element
+        Convenience method for appending to the root element of the SVG.
+        Anything you draw by calling this will show up on top of everything else.
     ***/
     this.svgElement.appendChild(node);
 }
 
 MochiKit.SVG.prototype.createUniqueID = function(base) {
+    /***
+        For gradients and things, often you want them to have a unique id
+        of the form 'gradient123' where the number is sequentially increasing.
+        You would pass this function 'gradient' and it would look for the lowest
+        number which returns no elements when you do a getElementByID.
+    ***/
     var i=0;
     var id;
     do {
@@ -534,9 +581,9 @@ MochiKit.SVG.prototype.createUniqueID = function(base) {
 }
 
 MochiKit.SVG.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
-    /*
+    /***
         Like MochiKit.SVG.createDOM, but with the SVG namespace.
-    */
+    ***/
     var elem;
     var dom = MochiKit.DOM;
     if (typeof(name) == 'string') {
@@ -579,7 +626,11 @@ MochiKit.SVG.prototype.createSVGDOMFunc = function (/* tag, attrs, *nodes */) {
 
 
 MochiKit.SVG.prototype.toXML = function (decorate /* = false */) {
-    // This doesn't work cux toHTML converts everything to lower case.
+    /***
+        This doesn't work cuz toHTML converts everything to lower case.
+        
+        returns a string of XML.
+    ***/
     if (typeof(decorate) == "undefined" || decorate == null) {
         decorate = false;
     }
@@ -612,12 +663,22 @@ MochiKit.SVG.prototype.deleteContent = function() {
     /***
         Deletes all graphics content, but leaves definitions
     ***/
+    var deleteFrom = 0;
+    while(this.svgElement.childNodes.length>0) {
+        if (this.svgElement.childNodes[deleteFrom].tagName=='defs')
+            deleteFrom++;
+        else
+            this.svgElement.removeChild(this.svgElement.childNodes[deleteFrom]);
+    }
 }
 
 MochiKit.SVG.prototype.deleteEverything = function() {
     /***
         Deletes everything including definitions
     ***/
+    while(this.svgElement.childNodes.length>0) {
+        this.svgElement.removeChild(this.svgElement.childNodes[0]);
+    }
 }
 
 MochiKit.SVG.__new__ = function () {
