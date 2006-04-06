@@ -173,7 +173,8 @@ MochiKit.SVGCanvas.EXPORT_OK = [
 
 MochiKit.SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
     /***
-        Can pass it in an SVG object, or can pass it things that the SVG constructor uses.
+        You can pass it in an SVG object to draw on,
+        or can pass it anything that the SVG constructor uses.
     ***/
     var isSVG = typeof(widthOrIdOrNode) == 'object' && widthOrIdOrNode.constructor == MochiKit.SVG;
     this.svg = isSVG ? widthOrIdOrNode : new SVG(widthOrIdOrNode, height, id);
@@ -224,7 +225,7 @@ MochiKit.SVGCanvas.prototype.reset = function(startingGroup) {
                               'transformations' : "",  // Applys to all subpaths.
                               'drawGroup' : startingGroup, // When you start, there is no clipping and you're not in a marker.
                               'currentGroup' : startingGroup };  // if this is changed, you also have to change the drawGroup
-    this._setState(this, this._startingState);  // Copy the state above to be accessed with this.fillStyle, etc.
+    this._copyState(this, this._startingState);  // Copy the state above to be accessed with this.fillStyle, etc.
     if (typeof(this._stateStack)=='undefined' || this._stateStack==null)
         this._stateStack = []; // A state stack.  The current state is stored as this.fillStyle so it has same Canvas interface.
     //log("calling beginPath");
@@ -242,30 +243,102 @@ MochiKit.SVGCanvas.prototype.setGroup = function(group) {
     this.currentTransformationMatrix = null;
 }
 
-MochiKit.SVGCanvas.prototype._setState = function(dest, src) {
+MochiKit.SVGCanvas.prototype._copyState = function(dest, src) {
+    /***
+        All of the drawing state (like strokeStyle) lives as members of
+        the SVGCanvas object, but not all members are state members,
+        so it goes through the keys in the _startingState and copies
+        just those items from src to dest.  Either one can be the
+        SVGCanvas object itself.
+    ***/
     var stateKeys = keys(this._startingState)
     for (var i=0; i<stateKeys.length; i++) {
         dest[stateKeys[i]] = src[stateKeys[i]];
     }
 }
 
+MochiKit.SVGCanvas.prototype.setState = function(state) {
+    /***
+        Overwrites the current state, including the drawGroup and currentGroup
+    ***/
+    this._copyState(this, state);
+}
+
+MochiKit.SVGCanvas.prototype.getState = function() {
+    /***
+        Copies and returns the current state, 
+        including the drawGroup and currentGroup
+    ***/
+    var state = {};
+    this._copyState(state, this);
+    return state;
+}
+
 //Canvas State Methods
 
 MochiKit.SVGCanvas.prototype.save = function() {
+    /***
+        pushes a copy of the current drawing state onto the drawing 
+        state stack.
+    ***/
     var currentState = {};
-    this._setState(currentState, this);
+    this._copyState(currentState, this);
     this._stateStack.push(currentState);
 }
 MochiKit.SVGCanvas.prototype.restore = function() {
-    var prevState = this._stateStack.pop();
-    this._setState(this, prevState);
+    /***
+        pops the top entry in the drawing state stack, and resets the 
+        drawing state it describes. If there is no saved state, 
+        the method does nothing.
+    ***/
+    if (this._stateStack.length>0) {
+        var prevState = this._stateStack.pop();
+        this._copyState(this, prevState);
+    }
 }
 
 MochiKit.SVGCanvas.prototype._hasOnlyMoveZero = function() {
-    return this._subpaths[this._subpaths.length-1] == '' || this._subpaths[this._subpaths.length-1] == ' M 0,0'
+    /***
+        returns true if there is either no subpath or one that
+        only includes a move to 0,0.
+    ***/
+    return this._subpaths[this._subpaths.length-1] == '' || 
+            this._subpaths[this._subpaths.length-1] == ' M 0,0'
 }
 
+MochiKit.SVGCanvas.prototype.scale = function(sx, sy) {
+    /***
+        Add the scaling transformation described by the arguments to the 
+        transformation matrix. The x argument represents the scale factor in 
+        the horizontal direction and the y argument represents the scale 
+        factor in the vertical direction. The factors are multiples.
+        
+        SVG implimentation:  If you haven't drawn anything yet, it will add a
+        scale the transform attribute of the emitted shapes so that the 
+        coordinates that get included in the SVG elements will be identical 
+        to those you passed.
+        If you've started a path already, you can't apply a global 
+        transformation any more, so this builds up a transformation matrix that
+        each future coordinate explicitly get multiplied by before inclusion
+        in the SVG.
+        To increase the speed of SVG rendering at the cost of nice SVG ouput,
+        you could get rid of the transform attribute bit and always explicitly
+        multiply coordinaets.
+    ***/
+    if (this._subpaths.length==1 && this._hasOnlyMoveZero())
+        this.transformations += "scale(" + sx +"," + sy + ")";
+    else{
+        if (this.currentTransformationMatrix==null)
+            this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
+        this.currentTransformationMatrix = this.currentTransformationMatrix.scaleNonUniform(sx, sy);
+    }
+}
 MochiKit.SVGCanvas.prototype.rotate = function(angle) {
+    /***
+        Add the rotation transformation described by the argument to the 
+        transformation matrix. The angle argument represents a clockwise 
+        rotation angle expressed in radians.
+    ***/
     var deg = angle*180/Math.PI;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
         this.transformations += "rotate(" + deg + ")";
@@ -275,16 +348,14 @@ MochiKit.SVGCanvas.prototype.rotate = function(angle) {
         this.currentTransformationMatrix = this.currentTransformationMatrix.rotate(deg);
     }
 }
-MochiKit.SVGCanvas.prototype.scale = function(sx, sy) {
-    if (this._subpaths.length==1 && this._hasOnlyMoveZero())
-        this.transformations += "scale(" + sx +"," + sy + ")";
-    else{
-        if (this.currentTransformationMatrix==null)
-            this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
-        this.currentTransformationMatrix = this.currentTransformationMatrix.scaleNonUniform(sx, sy);
-    }
-}
 MochiKit.SVGCanvas.prototype.translate = function(tx, ty) {
+    /***
+        dd the translation transformation described by the arguments 
+        to the transformation matrix. The x argument represents the 
+        translation distance in the horizontal direction and the y 
+        argument represents the translation distance in the vertical 
+        direction. The arguments are in coordinate space units.
+    ***/
     if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
         this.transformations += "translate(" + tx +"," + ty + ")";
     else {
@@ -294,8 +365,16 @@ MochiKit.SVGCanvas.prototype.translate = function(tx, ty) {
     }
 }
 
-// Helpter method
+// Helper method
 MochiKit.SVGCanvas.prototype._transformWithCTM = function(x,y) {
+    /***
+        When a transformation happens in the middle of a path, you 
+        can no longer rely on SVG's transform attribute, so we
+        explicitly build up a transform matrix and transform
+        incomming points by it before adding it to the path.
+        
+        @return an SVGPoint with .x and .y members
+    ***/
     var p = this.svg.svgElement.createSVGPoint()
     p.x = x
     p.y = y
@@ -326,10 +405,21 @@ MochiKit.SVGCanvas.prototype.beginPath = function() {
     this.moveTo(0,0);
 }
 
-// Helper Method
+
 MochiKit.SVGCanvas.prototype.hasDrawing = / M [\-0-9eE\.]+,[\-0-9eE\.]+ /;
+/*
+    a regular expression to determine if the current path has stuff in it
+    as opposed to being empty.
+*/
 
 MochiKit.SVGCanvas.prototype._newSubPath = function(addToEnd) {
+    /***
+        If the current path includes anything, add it to the subpaths
+        list and clear the current subpath.
+        
+        @param addToEnd a string that gets added to the end of the 
+        subpath before it is added to the list.
+    ***/
     if (this.hasDrawing.test(this._subpaths[this._subpaths.length-1])) {
         //log("_newSubPath: current sub path = ", this._subpaths[this._subpaths.length-1]), "  making new empty one";
         if (typeof(addToEnd) == 'string')
@@ -337,7 +427,7 @@ MochiKit.SVGCanvas.prototype._newSubPath = function(addToEnd) {
         this._subpaths.push("");
     }
     else {
-        //log("_pushAndClear: didn't push it = ", this._subpaths[this._subpaths.length-1]);
+        //log("_newSubPath: didn't push it = ", this._subpaths[this._subpaths.length-1]);
     }
 }
 
@@ -354,6 +444,7 @@ MochiKit.SVGCanvas.prototype.moveTo = function(x, y) {
         a new subpath with that point as its first (and only) point. If there 
         was a previous subpath, and it consists of just one point, then that 
         subpath is removed from the path.
+        
         We don't error check or optimize.
     ***/
     //log("moveTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
@@ -397,6 +488,11 @@ MochiKit.SVGCanvas.prototype.lineTo = function(x, y) {
 }
     
 MochiKit.SVGCanvas.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {
+    /***
+        adds the given coordinate (x, y) to the list of points of the subpath,
+        and connects the current position to that point with a quadratic 
+        curve with control point (cpx, cpy)
+    ***/
     var cp = this._transformWithCTM(cpx,cpy);
     var p = this._transformWithCTM(x,y);
     this._subpaths[this._subpaths.length-1] += " Q " + cp.x + "," + cp.y + " " + p.x + "," + p.y;
@@ -405,6 +501,11 @@ MochiKit.SVGCanvas.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {
 }
 
 MochiKit.SVGCanvas.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+    /***
+        adds the given coordinate (x, y) to the list of points of the 
+        subpath, and connects the two points with a bezier curve with 
+        control points (cp1x, cp1y) and (cp2x, cp2y).
+    ***/
     var cp1 = this._transformWithCTM(cp1x,cp1y);
     var cp2 = this._transformWithCTM(cp2x,cp2y);
     var p = this._transformWithCTM(x,y);
