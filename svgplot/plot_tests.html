@@ -35,7 +35,7 @@ var tan = Array(POINT_COUNT);
 var atan = Array(POINT_COUNT);
 for (var i=0; i<POINT_COUNT; i++) {
     var x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/(POINT_COUNT-1);
-    log("in trig x=" + x);
+    //log("in trig x=" + x);
     trigx[i] = x;
     sin[i] = Math.sin(x);
     cos[i] = Math.cos(x);
@@ -94,6 +94,8 @@ var testFunctions = {
         p.fillStyle = "#888";
         p.addBox();
         p.addBoxDefaults();
+        p.setYRange(-1.5,1.5)
+        p.setXRange(-7,7)
         var locations = [-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI]
         p.setXTicks(locations)
         p.setXStubs(locations, ['-2pi', '-pi', '0', 'pi', '2pi'])
