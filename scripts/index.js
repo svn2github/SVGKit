@@ -16,13 +16,25 @@ var TopBar = {
         myvals = [];
         myvals["instrumentMode"] = newstate.instrumentState.mode;
         tempState = newstate.temperatureTelemetryState;
-        myvals["instTemp"]       = 0.;
+        myvals["instrumentTemperature"]       = -76.;
         for (i=0; i<8; i++) {
-            myvals["instTemp"]   = Math.max(myvals["instTemp"], 
+            myvals["instrumentTemperature"]   = Math.max(myvals["instrumentTemperature"], 
                                             parseInt(tempState[i].temperature))
         }
-        myvals["instHumidity"]   = newstate.humidityTelemetryState.humidity
-        myvals["instrument"]     = myvals["instrumentMode"] + "  -  " + 
+        if (parseInt(myvals["instrumentTemperature"]) < 0) {
+            myvals["instrumentTemperature"] = "NA";
+        }
+        else {
+            myvals["instrumentTemperature"] = myvals["instrumentTemperature"] + "°F";
+        }
+        myvals["instrumentHumidity"]   = newstate.humidityTelemetryState.humidity
+        if (parseInt(myvals["instrumentHumidity"]) < 0) {
+            myvals["instrumentHumidity"] = "NA";
+        }
+        else {
+            myvals["instrumentHumidity"] = myvals["instrumentHumidity"] + "%";
+        }
+        myvals["instrument"]     = myvals["instrumentMode"] + "  /  " + 
                                    myvals["instTemp"] + "°F / " + 
                                    myvals["instHumidity"] + "%";
         myvals["shutter"]        = newstate.shutterState.position;
@@ -38,8 +50,9 @@ var TopBar = {
                                    newstate.weatherStationState.humidity + "%";
         myvals["cloudCover"]     = newstate.webCloudCoverState.cloudCover + "%";
         //replace the state variables in the top toolbar
-        myvars = ["instrument", "shutter", "telescope", 
-                  "environment", "cloudCover"];
+        myvars = ["instrumentMode", "instrumentTemperature", "instrumentHumidity", 
+                  "shutter", "telescope", 
+                  "temperature", "humidity", "cloudCover"];
         forEach(myvars,
             function (myvar) {
                 elem = getElement("top_" + myvar);
