@@ -84,6 +84,7 @@ var SetiEvent = {
         var pmtSpan2       = SPAN( null, " / " );
         var pmtSpan3       = SPAN( { "style" : { "color" : "#FF3232" } }, daughterboard + "R" );
         var pixelPairSpan  = SPAN( null, "" );
+        var keyComment     = eventText + ": " + eventTime;
         appendChildNodes(pixelPairSpan, pixelPairSpan2, pixelPairSpan3, pixelPairSpan4, 
                                         pixelPairSpan5, 
                                         pmtSpan1, pmtSpan2, pmtSpan3);
@@ -130,8 +131,11 @@ var SetiEvent = {
         function plotFunction(p, time_ns, left, right, voltages) {
             p.strokeStyle = "#C6C6C6";
             p.fillStyle   = "#C6C6C6";
+            p.fontSize   = '7px';
+            //p.fontFamily = "Arial, SunSans-Regular, sans-serif"
             p.addBox();
             p.addBoxDefaults();
+            p.setYRange(voltages[voltages.length-1]-0.1, voltages[0]+0.1);
             p.setYTicks(voltages);
             p.setYStubs(voltages);
             p.fontSize   = '10px';
@@ -163,6 +167,7 @@ var SetiEvent = {
                                          left, 
                                          voltages) 
                                 );
+        PixelView.highlightPixels([[pmtPixel, keyComment]]);
     },
     
     interleave: function(a, b) {

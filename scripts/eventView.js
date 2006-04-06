@@ -112,6 +112,8 @@ var EventView = {
         );
     },
     
+    
+    //AWH: finish this function
     applyCookies: function() {
         var settings = EventView.controlSettings;
         forEach(dir(settings),

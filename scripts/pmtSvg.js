@@ -70,23 +70,38 @@ var PMT = {
         }
     },
     
-    //set all pixels back to the defaults (state=0), or bright red (state=1)
     all: function (state) {
+        /*
+        Set all pixels back to the defaults (state=0), or bright red (state=1)
+        */
         for (i=0; i<512; i++) {
             PMT.setProps(i, "both", PMT.fillColorDefault, state, PMT.strokeColorDefault, 1);
         }
     },
     
-    //set all pixels to a solid color (opacity=1) according to a state parameter 
-    //variables:  chip       = IC that determines PulseNet state - "SETI", "Astro", "SuC", "AuC", "PN", or "FCT"
-    //            stateParam = state parameter being plotted     - e.g. "programmingStatus";
-    //            selection  = name of data to be displayed (used for id of key div)
-    //            valueArray = possible parameter values         - e.g. PixelView.SETI_status_status_value_array;
-    //            colorArray = possible pixel colors             - e.g. PMT.color;
+    setOne: function (pixel, color) {
+        /*
+        Set one pixel to a color.
+        */
+        PMT.setProps(pixel, "both", color, 1, PMT.strokeColorDefault, 1);
+    },
+    
     setAllDiscrete: function (chip, stateParam, selection, valueArray, colorArray) {
+        /*
+        Set all pixels to a solid color (opacity=1) according to a state parameter.
+        Variables:  chip       = IC that determines PulseNet state 
+                                    - "SETI", "Astro", "SuC", "AuC", "PN", or "FCT"
+                    stateParam = state parameter being plotted     
+                                    - e.g. "programmingStatus";
+                    selection  = name of data to be displayed (used for id of key div)
+                    valueArray = possible parameter values         
+                                    - e.g. PixelView.SETI_status_status_value_array;
+                    colorArray = possible pixel colors             
+                                    - e.g. PMT.color;
+        */
         PixelView.makeDiscreteKey(selection, valueArray, colorArray);
         for (pixelNum=0; pixelNum<512; pixelNum++) {
-            //calculate value for pixel
+            // calculate value for pixel
             if      (chip == "SETI" | chip == "Astro")  {
                 var PN         = Convert.pix2PN(pixelNum) ;
                 var chipName   = "pulsenet" + chip + "_State";
@@ -106,7 +121,7 @@ var PMT = {
                 var stateValue = PN%4;
             }
             else                   {return}
-            //set SVG pixel color according to state parameter
+            // set SVG pixel color according to state parameter
             for (valueIndex=0; valueIndex<valueArray.length; valueIndex++) {
                 if (valueArray[valueIndex] == stateValue) {
                     var attrs = "fill:" + PMT.color[colorArray[valueIndex]] + ";" +
@@ -116,7 +131,7 @@ var PMT = {
                                 "stroke-opacity:1;"
                     PMT.pixelL[pixelNum].setAttribute("style",attrs);
                     PMT.pixelR[pixelNum].setAttribute("style",attrs);
-                    //exit for loop early if match on stateValue?
+                    // exit for loop early if match on stateValue?
                 }
             }
         }        
@@ -124,7 +139,7 @@ var PMT = {
 
     //  removeElementClass(document.getElementById(PMT.idbase + "key_continuous"),"invisible");
     
-    //this function is not finished.
+    // this function is not finished.
     setAllContinuous: function (chip, minValue, maxValue) {
         removeElementClass("invisible", PMT.idbase + "key_continuous");
         keyDiv = document.getElementById(PMT.idbase + "key_continuous")

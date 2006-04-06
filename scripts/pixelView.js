@@ -61,7 +61,6 @@ var PixelView = {
     FCT_values:              [ "0", "1", "2", "3" ],
     FCT_colors:              [ 3, 2, 1, 0 ],
     
-    
     loadParameters: function(selection) {
         //clear previous key div & SVG display
         PMT.all(1);
@@ -195,6 +194,7 @@ var PixelView = {
         }
         var newTable = TABLE(null, TBODY(null, rows));
         var elem_id = PixelView.idbase + "key_" + selection;
+        log($(elem_id));
         document.getElementById(elem_id).innerHTML = toHTML(newTable);
     },
 
@@ -211,11 +211,42 @@ var PixelView = {
         return mytd
     },
     
-    
+    highlightPixels: function (pixelCommentArray) {
+        /*
+        Function to plot highlight pixels, usually from the SETI event viewer.  
+        It takes an array of pixel/comment pairs 
+        [[pixelNum, comment], [pixelNum, comment]] as input.  
+        A key with these pairs is automatically generated
+        */
+        // TO-DO: remember to open the pixel panel and set an onload 
+        PixelView.clearKeyDivs();
+        PixelView.clearParameterDivs();
+        PMT.all(1);
+        pixels = pixelCommentArray.length;
+        pixelArray = [];
+        commentArray = [];
+        for (i=0; i<pixels; i++) {
+            pixel = parseInt(pixelCommentArray[i][0]);
+            // check that the pixel number is valid
+            if ((pixel >= 0) && (pixel < 512)) {
+                color = PMT.color[i];
+                comment = "Pixel " + pixelCommentArray[i][0] +
+                          " - "    + pixelCommentArray[i][1]
+                pixelArray.push(pixel);
+                commentArray.push(comment);
+                PMT.setOne(pixel, color);
+            }
+        }
+        key = 'highlight_pixels';
+        var keyElem = PixelView.idbase + "key_" + key;
+        removeElementClass(keyElem, "invisible");
+        PixelView.makeDiscreteKey(key, commentArray, PixelView.PN_colors);
+    },
     
 };
 
+//  PixelView.highlightPixels([ [1, "ab"], [56, "cd"], [345, "ef"], [426, "gh"] ])
+
 //IDEAS:
-//* highlight pixel for the coincidence plot you're looking at
 //* clickable pixel map?: PulseNet#, uC#, plots of coincidences
 
