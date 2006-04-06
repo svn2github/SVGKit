@@ -149,7 +149,7 @@ SVGPlot = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) 
     if (arguments.length>0)
         this.__init__(widthOrIdOrNode, height, id);
     if (typeof(this.__init__)=='undefined' || this.__init__ == null) {
-        log("You called SVGPlot() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
+        //log("You called SVGPlot() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
         return new SVGPlot(widthOrIdOrNode, height, id);  // Ends up calling this constructor again, but returning an object.
     }
     return null;
@@ -216,7 +216,7 @@ SVGPlot.prototype.__init__ = function (widthOrIdOrNode, height, id /*optional*/)
 
 SVGPlot.prototype.resetPlot = function() {
     // SVGCanvas already has a reset()
-    log("Constructing SVGPlot in SVGPlot.reset");
+    //log("Constructing SVGPlot in SVGPlot.reset");
     this.boxes = []
     this.box = null;
     this.element = this.svg.svgElement;
@@ -322,7 +322,7 @@ SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
         xdata[i] = temp[name];
         ydata[i] = eval.call(temp, func);
     }
-    log("Calling plotLine with data");
+    //log("Calling plotLine with data");
     return this.plotLine(xdata, ydata);
     // Maybe this should be in a <plotFunction> <plotLine/> <plotFunction>
 }
@@ -1118,7 +1118,7 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
             !isNaN(sy) && sy!=Number.MAX_VALUE && sy!=Number.MIN_VALUE &&
             sy!=Number.NEGATIVE_INFINITY && sy!=Number.POSITIVE_INFINITY ) {
                 drawingFunction.call(p, sx, sy);
-                log("Plotting point ("+sx+","+sy+")");
+                //log("Plotting point ("+sx+","+sy+")");
                 drawingFunction = p.lineTo;
         }
     }

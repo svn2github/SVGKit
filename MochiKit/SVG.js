@@ -91,7 +91,7 @@ if (typeof(MochiKit.SVG) == 'undefined') {
     // Constructor
     MochiKit.SVG = function(widthOrIdOrNode, height, id, type) {
         if (typeof(this.__init__)=='undefined' || this.__init__ == null){
-            log("You called SVG() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
+            //log("You called SVG() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
             return new MochiKit.SVG(widthOrIdOrNode, height, id, type);
         }
         this.__init__(widthOrIdOrNode, height, id, type);
@@ -236,9 +236,9 @@ MochiKit.SVG.prototype.getDefs = function(createIfNeeded /* = false */) {
         return null;
     }
     defs = this.DEFS(null);
-    log("Created defs", defs, "... going to append")
+    //log("Created defs", defs, "... going to append")
     this.append(defs);
-    log("append worked")
+    //log("append worked")
     return defs;
 }
 
@@ -256,14 +256,14 @@ MochiKit.SVG.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=
     this._redrawId = null;
     this.newSVGType = 'object'; // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
-    log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
+    //log("SVG.__init__ widthOrIdOrNode = ", widthOrIdOrNode);
     this.setBaseURI();
     if (typeof(widthOrIdOrNode) == 'object' || typeof(widthOrIdOrNode) == 'string') {  // Not <object> but a JS object
-        log("__init__ got object, hopefully <embed> or <object>. Trying to grabSVG on it.");
+        //log("__init__ got object, hopefully <embed> or <object>. Trying to grabSVG on it.");
         this.grabSVG(widthOrIdOrNode);
     }
     else {
-        log("Going to createSVG()");
+        //log("Going to createSVG()");
         this.createSVG(widthOrIdOrNode, height, id, type)
     }
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
@@ -455,7 +455,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         attrs['src'] = this._mochiKitBaseURI + filename;
         attrs['type'] = this._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
-        log("Going to createDOM('embed')");
+        //log("Going to createDOM('embed')");
         this.htmlElement = createDOM('embed', attrs );
         var svg = this;
         this.whenReady( function (event) {
@@ -463,8 +463,8 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
             // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
             // and move them around. This seems to work in IE.
             // width=0, height=0 works in Firefox, but not IE.
-            log("new embed: svg.htmlElement = " + svg.htmlElement) ;
-            log("new embed: Going to svg.htmlElement.getSVGDocumen() )") ;
+            //log("new embed: svg.htmlElement = " + svg.htmlElement) ;
+            //log("new embed: Going to svg.htmlElement.getSVGDocumen() )") ;
             svg.svgDocument = svg.htmlElement.getSVGDocument();
             finishSettingProps(svg);
         } );
@@ -489,14 +489,14 @@ MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
         
         @param htmlElement: either an id string or a dom element ('object', 'embed', 'svg)
     ***/
-    log("grabSVG htmlElement (node or id) = ", htmlElement);
+    //log("grabSVG htmlElement (node or id) = ", htmlElement);
     if (typeof(htmlElement) == 'string') {
         htmlElement = MochiKit.DOM.getElement(htmlElement);
     }
     this.htmlElement = htmlElement;
-    log("htmlElement (node) = ", htmlElement);
+    //log("htmlElement (node) = ", htmlElement);
     var tagName = htmlElement.tagName.toLowerCase();
-    log("tagName = ", tagName);
+    //log("tagName = ", tagName);
     if (tagName == 'svg')  { // Inline
         this.svgDocument = document;
         this.svgElement = htmlElement;
@@ -508,11 +508,11 @@ MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
     }
     // IE Bug:  htmlElement.getSVGDocument is nothing, but htmlElement.getSVGDocument() works.
     else if (tagName == 'embed' /* && typeof(htmlElement.getSVGDocument) != 'unknown' */) {
-        log("embed typeof(htmlElement.getSVGDocument) = " + typeof(htmlElement.getSVGDocument));
+        //log("embed typeof(htmlElement.getSVGDocument) = " + typeof(htmlElement.getSVGDocument));
         this.svgDocument = htmlElement.getSVGDocument();
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
-        log("embed  this.svgDocument = ", this.svgDocument);
-        log("embed  this.svgElement = ", this.svgElement);
+        //log("embed  this.svgDocument = ", this.svgDocument);
+        //log("embed  this.svgElement = ", this.svgElement);
     }
 }
 
