@@ -25,10 +25,10 @@ See <http://com/> for documentation, downloads, license, etc.
        Graphics[]  // Random circles floating around
        Ledgend[]  // List of the names of the overlays.  Auto or manual.
        Area // (x,y) coordinates where the all of the datasets get confined.
-       Layer[]  // Independent sets of things all plotted over each other.  They share the same physical frame and know to shrink to accomodate each others axes.
+       Range[]  // Independent sets of things all plotted over each other.  They share the same physical frame and know to shrink to accomodate each others axes.
          Grid[]  // The cartesian or polar grid or checkerboard, displayed or not displayed.
          XAxis[], YAxis[], XLabels[] XTicks[], YTicks[] // Normally you want one or none, but ability to have an array of them for related axes like both deg C and deg F.
-         Dataset[] // If you have multiple line plots that all use the same axes, they get listed here.  Also area accumulations get listed here
+         Plot[] // If you have multiple line plots that all use the same axes, they get listed here.  Also area accumulations get listed here
            Range (not all functions/data get plotted over their full x-range.)
            Data, Label, Color, ColorFunction
            Decorations[] // like arrows pointing to specific places on the plot.
@@ -37,7 +37,7 @@ See <http://com/> for documentation, downloads, license, etc.
     Data format just Plain XML, Plain SVG, or Combined
     Easily converted to other formats: PDF, PS, PNG
     Write quickly with small script, but have ability to modify tree later.
-   Select layer by color.
+   Select plot or layer by color (or some other characteristic) rather than reference.
    in a histogram, you want steps and not column plot.
    
    Another concept.  Rather than heirarchial, since single plots are the common case, maybe
@@ -46,17 +46,12 @@ See <http://com/> for documentation, downloads, license, etc.
    contained in it.  This way when the axis changes, the plots do too.
    
    
-// When you call something, it sets up reasonable defaults for everything else.
+   When you call something, it sets up reasonable defaults for everything else.
 
-// autoColorIncrement = true // cycle through predefined nice default colors
+   autoColorIncrement = true // cycle through predefined nice default colors
 
-// be able to pass in error bars or stock ranges with any plot
-// grid lines
-// grid stripes
-// ledgend and/or labeling of lines
-
-// hook up live data-sources -- JSON, XML, plain text.
-
+   be able to pass in error bars or stock ranges with any plot
+   ledgend and/or labeling of plots
    
    Programming interface concept:  Too many objects and layers, so expose each one's functionality
    to it's children and it's parents.  When you call a high-layer method on a child, it works.
@@ -88,7 +83,7 @@ See <http://com/> for documentation, downloads, license, etc.
           * always from origin?  For date plots this is dumb.
           * zoom uniformly to keep axis ratios fixed.
           
-   Passing Parameters:
+   Ways to pass parameters:
      -- Stack-based state method like Canvas
      -- Explicitly with each function like Mathematica
              plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )
@@ -121,6 +116,14 @@ See <http://com/> for documentation, downloads, license, etc.
     -- CSS Colors and Fonts
     -- Move stubs to fit on plot or make plot bigger to accomodate stubs
     -- Moving JS objects around should move XML elements around at render time.  This is not done to cache them
+    -- Check range for zeros better.
+    -- When axes are created automatically as a result of a plot command, they should get the default style
+    -- Box background and plot area background.
+    -- Grids -- lines or stripes.
+    -- Axes, ticks, and grids align themselves to nearest pixel.
+    -- Smooth connect lines
+    -- Autorange so that at least the line-width fits.
+    -- Plot title
 ***/
 
 
@@ -263,7 +266,7 @@ SVGPlot.genericConstructor = function(self, svgPlot, parent) {
     self.svgPlot = svgPlot;
     self.parent = parent;
     self.element = null;
-    self._style = {};
+    self._style = svgPlot.getState();
 }
 
 
@@ -300,10 +303,17 @@ SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
     parent.plots.push(this)
     this.xdata = xdata;
     this.ydata = ydata;
-    svgPlot._setState(this._style, svgPlot);
+}
+
+
+SVGPlot.prototype.setPlotStyle = function() {
+    this.plot._style = this.getState();
 }
 
 SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
+    /***
+        used for auto-range
+    ***/
     var xrange = SVGPlot.minmax(this.xdata)
     xExtents.min = Math.min(xExtents.min, xrange.min)
     xExtents.max = Math.max(xExtents.max, xrange.max)
@@ -338,7 +348,10 @@ SVGPlot.prototype.setBox = function(layout /* ='float' */, x /* =0 */, y /* =0 *
                             parseFloat(this.svg.svgElement.getAttribute('width')));
     this.box.height = SVGPlot.firstNonNull(height, this.box.height, 
                             parseFloat(this.svg.svgElement.getAttribute('height')));
-    this._setState(this.box._style, this);
+}
+
+SVGPlot.prototype.setBoxStyle = function() {
+    this.box._style = this.getState();
 }
 
 SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */)  {
@@ -367,7 +380,6 @@ SVGPlot.prototype.setXRange = function(xmin /* ='auto' */, xmax /* ='auto' */) {
         this.addRange(xmin, xmax);
     this.range.xmin = SVGPlot.firstNonNull(xmin, this.range.xmin, 'auto');
     this.range.xmax = SVGPlot.firstNonNull(xmax, this.range.xmax, 'auto');
-    this._setState(this.range._style, this);
 }
 
 SVGPlot.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */) {
@@ -375,12 +387,15 @@ SVGPlot.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */) {
         this.addRange(null, null, ymin, ymax);
     this.range.ymin = SVGPlot.firstNonNull(ymin, this.range.ymin, 'auto');
     this.range.ymax = SVGPlot.firstNonNull(ymax, this.range.ymax, 'auto');
-    this._setState(this.range._style, this);
 }
 
 SVGPlot.prototype.setRange = function(xmin /* ='auto' */, xmax /* ='auto' */, ymin /* ='auto' */, ymax /* ='auto' */) {
     this.setXRange(xmin, xmax);
     this.setYRange(ymin, ymax);
+}
+
+SVGPlot.prototype.setRangeStyle = function() {
+    this.range._style = this.getState();
 }
 
 SVGPlot.prototype.addRange = function(xmin /* ='auto' */, xmax /* ='auto' */, ymin /* ='auto' */, ymax /* ='auto' */) { 
@@ -413,7 +428,6 @@ SVGPlot.prototype.setXAxis = function(position /* 'bottom' */, scale_type /* ='l
     this.xAxis.type = 'x'
     this.xAxis.position = SVGPlot.firstNonNull(position, this.xAxis.position, 'bottom');
     this.xAxis.scale_type = SVGPlot.firstNonNull(scale_type, this.xAxis.scale_type, 'linear');
-    this._setState(this.xAxis._style, this);
 }
 
 SVGPlot.prototype.setYAxis = function(position /* 'left' */, scale_type /* ='lnear' */) {
@@ -422,7 +436,14 @@ SVGPlot.prototype.setYAxis = function(position /* 'left' */, scale_type /* ='lne
     this.yAxis.type = 'y';
     this.yAxis.position = SVGPlot.firstNonNull(position, this.yAxis.position, 'left');
     this.yAxis.scale_type = SVGPlot.firstNonNull(scale_type, this.xAxis.scale_type, 'linear');
-    this._setState(this.yAxis._style, this);
+}
+
+SVGPlot.prototype.setXAxisStyle = function() {
+    this.xAxis._style = this.getState();
+}
+
+SVGPlot.prototype.setYAxisStyle = function() {
+    this.yAxis._style = this.getState();
 }
 
 SVGPlot.prototype.addXAxis = function(position /* 'bottom' */, scale_type /* ='lnear' */) {
@@ -464,7 +485,6 @@ SVGPlot.prototype.setXTicks = function(locs /*='auto'*/, position /* ='bottom' *
     this.xTicks.locs = SVGPlot.firstNonNull(locs, this.xTicks.locs, 'auto');
     this.xTicks.position = SVGPlot.firstNonNull(position, this.xTicks.position, 'bottom');
     this.xTicks.length = SVGPlot.firstNonNull(length, this.xTicks.length, SVGPlot.defaultTickLength);
-    this._setState(this.xTicks._style, this);
 }
 
 SVGPlot.prototype.setYTicks = function(locs /*='auto'*/, position /* ='left' */, length /* =2 */) {
@@ -473,7 +493,14 @@ SVGPlot.prototype.setYTicks = function(locs /*='auto'*/, position /* ='left' */,
     this.yTicks.locs = SVGPlot.firstNonNull(locs, this.yTicks.locs, 'auto');
     this.yTicks.position = SVGPlot.firstNonNull(position, this.yTicks.position, 'left');
     this.yTicks.length = SVGPlot.firstNonNull(length, this.yTicks.length, SVGPlot.defaultTickLength);
-    this._setState(this.yTicks._style, this);
+}
+
+SVGPlot.prototype.setXTicksStyle = function() {
+    this.xTicks._style = this.getState();
+}
+
+SVGPlot.prototype.setYTicksStyle = function() {
+    this.yTicks._style = this.getState();
 }
 
 SVGPlot.prototype.removeXTicks = function() {
@@ -510,7 +537,6 @@ SVGPlot.prototype.setXStubs = function(locs /* ='auto'*/, labels /* = toString(l
     this.xStubs.locs = SVGPlot.firstNonNull(locs, this.xStubs.locs, 'auto');
     this.xStubs.labels = SVGPlot.firstNonNull(labels, this.xStubs.labels, 'auto');
     this.xStubs.position = SVGPlot.firstNonNull(position, this.xStubs.position, 'bottom');
-    this._setState(this.xStubs._style, this);
 }
 
 SVGPlot.prototype.setYStubs = function(locs /* ='auto'*/, labels /* = toString(locs) */, position /* ='bottom' */) {
@@ -519,13 +545,20 @@ SVGPlot.prototype.setYStubs = function(locs /* ='auto'*/, labels /* = toString(l
     this.yStubs.locs = SVGPlot.firstNonNull(locs, this.yStubs.locs, 'auto');
     this.yStubs.labels = SVGPlot.firstNonNull(labels, this.yStubs.labels, 'auto');
     this.yStubs.position = SVGPlot.firstNonNull(position, this.yStubs.position, 'left');
-    this._setState(this.yStubs._style, this);
+}
+
+SVGPlot.prototype.setXStubsStyle = function() {
+    this.xStubs._style = this.getState();
+}
+
+SVGPlot.prototype.setYStubsStyle = function() {
+    this.yStubs._style = this.getState();
 }
 
 /*
 // Right now this doesn't work in Firefox.
 SVGPlot.prototype.setStubsStyle = function(stubs) {
-    this._setState(stubs._style, this);
+    this._copyState(stubs._style, this);
     if (stubs.position=='top' || stubs.position=='bottom')
         stubs._style.textAnchor = 'middle'
     else if (stubs.position=='left')
@@ -571,7 +604,7 @@ SVGPlot.prototype.setXLabel = function(label, loc /* ='50%' */, position /* 'bot
     this.xLabel.label = label;
     this.xLabel.loc = SVGPlot.firstNonNull(loc, this.xLabel.loc, '50%');
     this.xLabel.position = SVGPlot.firstNonNull(position, this.xLabel.position, 'bottom');
-    this._setState(this.xLabel._style, this);
+    this._copyState(this.xLabel._style, this);
 }
 
 SVGPlot.prototype.setYLabel = function(label, loc /* ='50%' */, position /* 'bottom' */) {
@@ -580,7 +613,15 @@ SVGPlot.prototype.setYLabel = function(label, loc /* ='50%' */, position /* 'bot
     this.yLabel.label = label;
     this.yLabel.loc = SVGPlot.firstNonNull(loc, this.yLabel.loc, '50%');
     this.yLabel.position = SVGPlot.firstNonNull(position, this.yLabel.position, 'left');
-    this._setState(this.yLabel._style, this);
+    this._copyState(this.yLabel._style, this);
+}
+
+SVGPlot.prototype.setXLabelStyle = function() {
+    this.xLabel._style = this.getState();
+}
+
+SVGPlot.prototype.setYLabelStyle = function() {
+    this.yLabel._style = this.getState();
 }
 
 SVGPlot.prototype.addXLabel = function(label, loc /* ='50%' */, position /* 'bottom' */) {
@@ -870,29 +911,37 @@ SVGPlot.Axis.prototype.layout = function(totalXSize, totalYSize) {
     this._offset = 0;  // Signed-distance from the plot area, which we don't know yet.
     if (this.position=='bottom') {
         this._offset = totalYSize.bottom;
-        if (totalYSize.first_bottom==false)
+        if (totalYSize.first_bottom==false) {
             totalYSize.bottom += offsets.above + SVGPlot.axisMargin;
+            this._offset += offsets.above + SVGPlot.axisMargin;
+        }
         totalYSize.bottom += offsets.below + SVGPlot.axisMargin;
         totalYSize.first_bottom = false;
     }
     else if (this.position=='top') {
         this._offset = -totalYSize.top;
-        if (totalYSize.first_top==false)
+        if (totalYSize.first_top==false) {
             totalYSize.top += offsets.below + SVGPlot.axisMargin;
+            this._offset -= offsets.below + SVGPlot.axisMargin;
+        }
         totalYSize.top += offsets.above + SVGPlot.axisMargin;
         totalYSize.first_top = false;
     }
     else if (this.position=='left'){
         this._offset = -totalXSize.left;
-        if (totalXSize.first_left==false)
+        if (totalXSize.first_left==false) {
             totalXSize.left += offsets.above + SVGPlot.axisMargin;
+            this._offset -= offsets.above + SVGPlot.axisMargin;
+        }
         totalXSize.left += offsets.below + SVGPlot.axisMargin;
         totalXSize.first_left = false;
     }
     else if (this.position=='right'){
         this._offset = totalXSize.right;
-        if (totalXSize.first_right==false)
+        if (totalXSize.first_right==false) {
             totalXSize.right += offsets.below + SVGPlot.axisMargin;
+            this._offset += offsets.below + SVGPlot.axisMargin;
+        }
         totalXSize.right += offsets.above + SVGPlot.axisMargin;
         totalXSize.first_right = false;
     }
@@ -997,7 +1046,7 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     if (this.type=='x')
         path = 'M 0,0 h '+(right-left);
     else if (this.type=='y')
-        path = 'M 0,'+bottom+' v '+(top-bottom);
+        path = 'M 0,'+(bottom-top)+' v '+(top-bottom);
     var pathElem = this.svgPlot.svg.PATH({'d': path});
     //SVGPlot.removeAllChildren(this.element);  // TODO Remove the paths.
     this.element.appendChild(pathElem);
@@ -1026,14 +1075,16 @@ SVGPlot.Ticks.prototype.render = function(min, max, map) {
         locs = SVGPlot.defaultlocs(min, max, this.interval, this.number);
     var path = '';
     for (var k=0; k<locs.length; k++) {
-        if (this.position=='top')
-            path += ' M '+map(locs[k])+' 0 '+'v '+(-this.length);
-        else if (this.position=='bottom')
-            path += ' M '+map(locs[k])+' 0 '+'v '+(this.length);
-        else if (this.position=='right')
-            path += ' M 0 '+map(locs[k])+'h '+(this.length);
-        else if (this.position=='left')
-            path += ' M 0 '+map(locs[k])+'h '+(-this.length);
+        if (locs[k]>min && locs[k]<max) {
+            if (this.position=='top')
+                path += ' M '+map(locs[k])+' 0 '+'v '+(-this.length);
+            else if (this.position=='bottom')
+                path += ' M '+map(locs[k])+' 0 '+'v '+(this.length);
+            else if (this.position=='right')
+                path += ' M 0 '+map(locs[k])+'h '+(this.length);
+            else if (this.position=='left')
+                path += ' M 0 '+map(locs[k])+'h '+(-this.length);
+        }
     }
     SVGPlot.removeAllChildren(this.element);
     this.element.appendChild( this.svgPlot.svg.PATH({'d':path}) );
@@ -1066,6 +1117,10 @@ SVGPlot.translateBottomText = function(component) {
 }
 
 SVGPlot.renderText = function (text, loc, bbox, position, min, max, map) {
+    if (loc<min || loc>max)
+        text.setAttribute('display', 'none');
+    else
+        text.removeAttribute('display');
     if (typeof(loc)=='string' && loc[loc.length-1] == '%')
         loc = min + parseFloat(loc.substring(0, loc.length-1)) / 100 * (max-min)
     var transform = text.getAttribute('transform');
@@ -1098,7 +1153,7 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
     p.applyStyles = false;
     p.setGroup(this.element);
     //var rect = this.getDatasetRect();
-    //this.clipRect(0, 0, rect.width, rect.height);
+    p.clipRect(left, top, right-left, bottom-top);
     //this.translate(rect.x, rect.y);
     //plotDataset.plot();
     
@@ -1303,7 +1358,7 @@ SVGPlot.defaultlocs = function(min, max, interval /* defaultInterval */, number 
 }
 
 
-SVGPlot.createGroupIfNeeded = function(self, cmd, style_type) {
+SVGPlot.createGroupIfNeeded = function(self, cmd, style_type /* 'stroke' 'fill' or 'text' */) {
     if (self.element == null) {
         self.element = self.svgPlot.svg.G(null);
     }
@@ -1341,9 +1396,8 @@ SVGPlot.setPlotAttributes = function(self, cmd) {
 
 SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'text' */) {
     var p = self.svgPlot
-    var backupStyle = {};
-    p._setState(backupStyle, p);
-    p._setState(p, self._style);
+    var backupStyle = p.getState();
+    p.setState(self._style);
     
     if (style_type=='text') {
         p._setFontAttributes(self.element);
@@ -1351,7 +1405,7 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
     }
     p._setGraphicsAttributes(self.element, style_type);
     
-    p._setState(p, backupStyle);
+    p.setState(backupStyle);
 }
 
 
