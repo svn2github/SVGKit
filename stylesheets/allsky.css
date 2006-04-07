@@ -319,13 +319,13 @@ table.datagrid tbody td, table.datagrid tbody th {
     text-align: left;
     padding: 0em .3em 0em .7em}
 div#event_view_event_filter {
-    max-height:116px; /*  max-height.event_filter = max_height.events - 48px */
+    max-height:144px; /*  max-height.event_filter = max_height.events - 48px */
     overflow:auto}
 div#event_view_event_table {
-    max-height:164px; /*  max-height = 24 + 14*table_rows */
+    max-height:192px; /*  max-height = 24 + 14*table_rows */
     overflow:auto}
 div#event_view_event_details {
-    max-height:164px; /*  max-height = 24 + 14*table_rows */
+    max-height:192px; /*  max-height = 24 + 14*table_rows */
     overflow:auto}
 .mochi-template { 
     display: none; }
