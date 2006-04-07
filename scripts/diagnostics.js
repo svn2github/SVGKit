@@ -1,4 +1,6 @@
 var Diagnostics = {
+    base:   "/expt/",
+    idbase: "diagnostics_",
 
     command: function(methodName) {
         log("Diagnostics.command(" + methodName +")");
