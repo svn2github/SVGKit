@@ -27,6 +27,9 @@ var Diagnostics = {
     },
 
     doFixedFlash: function() {
+        /***
+        Send a pulse with the Gelfand Flasher I.
+        ***/
         Diagnostics.command('doFixedFlash');
     },
     
