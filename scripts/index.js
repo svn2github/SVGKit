@@ -282,7 +282,7 @@ var Convert = {
     // convert PulseNet number (0-31) and PulseNet pixel (0-15) to PMT pixel (0-511)
     PN2pix: function (PN, PNpix) {
         var PNonBoard = PN % 4;
-        var DB = (PN - PNonBoard) / 8;
+        var DB = (PN - PNonBoard) / 4;
         var PMTpix = Convert.PNpixPNonBoard2PMTpix(PNpix, PNonBoard);
         pixelNum = 64 * DB + PMTpix; 
         return pixelNum
