@@ -44,6 +44,16 @@ var setiProgram = {
         }
     },
     
+    setCoincMaskNull: function() {
+        /***
+        Set all coinc masks to zero (ignore coincidences).
+        ***/
+        var pnMask = '0,0,0,0';
+        for (uCno = 0; uCno < 8;uCno++) {
+            setiProgram.command('setCoincMask?uCno=' + uCno + '&pnMask=' + pnMask); 
+        }
+    },
+    
     program: function (option) {
         for (uCno = 0; uCno < 8; uCno++) {
             // see definitions of DBno, asicNo, and PNno above in setCoincMask()

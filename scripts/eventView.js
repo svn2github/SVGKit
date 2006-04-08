@@ -82,7 +82,7 @@ var EventView = {
 
     setTableHeight: function (rows) {
         if (!isInt(rows)) {
-            rows = 10;
+            rows = 14;
         }
         var heightEventTable  = 24 + 14*rows;
         var heightEventFilter = heightEventTable - 48;
@@ -96,7 +96,7 @@ var EventView = {
     
     setTableHeightOnLoad: function (rows) {
         var cookieTableHeight = Cookie.read("event_view_controls_max_rows")
-        var minTableHeight    = 10;
+        var minTableHeight    = 12;
         var tableHeight       = Math.max(parseInt(cookieTableHeight), 
                                          parseInt(minTableHeight))
         EventView.setTableHeight(tableHeight);
@@ -123,20 +123,6 @@ var EventView = {
             }
         );
     },
-    
-    
-    /*
-INFO: cookie saved for event_view_controls_autoload_interval [ 5 ]
-INFO: cookie saved for event_view_controls_events_id [ 100 ]
-INFO: cookie saved for event_view_controls_events_time [ 2006-04-03 17:30:28 ]
-INFO: cookie saved for event_view_controls_max_events [ 50 ]
-INFO: cookie saved for event_view_controls_max_rows [ 10 ]
-INFO: cookie saved for event_view_controls_sel_recent [ true ]
-INFO: cookie saved for event_view_controls_sel_since_id [ false ]
-INFO: cookie saved for event_view_controls_sel_since_time [ false ]
-INFO: Updating state.
-    
-    */
     
     autoLoadTable: function () {
         var prefix = EventView.idbase + "controls_";
@@ -327,7 +313,7 @@ INFO: Updating state.
         }
         // otherwise just create the plot
         else {
-            SetiEvent.createPlotId(eventId, eventTime)
+            SetiEvent.addPlot(eventId, eventTime);
         }
     },
 

@@ -1,10 +1,41 @@
 var SetiEvent = {
     base:   "/expt/",
     idbase: "seti_event_",
-
-    createPlotId: function(eventId, eventTime) {
+    
+    maxPlots: 1,
+    plotsInTable: 0,
+    eventIdArray: [],
+    keyArray: [],
+    displaySmallPlots: true,
+    displayLargePlots: true,
+    
+    getControlSettings: function() {
         /***
-            Returns an SVGPlot object filled in with data.
+        Function that retrieves the control setting values from the web page.
+        ***/
+        elem = getElement(SetiEvent.idbase + 'max_plots');
+        SetiEvent.maxPlots = elem.value;
+    },
+    
+    addMultiplePlots: function(eventArray) {
+        /***
+        Add a several row in the top of SETI Event History table.  
+        The input array consists of a list of [eventId, eventTime] pairs.
+        ***/
+        SetiEvent.getControlSettings();
+        inputPixels = eventArray.length;
+        for (pixel=0; pixel<inputPixels; pixel++) {
+            SetiEvent.addPlot(eventArray[pixel][0], eventArray[pixel][1]);
+            SetiEvent.eventIdArray.push(eventArray[pixel][0]);
+        }
+    },
+    
+    // SetiEvent.addMultiplePlots([[6570, '2006-04-06 01:30:18'], [3198, '2006-04-06 01:01:40']])
+    
+    addPlot: function(eventId, eventTime) {
+        /***
+        Add a new row in the top of SETI Event History table that includes 
+        statistics and two plots.
         ***/
         EventView.getEventWithCallback(eventId, 
             function(eventDetails, eventId) {
@@ -17,13 +48,48 @@ var SetiEvent = {
             });
     },
     
+    removePlot: function(eventId) {
+        /***
+        Remove the plot for eventId from the SETI Event History table.  
+        If eventId = -1, the plot from the bottom of the table will be removed. 
+        ***/
+        //
+    },
+    
+    removeAllPlots: function() {
+        elem = getElement(SetiEvent.idbase + 'outerTable');
+        replaceChildNodes(elem);
+        SetiEvent.keyArray = [];
+    },
+    
     createPlotData: function(eventDetails, eventId, eventTime, stateDetails) {
         /***
             
         ***/
+        // Construct the  the table row into which the plots and data will be inserted.
+        var plotDetailsCol  = TD( null, null);
+        var smallPlotCol    = TD( null, null);
+        var largePlotCol    = TD( null, null);
+        var spacerCol1      = TD( {"style" : {"width" : "15px"} }, null );
+        var spacerCol2      = TD( {"style" : {"width" : "15px"} }, null );
+        var tableRowLine    = TR( {"style" : {"width" : "1066px", "height" : "3px",
+                                              "borderBottom" : "2px solid #FFFFFF"} }, 
+                                  null);
+        var tableRowContent = TR( {"style" : {"border" : "2px solid #FFFFFF"} }, 
+                                  [plotDetailsCol, 
+                                   spacerCol1, 
+                                   smallPlotCol, 
+                                   spacerCol2, 
+                                   largePlotCol]);
+        var tableFrame      = TABLE ( null, [tableRowLine, tableRowContent]);
+        var eventTableCol   = TD( null, tableFrame);
+        var eventTableRow   = TR( {"id": "eventTableRow_" + eventId}, eventTableCol); 
+        var outerTable      = getElement(SetiEvent.idbase + "outerTable")
+        appendChildNodes(outerTable, eventTableRow);
+        
         // Plot parameters
         var samplesInSmall = 32;
-        var smallPlotWidth = 189;  // 32 samples at 5 px/sample, including overhead (on Carl)
+        var smallPlotWidth = 189;  //  32 samples at 5 px/sample, including overhead (on Carl)
         var largePlotWidth = 542;  // 512 samples at 1 px/sample, including overhead (on Carl)
         var plotHeight     = 100;
 
@@ -121,8 +187,7 @@ var SetiEvent = {
         var plotDetailsTable = TABLE ( { "class" : "program",
                                          "width" : "250px" }, 
                                       [row1, row2, row3, row4, row5, row6, row7]);
-        var plotDetailsContainer = getElement(SetiEvent.idbase + "plotDetailsContainer");
-        replaceChildNodes(plotDetailsContainer, plotDetailsTable);
+        replaceChildNodes(plotDetailsCol, plotDetailsTable);
 
         // Create plots
         var plotLarge = new SVGPlot(largePlotWidth, plotHeight);
@@ -148,11 +213,10 @@ var SetiEvent = {
             p.plotLine(time_ns, right);
             p.render();
         }
-        
         var smallPlotContainer = getElement(SetiEvent.idbase + "smallPlotContainer");
         var largePlotContainer = getElement(SetiEvent.idbase + "largePlotContainer");
-        replaceChildNodes(smallPlotContainer, plotSmall.svg.htmlElement);
-        replaceChildNodes(largePlotContainer, plotLarge.svg.htmlElement);
+        replaceChildNodes(smallPlotCol, plotSmall.svg.htmlElement);
+        replaceChildNodes(largePlotCol, plotLarge.svg.htmlElement);
         plotSmall.svg.whenReady( partial(plotFunction, 
                                          plotSmall, 
                                          time_ns.slice(0,samplesInSmall), 
@@ -167,7 +231,9 @@ var SetiEvent = {
                                          left, 
                                          voltages) 
                                 );
-        PixelView.highlightPixels([[pmtPixel, keyComment]]);
+        //PixelView.highlightPixels([[pmtPixel, keyComment]]);
+        SetiEvent.keyArray.push([pmtPixel, keyComment]);
+        PixelView.highlightPixels(SetiEvent.keyArray);
     },
     
     interleave: function(a, b) {
@@ -178,6 +244,6 @@ var SetiEvent = {
         }
         return inter;
     },
-    
+      
 };
 

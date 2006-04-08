@@ -216,7 +216,7 @@ var PixelView = {
         Function to plot highlight pixels, usually from the SETI event viewer.  
         It takes an array of pixel/comment pairs 
         [[pixelNum, comment], [pixelNum, comment]] as input.  
-        A key with these pairs is automatically generated
+        A key with these pairs is automatically generated.
         */
         // TO-DO: remember to open the pixel panel and set an onload 
         PixelView.clearKeyDivs();
