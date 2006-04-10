@@ -285,12 +285,12 @@ input.textbox {
     font-size: 0.8em; 
     padding: 2px 4px;
     margin-top: 0.3em;
-    width: 1000px}
+    width: 1020px}
 div#interpreter_area {
     display: block;
     padding: 2px 4px;
     margin-top: .3em;
-    width: 1000px;
+    width: 1020px;
     height: 200px;
     overflow: auto}
 div#interpreter_output {

@@ -1,11 +1,11 @@
-var astroProgram = {
+var AstroProgram = {
 
     base:   '/expt/',
     idbase: 'astro_program_',
-    expt:   'ExperimentState.pulsenetAstroState',
+	controlSettings: [],
     
     command: function(methodName) {
-        log("astroProgram.command(" + methodName +")");
+        log("AstroProgram.command(" + methodName +")");
         deferred = doSimpleXMLHttpRequest(this.base+methodName);
         deferred.addCallback(function (res) {
             response = res.responseText;
@@ -17,46 +17,60 @@ var astroProgram = {
             this.setError("Error: " + repr(err));
         });
     },
-
+    
+    getControlSettings: function() {
+        controlElems = getElement('astro_program_controls');
+        log("There are this many controlElems: " + controlElems.length)
+		forEach(controlElems, 
+			function(elem) {
+				elemName = elem.id;
+                if (elemName != "") {
+                    log(elemName);
+                    if      (elem.type == "radio" | elem.type == "checkbox") {
+                        AstroProgram.controlSettings[elemName] = elem.checked;
+                    }
+                    else if (elem.type == "text" | elem.type == "select") {
+                        AstroProgram.controlSettings[elemName] = elem.value;
+                    }
+                }
+			}
+		);
+    },
+        
     checkAll: function(state,boxname) {
         for (i = 0; i < 32; i++) {
             getElement(document.forms[this.idbase].elements['PN'+i+boxname]).checked = state;
         }
     },
     
-    setCoincMask: function() {
-        for (i = 0; i < 8; i++) {
-            checked = []; checked_cap = [];
-            for (j = 0; j < 4; j++) {
-                k = 4*i+j;
-                checked[j] = getElement(document.forms[this.idbase].elements['PN'+k+'_coincMask']).checked;
-                if (checked[j] == true) {checked_cap[j] = '1';}
-                else                    {checked_cap[j] = '0';}
-            }
-            astroProgram.command('setCoincMask?uCno='+i+
-                                '&pulseNet0='+checked_cap[0]+'&pulseNet1='+checked_cap[1]+
-                                '&pulseNet2='+checked_cap[2]+'&pulseNet3='+checked_cap[3]); 
-        }
-    },
-    
     program: function (option) {
-        for (i = 7; i >= 0; i--) {
-            i_reverse = 7-i;
-            for (j = 0; j < 4; j++) {
-                k = 4*i_reverse + j
-                if (getElement(document.forms[this.idbase].elements['PN'+k+'_program']).checked == true) {
-                    if (option == 'reset') {
-                        astroProgram.command('resetASIC?uCno=' + i + '&asicno=' + j);
-                    }
-                    else if (option == 'program') {
-                        thresh    = getElement(document.forms[this.idbase].elements['thresh']).value;
-                        veto      = getElement(document.forms[this.idbase].elements['veto']).value;
-                        clockhalf = getElement(document.forms[this.idbase].elements['clockhalf']).value;
-                        astroProgram.command('setiConfigASIC?uCno=' + i + '&asicno=' + j + 
-                                            '&threshold=' + thresh + '&veto=' + veto + '&halfclock=' + clockhalf);
-                    }
+        /***
+        Program the astronomy channel of one or more PulseNets.
+        It takes one parameter, option, which is allowed to have these values:
+           'program', 'start', 'stop', 'read', 'auto'.
+        ***/
+        AstroProgram.getControlSettings();
+        settings = AstroProgram.controlSettings;
+        if (option == "program" | 
+            option == "start"   | 
+            option == "stop"    | 
+            option == "read"    ) {
+            for (uCno=11; uCno<=8; uCno++) {
+                // note that daughterboards are number oppositely from uCs
+                if (option == "program") {
+                    //astConfigASIC(self, uCno, asicno, pixel, level):
+                    AstroProgram.command();
+                }
+                else if (option == "stop" | option == "start") {
+                    //
+                }
+                else if (option == "read") {
+                    //
                 }
             }
+        }
+        else if (option == "auto") {
+            //
         }
     },
    

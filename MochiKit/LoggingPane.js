@@ -245,7 +245,7 @@ MochiKit.LoggingPane.LoggingPane = function (inline/* = false */, logger/* = Moc
     }, this);
 
     /* Create the debug pane */
-    var style = "display: block; left: 0px; bottom: 0px; position: static; width: 100%; background-color: white; font: " + this.logFont;
+    var style = "display: block; left: 0px; bottom: 0px; position: static; width: 100%; color: black; background-color: white; font: " + this.logFont;
     if (inline) {
         style += "; height: 20em; border-top: 2px solid black";
     } else {
