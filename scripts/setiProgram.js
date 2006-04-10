@@ -44,11 +44,11 @@ var setiProgram = {
         }
     },
     
-    setCoincMaskNull: function() {
+    disableCoincMask: function() {
         /***
         Set all coinc masks to zero (ignore coincidences).
         ***/
-        var pnMask = '0,0,0,0';
+        var pnMask = 'False,False,False,False';
         for (uCno = 0; uCno < 8;uCno++) {
             setiProgram.command('setCoincMask?uCno=' + uCno + '&pnMask=' + pnMask); 
         }
