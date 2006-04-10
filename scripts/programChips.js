@@ -4,7 +4,6 @@ var ProgramChips = {
     idbase: 'expt_',
 
     command: function(methodName) {
-        //this.setError("No error so far");
         log("ProgramChips.command(" + methodName +")");
         deferred = doSimpleXMLHttpRequest(this.base+methodName);
         deferred.addCallback(function (res) {
@@ -35,6 +34,11 @@ var ProgramChips = {
             if (voltage == 'all') {
                 for (i = 0; i <= 7; i++) {
                     ProgramChips.setDAC('pmt', i, side);
+                }
+            }
+            else if (voltage == 'groundall') {
+                for (i = 0; i <= 7; i++) {
+                    ProgramChips.command('programDAC?chip='+side+'&channel='+i+'&voltage=0');
                 }
             }
             else {

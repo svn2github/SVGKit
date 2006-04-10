@@ -15,7 +15,7 @@ div.panelTitle {
     background-color: #545A65}
 div.progressbar_inner {
     background-color: #545A65}
-.smallbutton { 
+.smallbutton, .redbutton { 
     background-image: url(/static/images/titlebg.gif)}
 .smallbutton_depressed{
     background-image: url(/static/images/titleDepressedbg.gif)}
@@ -37,7 +37,7 @@ div#container_outer {
 div#container_inner { 
     border-top:  solid #545A65 2px;
     border-left: solid #545A65 2px}
-.smallbutton {
+.smallbutton, .redbutton {
     border-top:    2px solid #545A65;
     border-right:  2px solid #2B2D31;
     border-bottom: 2px solid #2B2D31;
@@ -92,6 +92,8 @@ div#body {
     color: #9FAABF}
 .smallbutton { 
     color: #C6C6C6}
+.redbutton { 
+    color: #BB0000}
 .smallbutton_depressed { 
     color: #00BB00}
 div.panelTitle a:link, 
@@ -252,7 +254,7 @@ table.program th {
     text-decoration: underline}
 ol.program {
     font-size: x-small;}
-.smallbutton, .smallbutton_depressed{
+.smallbutton, .smallbutton_depressed, .redbutton{
     font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
     font-size: x-small;
     margin:  0px;
