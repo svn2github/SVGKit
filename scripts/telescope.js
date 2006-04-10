@@ -44,6 +44,22 @@ var Telescope = {
         // TODO: clean up this duplicate code
     },
     
+    goto: function() {
+        // send goto command
+        deferred = doSimpleXMLHttpRequest(this.base+"webGoto?" + 
+                            queryString(getElement(this.idbase + "goto_form")));
+        deferred.addCallback(function (res) {
+            response = res.responseText;
+            if(response.indexOf("Traceback") != -1) {
+                this.setError("Python error: \n" + response);
+            }
+        });
+        deferred.addErrback(function (err) {
+            this.setError("Error: " + repr(err));
+        });
+        // TODO: clean up this duplicate code
+    },
+    
     update: function(state) {
     	ObsSvg.rotateTelescope(state.telescopeState.degrees);
     },
