@@ -253,8 +253,15 @@ function addTests() {
         i++;
     }
 }
+/*
+p = new SVGPlot(220, 220);
+d=$('test')
+replaceChildNodes(d, p.svg.htmlElement)
+p.svg.circle()
+p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+*/
 
-addLoadEvent(addTests);
+//addLoadEvent(addTests);
 </script>
 
 </head>
@@ -262,7 +269,9 @@ addLoadEvent(addTests);
 <body>
 
 
-<div>
+<div id="test">
+
+
 
 <form  method="post" action="javascript:void()">
 <table id="tests" border="1">
