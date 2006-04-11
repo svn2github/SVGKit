@@ -35,6 +35,16 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     Add getURL and setURL to non-ASP based renders like
     http://jibbering.com/2002/5/dynamic-update-svg.html
     
+        
+    Embed:  htmlElement.getSVGDocument  is type "undefined", but in IE
+            htmlElement.getSVGDocument() works.
+            IE: Creating an embed and inserting it doesn't load the SVG
+            Safari: it's both undefined and doesn't work. Worst, but consistent.
+            Safari: Creating an embed and inserting it does load it, but onload isn't called.
+            
+    Object: htmlElement.contentDocument doesn't work on IE or Safari.
+            Safari: Creating an embed and inserting it does not load it.
+    
     SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
     1999 and here we are SEVEN years later and even I just learned about the standard.
     
