@@ -60,6 +60,13 @@ var Power = {
         });
     },
     
+    setEEPROM: function() {
+        deferred = loadJSONDoc(Power.base + "webSetEEPROM");
+        deferred.addCallback(function(res) {
+            // nothing to do
+        });
+    },
+    
     setSwitch: function(number, val) {
         switchURL = Power.base + "webSetSwitch?" + 
                     queryString({'switchNum' : number,
