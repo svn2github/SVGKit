@@ -142,14 +142,16 @@ StarChart.displayStars = function(newstars)  {
     log("Got ", newstars.length, " stars");
     for (i=0; i<newstars.length; i++) {
         var mag = newstars[i].mag;
-        var dark255 = Math.round(25*(StarChart.magmax+1.-mag))
+        var dark255 = Math.round(255/StarChart.magmax*(StarChart.magmax-mag))
         var darkness = StarChart.pad0(Math.min(255, dark255).toString(16),2);
         //var darkness = 'FF';
         var circle = StarChart.svg.CIRCLE(
                                  {'cx': newstars[i].ra,
                                   'cy': newstars[i].dec,
-                                  'r': 1/4, // 1/StarChart.zoom/4 //(StarChart.magmax+1.-newstars[i].mag)*.05,
-                                  'fill': '#'+darkness+darkness+darkness });
+                                  'r': (StarChart.magmax+1.-newstars[i].mag)*.04, // /Math.sqrt(StarChart.zoom),
+                                  'fill': '#'+darkness+darkness+darkness,
+                                  //'fill-opacity': darkness/255.,
+                                  'stroke' : 'none'});
         stars.appendChild(circle);
     }
 }
@@ -183,7 +185,8 @@ StarChart.createRects = function(stripes) {
     for (var i=start; i<start+stripes; i++) {
         for (var m=0; m<multiple; m++) {
             var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", Math.random()*300-100+'%' );
+            var length = Math.random()*360
+            rect.setAttribute("x", Math.random()*360 );
             rect.setAttribute("y", ((i*300)/stripes)+50+'%' );
             rect.setAttribute("width", Math.random()*200+'%' );
             rect.setAttribute("height", .9+'%' );
