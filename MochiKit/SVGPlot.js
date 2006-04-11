@@ -13,8 +13,11 @@ See <http://com/> for documentation, downloads, license, etc.
    * can hook up live data (JSON, XML, CSV)
    * server-side rendering through Mozilla's command-line JS
    * Has good features of Matlab, Mathematica, Asymptote, Ploticus, Super Mongo, GNU Plot, Origin
+   * Can reproduce any plot in Science and Nature as strighforwardly as possible
+   * Can reproduce any plot in Physics and Math books as straightforwardly as possible.
    * Clean programatic canvas-like interface and also clean SVG-like XML representation.
    * Reasonable defaults, but ability to tweak everything.
+   * Client-side features of zooming, panning, and exploring the data.
 
    Everything is object-oriented, but objects get created for you rather than 
    having to call constructors and link them in.  Complimentary like SVG DOM vs Canvas
@@ -267,74 +270,6 @@ SVGPlot.genericConstructor = function(self, svgPlot, parent) {
     self.parent = parent;
     self.element = null;
     self._style = svgPlot.getState();
-}
-
-
-//SVGPlot.prototype.plot = function() {
-//  This has the same name as the "currentPlot"
-//    /***
-//        Designed to work like canvas.stroke() where it just plots its shit into whatever 
-//        SVG group happens to be the canvas's Group.
-//    ***/    
-//}
-
-SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
-
-    if (arguments.length==1) {
-        // If only one argument given, treat it as a y array and plot it against the integers.
-        var xdata = new Array(xorydata.length);  // ydata = xorydata;
-        for (var i=0; i<xorydata.length; i++)
-            xdata[i] = i;
-        this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
-    }
-    
-    if (this.box == null) {
-        this.addBox();
-        this.addBoxDefaults();
-    }
-    
-    for (var i=1; i<arguments.length; i++)
-        this.plot = new SVGPlot.LinePlot(this, this.range, xorydata, arguments[i]);
-    return this.plot;  // Last line plot.  Not of much use, really.
-}
-
-SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
-    SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.plots.push(this)
-    this.xdata = xdata;
-    this.ydata = ydata;
-}
-
-
-SVGPlot.prototype.setPlotStyle = function() {
-    this.plot._style = this.getState();
-}
-
-SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
-    /***
-        used for auto-range
-    ***/
-    var xrange = SVGPlot.minmax(this.xdata)
-    xExtents.min = Math.min(xExtents.min, xrange.min)
-    xExtents.max = Math.max(xExtents.max, xrange.max)
-    var yrange = SVGPlot.minmax(this.ydata)
-    yExtents.min = Math.min(yExtents.min, yrange.min)
-    yExtents.max = Math.max(yExtents.max, yrange.max)
-}
-
-SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
-    var POINT_COUNT = 200;
-    var xdata = Array(POINT_COUNT);
-    var ydata = Array(POINT_COUNT);
-    var temp = {}; // a new object context to set a variable inside and have a function run. 
-    for (var i=0; i<POINT_COUNT; i++) {
-        temp[name] = xmin + (xmax-xmin)*i/POINT_COUNT;
-        xdata[i] = temp[name];
-        ydata[i] = eval.call(temp, func);
-    }
-    //log("Calling plotLine with data");
-    return this.plotLine(xdata, ydata);
-    // Maybe this should be in a <plotFunction> <plotLine/> <plotFunction>
 }
 
 
@@ -777,7 +712,7 @@ SVGPlot.Stubs.prototype.createElement = function() {
     if (this.labels=='auto')
         label_strs = map(SVGPlot.prettyNumber, this._locs);
     
-    SVGPlot.removeAllChildren(this.element);
+    SVG.removeAllChildren(this.element);
     this._texts = [];
     
     var p = this.svgPlot;
@@ -802,7 +737,7 @@ SVGPlot.Stubs.prototype.createElement = function() {
 SVGPlot.Label.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'label', 'text');
 
-    SVGPlot.removeAllChildren(this.element);
+    SVG.removeAllChildren(this.element);
 
     var p = this.svgPlot;
     p.save();
@@ -1048,7 +983,7 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     else if (this.type=='y')
         path = 'M 0,'+(bottom-top)+' v '+(top-bottom);
     var pathElem = this.svgPlot.svg.PATH({'d': path});
-    //SVGPlot.removeAllChildren(this.element);  // TODO Remove the paths.
+    //SVG.removeAllChildren(this.element);  // TODO Remove the paths.
     this.element.appendChild(pathElem);
     
     var components = [this.ticks, this.stubs, this.labels];
@@ -1086,7 +1021,7 @@ SVGPlot.Ticks.prototype.render = function(min, max, map) {
                 path += ' M 0 '+map(locs[k])+'h '+(-this.length);
         }
     }
-    SVGPlot.removeAllChildren(this.element);
+    SVG.removeAllChildren(this.element);
     this.element.appendChild( this.svgPlot.svg.PATH({'d':path}) );
 }
 
@@ -1145,7 +1080,7 @@ SVGPlot.LinePlot.prototype.createElement = function() {
 SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     
     
-    SVGPlot.removeAllChildren(this.element);
+    SVG.removeAllChildren(this.element);
     
     var p = this.svgPlot;
     
@@ -1182,6 +1117,110 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
     
     p.restore();
     return plot;
+}
+
+
+// Line Plot
+
+SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
+
+    if (arguments.length==1) {
+        // If only one argument given, treat it as a y array and plot it against the integers.
+        var xdata = new Array(xorydata.length);  // ydata = xorydata;
+        for (var i=0; i<xorydata.length; i++)
+            xdata[i] = i;
+        this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
+    }
+    
+    if (this.box == null) {
+        this.addBox();
+        this.addBoxDefaults();
+    }
+    
+    for (var i=1; i<arguments.length; i++)
+        this.plot = new SVGPlot.LinePlot(this, this.range, xorydata, arguments[i]);
+    return this.plot;  // Last line plot.  Not of much use, really.
+}
+
+SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
+    SVGPlot.genericConstructor(this, svgPlot, parent);
+    parent.plots.push(this)
+    this.xdata = xdata;
+    this.ydata = ydata;
+}
+
+
+SVGPlot.prototype.setPlotStyle = function() {
+    this.plot._style = this.getState();
+}
+
+SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
+    /***
+        used for auto-range
+    ***/
+    var xrange = SVGPlot.minmax(this.xdata)
+    xExtents.min = Math.min(xExtents.min, xrange.min)
+    xExtents.max = Math.max(xExtents.max, xrange.max)
+    var yrange = SVGPlot.minmax(this.ydata)
+    yExtents.min = Math.min(yExtents.min, yrange.min)
+    yExtents.max = Math.max(yExtents.max, yrange.max)
+}
+
+SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
+    var POINT_COUNT = 200;
+    var xdata = Array(POINT_COUNT);
+    var ydata = Array(POINT_COUNT);
+    var temp = {}; // a new object context to set a variable inside and have a function run. 
+    for (var i=0; i<POINT_COUNT; i++) {
+        temp[name] = xmin + (xmax-xmin)*i/POINT_COUNT;
+        xdata[i] = temp[name];
+        ydata[i] = eval.call(temp, func);
+    }
+    //log("Calling plotLine with data");
+    return this.plotLine(xdata, ydata);
+    // Maybe this should be in a <plotFunction> <plotLine/> <plotFunction>
+}
+
+
+// ScatterPlot
+ 
+SVGPlot.prototype.plotScatter = function(xdata, ydata) {
+}
+ 
+SVGPlot.prototype.plotScatterStyle = function(xdata, ydata /* val1, val2, val3 */) {
+}
+
+// Color Functions
+
+/*
+    If you passed plotLine(x, y, p, q) for each point the
+    color function gets passed colorFunction([x, xin, xmax], [y, ymin, ymax],
+                                             [p, pmin, pmax], [q, qmin, qmax])
+    and it has to return an [r, g, b, a] value.  For line plots and area plots,
+    a gradient is constructed from the color functions.  For scatterPlots and columns
+    and stuff, 
+*/
+
+SVGPlot.prototype.colorCycle = function(colorList) {
+}
+
+SVGPlot.prototype.colorDarken = function() {
+}
+
+
+// Marker Fnuctions
+/*
+    This allows you do draw things like error bars, set colors, draw
+    funny shapes, draw whiskers that point in a given direction.
+*/
+
+SVGPlot.prototype.markerShapeCycle = function(shapeList) {
+}
+
+SVGPlot.prototype.markerSize = function() {
+}
+
+SVGPlot.prototype.markerColor = function() {
 }
 
 
@@ -1408,13 +1447,6 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
     p.setState(backupStyle);
 }
 
-
-
-SVGPlot.removeAllChildren = function(node) {
-    while(node.childNodes.length>0) {
-        node.removeChild(node.childNodes[0]);
-    }
-}
 
 
 

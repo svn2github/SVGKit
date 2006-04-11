@@ -35,16 +35,6 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
     Add getURL and setURL to non-ASP based renders like
     http://jibbering.com/2002/5/dynamic-update-svg.html
     
-        
-    Embed:  htmlElement.getSVGDocument  is type "undefined", but in IE
-            htmlElement.getSVGDocument() works.
-            IE: Creating an embed and inserting it doesn't load the SVG
-            Safari: it's both undefined and doesn't work. Worst, but consistent.
-            Safari: Creating an embed and inserting it does load it, but onload isn't called.
-            
-    Object: htmlElement.contentDocument doesn't work on IE or Safari.
-            Safari: Creating an embed and inserting it does not load it.
-    
     SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
     1999 and here we are SEVEN years later and even I just learned about the standard.
     
@@ -302,6 +292,7 @@ MochiKit.SVG.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     }
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
+    this.$ = function(id) { return this.svgDocument.getElementById(id) }
     //var createSVGDOMFunc = this.createSVGDOMFunc;
     this.A = this.createSVGDOMFunc("a")
     this.ALTGLYPH = this.createSVGDOMFunc("altGlyph")
@@ -489,7 +480,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         attrs['type'] = this._svgMIME;
         this.htmlElement = createDOM('object', attrs, this._errorText);
         var svg = this;  // Define svg in context of function below.
-        function finishLoad(svg, width, height, event) {
+        function finishObject(svg, width, height, event) {
             // IE doesn't have contentDocument
             // IE would have to use some sort of SVG pool of objects
             // that add themselves to a list uppon load.
@@ -497,7 +488,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
             svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
             svg.setSize(width, height);
         }
-        this.whenReady( partial(finishLoad, svg, width, height) );
+        this.whenReady( partial(finishObject, svg, width, height) );
     }
     else if (this.newSVGType=='embed') {
         attrs['src'] = this._mochiKitBaseURI + filename;
@@ -506,7 +497,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         //log("Going to createDOM('embed')");
         this.htmlElement = createDOM('embed', attrs );
         var svg = this;
-        function finishLoad(svg, width, height, event) {
+        function finishEmbed(svg, width, height, event) {
             // IE doesn't load the embed when you include it in the DOM tree.
             // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
             // and move them around. This seems to work in IE.
@@ -517,7 +508,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
             svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
             svg.setSize(width, height);
         }
-        this.whenReady( partial(finishLoad, svg, width, height) );
+        this.whenReady( partial(finishEmbed, svg, width, height) );
     }
 }
 
@@ -525,6 +516,8 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
    or after being hidden) there is a delay before the SVG content is
    accessible.
 */
+
+
 
 MochiKit.SVG.prototype.grabSVG = function (htmlElement) {
     /***
@@ -688,6 +681,100 @@ MochiKit.SVG.prototype.deleteEverything = function() {
     ***/
     while(this.svgElement.childNodes.length>0) {
         this.svgElement.removeChild(this.svgElement.childNodes[0]);
+    }
+}
+
+/*
+    The following take an element and transforms it.  If the last item in
+    the transform string is the same as what you're trying to do, replace it.
+    Note that translate(2,0) gets turned into translate(2).
+    Regular Expressions are hard coded so they can be compiled once on load.
+*/
+
+
+MochiKit.SVG.rotateRE = /(.*)rotate\(\s*(.*)\s*\)\s*$/
+MochiKit.SVG.prototype.rotate = function(elem, degrees) {
+    var old_transform = elem.getAttribute('transform')
+    var new_transform = this._oneParameter(old_transform, degrees, 
+                                            MochiKit.SVG.rotateRE, 'rotate')
+    elem.setAttribute('transform', new_transform);
+}
+
+
+MochiKit.SVG.translateRE = /(.*)translate\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
+MochiKit.SVG.prototype.translate = function(elem, tx, ty) {
+    var old_transform = elem.getAttribute('transform')
+    var new_transform = this._twoParameter(old_transform, sx, sy, 
+                                            MochiKit.SVG.translateRE,
+                                            'translate')
+    elem.setAttribute('transform', new_transform);
+}
+
+MochiKit.SVG.scaleRE = /(.*)scale\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
+MochiKit.SVG.prototype.scale = function(elem, sx, sy) {
+    var old_transform = elem.getAttribute('transform')
+    var new_transform = this._twoParameter(old_transform, sx, sy, 
+                                            MochiKit.SVG.scaleRE, 'scale')
+    elem.setAttribute('transform', new_transform);
+}
+
+MochiKit.SVG.prototype._oneParameter = function(old_transform, degrees, 
+                                                 regexp, name) {
+    /***
+        rotate('translate(1,2)rotate(12)', -12)  -> 'translate(1,2)'
+        rotate('translate(1,2)rotate(12)', -11)  -> 'translate(1,2)rotate(1)'
+        rotate('rotate( 4 ) rotate( 12 )', -12)  -> 'rotate( 4 ) '
+    ***/
+    MochiKit.SVG.rotateRE.lastIndex = 0;
+    var transform = elem.getAttribute('transform')
+    //var transform = elem;
+    var new_transform, array;
+    
+    if (old_transform==null)
+        new_transform = 'rotate('+degrees+')'
+    else if ( (array = MochiKit.SVG.rotateRE.exec(old_transform)) != null ) {
+        var old_angle = parseFloat(array[2]);
+        var new_angle = old_angle+degrees;
+        new_transform = array[1];
+        if (new_angle!=0)
+            new_transform += 'rotate('+new_angle+')';
+    }
+    else
+        new_transform = transform + 'rotate('+degrees+')';
+    return new_transform;
+}
+
+MochiKit.SVG.prototype._twoParameter = function(old_transform, x, y, 
+                                                 regexp, name) {
+    // Test: MochiKit.SVG.prototype._twoParameter('transform( 1 ,2 ) scale( 3 , 4  )', 1, 1, MochiKit.SVG.scaleRE, 'scale')
+    regexp.lastIndex = 0;
+    var transform = elem
+    var new_transform, array;
+    
+    if (old_transform==null)
+        new_transform = name+'('+x+','+y+')';
+    else if ( (array = regexp.exec(transform)) != null ) {
+        var old_x = parseFloat(array[2]);
+        var new_x = old_x+x;
+        var old_y;
+        if (array[3]!=null)
+            old_y = parseFloat(array[3]);
+        else
+            old_y = 0;
+        var new_y = old_y+y;
+        new_transform = array[1];
+        if (new_x!=0 && new_y!=0)
+            new_transform += name+'('+new_x+','+new_y+')';
+    }
+    else
+        new_transform = old_transform + name+'('+x+','+y+')';
+    return new_transform
+}
+
+
+MochiKit.SVG.removeAllChildren = function(node) {
+    while(node.childNodes.length>0) {
+        node.removeChild(node.childNodes[0]);
     }
 }
 

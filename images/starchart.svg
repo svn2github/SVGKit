@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="720"
+   height="360"
+   version="1.0"
+   id="svg3845"
+   sodipodi:version="0.32"
+   inkscape:version="0.43"
+   sodipodi:docname="starchart.svg"
+   sodipodi:docbase="Z:\allsky\controlsw\static\images">
+  <metadata
+     id="metadata3856">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs3854" />
+  <sodipodi:namedview
+     inkscape:window-height="794"
+     inkscape:window-width="1005"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     showgrid="true"
+     inkscape:grid-bbox="true"
+     inkscape:grid-points="true"
+     gridspacingx="1px"
+     gridspacingy="1px"
+     gridempspacing="5"
+     inkscape:zoom="2"
+     inkscape:cx="72.799027"
+     inkscape:cy="301.41521"
+     inkscape:window-x="21"
+     inkscape:window-y="163"
+     inkscape:current-layer="svg3845"
+     gridtolerance="0.4px"
+     gridoriginx="0.5px"
+     gridoriginy="0.5px" />
+  <rect
+     id="background"
+     width="720"
+     height="360"
+     x="0"
+     y="0"
+     style="fill:#000000;fill-opacity:1" />
+  <g
+     id="stars"
+     class="dragable" />
+  <g
+     id="coverage"
+     class="dragable" />
+  <g
+     id="controls"
+     style="fill:#888888;fill-opacity:0.2;stroke:#ffffff;stroke-width:1;stroke-opacity:0.5">
+    <g
+       transform="translate(0.5,0)"
+       id="slider_background">
+      <rect
+         id="rect5632"
+         width="10"
+         height="2"
+         x="45"
+         y="128.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7380"
+         width="10"
+         height="2"
+         x="45"
+         y="136.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7382"
+         width="10"
+         height="2"
+         x="45"
+         y="184.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7384"
+         width="9.5"
+         height="2"
+         x="45.5"
+         y="144.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7386"
+         width="10"
+         height="2"
+         x="45"
+         y="152.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7388"
+         width="10"
+         height="2"
+         x="45"
+         y="160.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7390"
+         width="10"
+         height="2"
+         x="45"
+         y="168.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7392"
+         width="10"
+         height="2.0625"
+         x="45"
+         y="176.5"
+         ry="1"
+         rx="1" />
+      <rect
+         id="rect7394"
+         width="10"
+         height="1.9375"
+         x="45"
+         y="192.5"
+         ry="0.96875"
+         rx="1" />
+      <rect
+         style="opacity:1;fill:#000000;fill-opacity:1"
+         id="rect5628"
+         width="4"
+         height="73"
+         x="48"
+         y="125"
+         ry="1.5"
+         rx="1.5" />
+    </g>
+    <g
+       transform="translate(0.5,7.5)"
+       id="slider">
+      <rect
+         style="opacity:1;fill:#000000;fill-opacity:1"
+         id="rect8349"
+         width="20"
+         height="10"
+         x="40"
+         y="150" />
+      <path
+         d="M 43,155 L 57,155"
+         id="path8351"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="up_arrow">
+      <rect
+         id="rect4735"
+         width="20"
+         height="20"
+         x="40"
+         y="10" />
+      <path
+         d="M 50,27 L 50,13 L 47,16 L 45,18"
+         id="path7396"
+         sodipodi:nodetypes="cccc"
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round" />
+      <path
+         d="M 50,13 L 55,18"
+         id="path7404"
+         sodipodi:nodetypes="cc"
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="down_arrow">
+      <rect
+         id="rect4743"
+         width="20"
+         height="20"
+         x="40"
+         y="70" />
+      <path
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round"
+         d="M 50,73 L 50,87 L 53,84 L 55,82"
+         id="path7410"
+         sodipodi:nodetypes="cccc" />
+      <path
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round"
+         d="M 50,87 L 45,82"
+         id="path7412"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="left_arrow">
+      <rect
+         id="rect4745"
+         width="20"
+         height="20"
+         x="10"
+         y="40" />
+      <path
+         d="M 27,50 L 13,50 L 16,53 L 18,55"
+         id="path7414"
+         sodipodi:nodetypes="cccc"
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round" />
+      <path
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round"
+         d="M 13,50 L 18,45"
+         id="path7416"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="right_arrow">
+      <rect
+         id="rect4739"
+         width="20"
+         height="20"
+         x="70"
+         y="40" />
+      <path
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round"
+         d="M 73,50 L 87,50 L 84,47 L 82,45"
+         id="path7418"
+         sodipodi:nodetypes="cccc" />
+      <path
+         style="fill:none;stroke-linecap:round;stroke-linejoin:round"
+         d="M 87,50 L 82,55"
+         id="path7420"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="plus_zoom">
+      <rect
+         id="rect5620"
+         width="20"
+         height="20"
+         x="40"
+         y="100" />
+      <path
+         d="M 50,103 L 50,117"
+         id="path8295"
+         sodipodi:nodetypes="cc" />
+      <path
+         d="M 43,110 L 57,110"
+         id="path8297"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="minus_zoom">
+      <rect
+         id="rect5622"
+         width="20"
+         height="20"
+         x="40"
+         y="204" />
+      <path
+         d="M 43,214 L 57,214"
+         id="path8299"
+         sodipodi:nodetypes="cc" />
+    </g>
+    <g
+       transform="translate(0.5,0.5)"
+       id="re_center">
+      <rect
+         id="rect4737"
+         width="20"
+         height="20"
+         x="40"
+         y="40" />
+      <g
+         id="g8337"
+         transform="matrix(0.5,0,0,0.5,25,25)"
+         style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+        <path
+           sodipodi:nodetypes="cccc"
+           id="path8301"
+           d="M 50,65.5 L 50,55 L 47,58 L 45,60" />
+        <path
+           sodipodi:nodetypes="cc"
+           id="path8303"
+           d="M 50,55 L 55,60" />
+        <path
+           sodipodi:nodetypes="cccc"
+           id="path8305"
+           d="M 50,34.5 L 50,45 L 53,42 L 55,40" />
+        <path
+           sodipodi:nodetypes="cc"
+           id="path8307"
+           d="M 50,45 L 45,40" />
+        <path
+           sodipodi:nodetypes="cccc"
+           id="path8309"
+           d="M 65.5,50 L 55,50 L 58,53 L 60,55" />
+        <path
+           sodipodi:nodetypes="cc"
+           id="path8311"
+           d="M 55,50 L 60,45" />
+        <path
+           sodipodi:nodetypes="cccc"
+           id="path8313"
+           d="M 34.5,50 L 45,50 L 42,47 L 40,45" />
+        <path
+           sodipodi:nodetypes="cc"
+           id="path8315"
+           d="M 45,50 L 40,55" />
+      </g>
+    </g>
+  </g>
+</svg>
