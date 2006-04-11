@@ -19,8 +19,9 @@ StarChart.height = 360;
 StarChart.centerRa  = StarChart.ramin+StarChart.rarange/2;
 StarChart.centerDec = StarChart.decmin+StarChart.decrange/2;
 StarChart.currentDeferred = null;
-StarChart.magmax = 12
+StarChart.magmax = 13
 StarChart.extraRoom = 1.3
+
 /*
 StarChart.current = {'ramin':StarChart.ramin,
                      'ramax':StarChart.ramax,
@@ -147,7 +148,7 @@ StarChart.displayStars = function(newstars)  {
         var circle = StarChart.svg.CIRCLE(
                                  {'cx': newstars[i].ra,
                                   'cy': newstars[i].dec,
-                                  'r': 1/StarChart.zoom/4, //(StarChart.magmax+1.-newstars[i].mag)*.05,
+                                  'r': 1/4, // 1/StarChart.zoom/4 //(StarChart.magmax+1.-newstars[i].mag)*.05,
                                   'fill': '#'+darkness+darkness+darkness });
         stars.appendChild(circle);
     }
@@ -196,7 +197,7 @@ StarChart.createRects = function(stripes) {
 
 StarChart.startup = function() {
     var sc = StarChart
-    sc.svg = new MochiKit.SVG('starchart');
+    sc.svg = new MochiKit.SVG(sc.idbase+'starchart');
     var s = sc.svg
     function ready(sc, s) {
         sc.width = parseInt(s.svgElement.getAttribute('width'))
@@ -221,5 +222,6 @@ StarChart.startup = function() {
     StarChart.svg.whenReady(partial(ready,sc, s));
 }
 
-log("Adding createRandom and createRects");
-addLoadEvent(StarChart.startup);
+
+//log("Adding createRandom and createRects");
+//addLoadEvent(StarChart.startup);
