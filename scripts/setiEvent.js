@@ -207,9 +207,9 @@ var SetiEvent = {
             p.fontFamily = "Helvetica, Geneva, Arial, SunSans-Regular, sans-serif"
             p.setXLabel("Time (ns)");
             p.setYLabel("Voltage (V)");
-            p.strokeStyle = 'rgba(255, 50, 50, 0.5)';
+            p.strokeStyle = 'rgba(255, 75, 75, 0.9)';
             p.plotLine(time_ns, left);
-            p.strokeStyle = 'rgba(50, 50, 255, 0.5)';
+            p.strokeStyle = 'rgba(75, 75, 255, 0.9)';
             p.plotLine(time_ns, right);
             p.render();
         }

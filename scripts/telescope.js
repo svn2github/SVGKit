@@ -62,8 +62,6 @@ var Telescope = {
     
     update: function(state) {
         dec = getElement(Telescope.idbase + 'posdec');
-        log("dec: " + dec);
-        log("dec#: " + 42.5 + state.telescopeState.degrees);
         dec.innerHTML = (42.5 + state.telescopeState.degrees).toPrecision(4)
     	ObsSvg.rotateTelescope(state.telescopeState.degrees);
     },

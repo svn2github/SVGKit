@@ -72,6 +72,7 @@ var State = {
         }
         var deferred = loadJSONDoc(State.base + "webGetState");
         deferred.addCallback(function (newState) {
+            log("processing state");
             State.processState(newState, State.currentState, 'ExperimentState');
             for(i in State.callbackList) {
                 State.callbackList[i](newState);
