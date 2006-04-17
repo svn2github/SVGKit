@@ -491,7 +491,7 @@ SVGPlot.prototype.setYStubsStyle = function() {
 }
 
 /*
-// Right now this doesn't work in Firefox.
+// Right now this text-positioning doesn't work in Firefox.
 SVGPlot.prototype.setStubsStyle = function(stubs) {
     this._copyState(stubs._style, this);
     if (stubs.position=='top' || stubs.position=='bottom')
@@ -671,13 +671,13 @@ SVGPlot.Range.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'range');
     
     for (var j=0; j<this.xAxes.length; j++) {
-        this.xAxes[j].createElement()
+        this.xAxes[j].createElement();
     }
     for (var j=0; j<this.yAxes.length; j++) {
-        this.yAxes[j].createElement()
+        this.yAxes[j].createElement();
     }
     for (var j=0; j<this.plots.length; j++) {
-        this.plots[j].createElement()
+        this.plots[j].createElement();
     }
 }
 
@@ -1073,7 +1073,39 @@ SVGPlot.renderText = function (text, loc, bbox, position, min, max, map) {
     text.setAttribute('transform', transform);
 }
 
-SVGPlot.LinePlot.prototype.createElement = function() {
+
+
+// Line Plot
+
+SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
+
+    if (arguments.length==1) {
+        // If only one argument given, treat it as a y array and plot it against the integers.
+        var xdata = new Array(xorydata.length);  // ydata = xorydata;
+        for (var i=0; i<xorydata.length; i++)
+            xdata[i] = i;
+        this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
+    }
+    
+    if (this.box == null) {
+        this.addBox();
+        this.addBoxDefaults();
+    }
+    
+    for (var i=1; i<arguments.length; i++)
+        this.plot = new SVGPlot.LinePlot(this, this.range, xorydata, arguments[i]);
+    return this.plot;  // Last line plot.  Not of much use, really.
+}
+
+SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
+    SVGPlot.genericConstructor(this, svgPlot, parent);
+    parent.plots.push(this)
+    this.xdata = xdata;
+    this.ydata = ydata;
+}
+
+
+SVGPlot.LinePlot.prototype.createElement = function () {
     SVGPlot.createGroupIfNeeded(this, 'line-plot', 'stroke');
 }
 
@@ -1118,37 +1150,6 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
     p.restore();
     return plot;
 }
-
-
-// Line Plot
-
-SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
-
-    if (arguments.length==1) {
-        // If only one argument given, treat it as a y array and plot it against the integers.
-        var xdata = new Array(xorydata.length);  // ydata = xorydata;
-        for (var i=0; i<xorydata.length; i++)
-            xdata[i] = i;
-        this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
-    }
-    
-    if (this.box == null) {
-        this.addBox();
-        this.addBoxDefaults();
-    }
-    
-    for (var i=1; i<arguments.length; i++)
-        this.plot = new SVGPlot.LinePlot(this, this.range, xorydata, arguments[i]);
-    return this.plot;  // Last line plot.  Not of much use, really.
-}
-
-SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
-    SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.plots.push(this)
-    this.xdata = xdata;
-    this.ydata = ydata;
-}
-
 
 SVGPlot.prototype.setPlotStyle = function() {
     this.plot._style = this.getState();

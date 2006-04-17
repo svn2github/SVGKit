@@ -6,6 +6,7 @@
 <head>
 <title>Some JavaScript SVG Plot Examples</title>
 
+<link href="simple.css" rel="stylesheet" type="text/css"></link>
 <link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
 
 <script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
@@ -17,28 +18,34 @@
 -->
 <script type="text/javascript">
 
-function testRect() {
+function testRect(svg_id) {
     log("Getting SVG")
-    var svg = new MochiKit.SVG('plot1');
+    var svg = new MochiKit.SVG(svg_id);
     log("Got svg = ", svg);
     var newRect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
     svg.append(newRect);
     svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} ) );
 }
 
-function testCreate() {
-    var svg = new MochiKit.SVG(100, 100);
-    appendChildNodes('mydiv', svg.htmlElement);
+function testCreate(type) {
+    var svg = new MochiKit.SVG(100, 100, 'new_'+type+'htmlElement', type);
+    appendChildNodes('new_'+type, svg.htmlElement);
     var init = function () {
         log("htmlElemnt = " + svg.htmlElement);
         log("svgDocument = " + svg.svgDocument);
         log("svgElement = " + svg.svgElement);
-        var newRect = svg.RECT( {'x':'10', 'y':'10', 'width':'80', 'height':'80', 'fill':'blue'} );
+        var newRect = svg.RECT( {'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue'} );
         svg.append(newRect);
         svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'red'} ) ); 
     }
     svg.whenReady(init);
 }
+
+function testLoad(type) {
+    var svg = new MochiKit.SVG('../svgplot/example.svg', 'load_'+type+'htmlElement', type);
+    appendChildNodes('load_'+type, svg.htmlElement);
+}
+
 /*
 function testCanvas() {
     var svg = new MochiKit.SVG(200, 200);
@@ -140,7 +147,12 @@ function drawBowtie(ctx, fillStyle) {
     appendChildNodes(getElement('mydiv'), svg.htmlElement);
 }
 */
-//addLoadEvent(testRect);
+addLoadEvent(partial(testLoad, 'embed'));
+addLoadEvent(partial(testLoad, 'object'));
+addLoadEvent(partial(testRect, 'embed1'));
+addLoadEvent(partial(testRect, 'object1'));
+addLoadEvent(partial(testCreate, 'embed'));
+addLoadEvent(partial(testCreate, 'object'));
 //addLoadEvent(testCreate);
 //addLoadEvent(testCanvas);
 //addLoadEvent(testBoxes);
@@ -152,29 +164,56 @@ function drawBowtie(ctx, fillStyle) {
 
 <body>
 
-
-<div>
-
-
-<embed  id="plot1" src="example.svg" width="600" height="400"
-        type="image/svg+xml"
-        pluginspage="http://www.adobe.com/svg/viewer/install/"></embed>
-
-
+<table id="tests" border="1">
+<tr>
+<td align="center"><strong>Description</strong></td>
+<td align="center"><strong>Embed</strong></td>
+<td align="center"><strong>Object</strong></td>
+<td align="center"><strong>SVG</strong></td>
+</tr>
 
 
-<object id="plot1o" data="example.svg" width="600" height="400" type="image/svg+xml">
-    You can't display SVG.
-</object>
+<tr>
+<td>Load SVG</td>
+<td id="load_embed"></td>
+<td id="load_object"></td>
+<td id="load_svg"></td>
+</tr>
 
-
+<tr>
+<td>Manipulate Existing SVG</td>
+<td>
+    <embed  id="embed1" src="example.svg" width="150" height="150"
+            type="image/svg+xml"
+            pluginspage="http://www.adobe.com/svg/viewer/install/"></embed>
+</td>
+<td>
+    <object id="object1" data="example.svg" width="150" height="150" type="image/svg+xml">
+        You can't display SVG.
+    </object>
+</td>
+<td>
 <!--
-<svg id="plot1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-    <rect x="10" y="10" width="80" height="80" style="fill:blue; stroke:black;" />
-</svg>
+    <svg id="svg1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <rect x="10" y="10" width="80" height="80" style="fill:blue; stroke:black;" />
+    </svg>
 -->
+</td>
+</tr>
+
+<tr>
+<td>New SVG</td>
+<td id="new_embed"></td>
+<td id="new_object"></td>
+<td id="new_svg"></td>
+</tr>
 
 
+
+</table>
+
+
+<p>What follows is a pool of empty SVGs 100x100</p>
 <embed  id="empty" src="../MochiKit/empty.svg" width="100" height="100"
         type="image/svg+xml"
         pluginspage="http://www.adobe.com/svg/viewer/install/"></embed>
@@ -191,23 +230,12 @@ function drawBowtie(ctx, fillStyle) {
         type="image/svg+xml"
         pluginspage="http://www.adobe.com/svg/viewer/install/"></embed>
 
-<object id="text-test" data="text-test2.svg" width="200" height="200 type="image/svg+xml">
-    You can't display SVG.
-</object>
-        
-</div>
+
 
 
 <div id="mydiv"></div>
 <div id="codediv"></div>
 
-<ul>
-<li>Grab an embed, object, iframe, inline and manipulate it
-<li>Manipulate self-registered SVGs.
-<li>Insert a new (embed, object, iframe, inline) from a file
-<li>Insert a new (embed, object, iframe, inline) and manipulate it.
-<li>Grab an (embed, object, iframe, inline) from a pool by ID and move it, resize it, manipuate it.
-</ul>
 
 <form id="interpreter_form" action="javascript:void(0);">
     <div>
@@ -218,7 +246,15 @@ function drawBowtie(ctx, fillStyle) {
     </div>
 </form>
 <p>MochiKit Logger: <a href="javascript:MochiKit.Logging.logger.debuggingBookmarklet()">
-javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a>
+javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a></p>
+
+<ul>
+<li>Grab an embed, object, iframe, inline and manipulate it</li>
+<li>Manipulate self-registered SVGs.</li>
+<li>Insert a new (embed, object, iframe, inline) from a file</li>
+<li>Insert a new (embed, object, iframe, inline) and manipulate it.</li>
+<li>Grab an (embed, object, iframe, inline) from a pool by ID and move it, resize it, manipuate it.</li>
+</ul>
 
 </body>
 </html>

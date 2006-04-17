@@ -261,7 +261,7 @@ MochiKit.SVG.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // TODO:  Make thse work right.
     // __init__()                          For JavaScript included in an SVG.
     // __init__(node)                      Already have an HTML element
-    // __init__(id)                        Have the id for an HTML element (if your id ends in .svg, pass in the node)
+    // __init__(id)                        Have the id for an HTML element (if your id ends in .svg, pass in the node instead)
     // __init__(filename, id, type)        Create a new HTML element that references filename (ends in .svg)
     // __init__(width, height, id, type)   Create a new SVG from scratch with width, height, and id
     
@@ -424,7 +424,7 @@ MochiKit.SVG.prototype.createSVG = function (width, height, id /* optional */, t
         Loads a blank SVG and sets its size and the size of any HTML
         element it lives in to the given width and height.
     ***/
-    this.loadSVG(this._svgEmptyName, width, height, id)
+    this.loadSVG(this._svgEmptyName, width, height, id, type)
 }
 
 MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, height /* = from file */, id /* optional */, type /* =default */) {
@@ -450,17 +450,20 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
     // TODO If it is new, default width and height are 100.  If it's from a file, defaults come from the file.
     //      You can still set the width and height if you want the thing to scroll.
 
+    var attrs = {};
+    
     if (typeof(id) == "undefined" || id == null) {
         id = null;
     }
-    
-    if (id != null) {
+    else {
         attrs['id'] = id;
     }
+    if (typeof(type) == "undefined" || type == null) {
+        type = this.newSVGType;
+    }
     
-    var attrs = {};
     
-    if (this.newSVGType=='inline') {
+    if (type=='inline') {
         /*  Make sure html tag has SVG namespace support?
                 <html xmlns="http://www.w3.org/1999/xhtml"
                   xmlns:svg="http://www.w3.org/2000/svg"
@@ -475,7 +478,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
         // TODO Load SVG from file inline
     }
-    else if (this.newSVGType=='object') {
+    else if (type=='object') {
         attrs['data'] = this._mochiKitBaseURI + filename;
         attrs['type'] = this._svgMIME;
         this.htmlElement = createDOM('object', attrs, this._errorText);
@@ -490,7 +493,7 @@ MochiKit.SVG.prototype.loadSVG = function (filename, width /* = from file */, he
         }
         this.whenReady( partial(finishObject, svg, width, height) );
     }
-    else if (this.newSVGType=='embed') {
+    else if (type=='embed') {
         attrs['src'] = this._mochiKitBaseURI + filename;
         attrs['type'] = this._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';

@@ -115,6 +115,9 @@ Writing the SVG:* Patters and gradients and other global <defs> that can be used
         lineTo 
         fill  // should make <g style="one"> <path/> <path style="two"/> </g>
         fillRect // should make <g style="one"> <path/> <g style="two"> <path/> <rect/> </g> </g>
+        
+    * SVG Specific: Add SVG element to the current group:
+        append( CIRCLE({'r':12})
 ***/
 
 if (typeof(dojo) != 'undefined') {
