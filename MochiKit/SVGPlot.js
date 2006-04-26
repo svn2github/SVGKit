@@ -108,6 +108,15 @@ See <http://com/> for documentation, downloads, license, etc.
     -- Render the axes
     -- Render the plot
     
+  Drawing Function can take all of the row and do whatever it wants.
+    it draws a shape around the origin given the parameters, 
+    which gets translated to the right spot based on the x,y coords.
+  Predefined Drawing Functions include:
+    -- Change shape based on category
+    -- Change color based on category
+    -- Error bars dx, dy, dx&dy
+    -- Error elipse dx, dy, theta
+    
   TODO
     -- floating axes, drawing on the graph, the plots.
     -- Make all lits both comma or space seperated like in SVG.
@@ -414,7 +423,10 @@ SVGPlot.prototype.addYAxisDefaults = function() {
 
 // Ticks
 
-SVGPlot.prototype.setXTicks = function(locs /*='auto'*/, position /* ='bottom' */, length /* =2 */) {
+SVGPlot.prototype.setXTicks = function(locs /*='auto'*/, position /* ='bottom' */, length /* =2 */, 
+                                         minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
+    // Should have MinorTicks parameter which automatically re-calls the function first to draw the minor
+    // ticks, then the major ticks over it.
     if (this.xTicks == null)
         this.addXTicks(locs, position, length);
     this.xTicks.locs = SVGPlot.firstNonNull(locs, this.xTicks.locs, 'auto');
@@ -422,7 +434,8 @@ SVGPlot.prototype.setXTicks = function(locs /*='auto'*/, position /* ='bottom' *
     this.xTicks.length = SVGPlot.firstNonNull(length, this.xTicks.length, SVGPlot.defaultTickLength);
 }
 
-SVGPlot.prototype.setYTicks = function(locs /*='auto'*/, position /* ='left' */, length /* =2 */) {
+SVGPlot.prototype.setYTicks = function(locs /*='auto'*/, position /* ='left' */, length /* =2 */, 
+                                         minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
     if (this.yTicks == null)
         this.addYTicks(locs, position, length);
     this.yTicks.locs = SVGPlot.firstNonNull(locs, this.yTicks.locs, 'auto');
