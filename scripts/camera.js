@@ -37,31 +37,49 @@ var Camera = {
     },
     
     setBigImage: function(idx) {
+        var delay = 0;
         if(Camera.hideDeferred != null) {
             Camera.hideDeferred.cancel();
             Camera.hideDeferred = null;
         }
-        img = getElement(Camera.idbase + "image_" + idx);
-        bigimg = getElement(Camera.idbase + "big_image");
-        bigimg.src = img.src;
-        removeElementClass(bigimg, "invisible");
-        Camera.bigIndex = idx;
+        if(Camera.showDeferred != null) {
+            Camera.showDeferred.cancel();
+            Camera.showDeferred = null;
+        }
+        
+        if(Camera.bigIndex == -1) {
+            delay = 0.25;
+        }
+        
+        Camera.showDeferred = callLater(delay, function() {
+            img = getElement(Camera.idbase + "image_" + idx);
+            bigimg = getElement(Camera.idbase + "big_image");
+            bigimg.src = img.src;
+            removeElementClass(bigimg, "invisible");
+            Camera.bigIndex = idx;
+        });
     },
     
     unsetBigImage: function(idx) {
-        log("unset " + idx);
+        if(Camera.showDeferred != null) {
+            Camera.showDeferred.cancel();
+            Camera.showDeferred = null;
+        }
+        
         if(Camera.bigIndex != idx) return;
         Camera.bigIndex = -2;
         if(Camera.hideDeferred != null) {
             Camera.hideDeferred.cancel();
             Camera.hideDeferred = null;
         }
+        
         Camera.hideDeferred = callLater(0.5, function() {
             log("unsetting now");
             if(Camera.bigIndex == -2) {
                 log("really unsetting");
                 bigimg = getElement(Camera.idbase + "big_image");
                 addElementClass(bigimg, "invisible");
+                Camera.bigIndex = -1;
             }
         });
     },

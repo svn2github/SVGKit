@@ -16,6 +16,9 @@
         <th>
             Telemetry
         </th>
+        <th>
+            Mode
+        </th>
     </tr>
     <tr>
         <td style="vertical-align: top">
@@ -86,6 +89,17 @@
             <button class="smallbutton" type="submit" 
                     onclick="Telemetry.getAllTelemetry()">
                 Get Telemetry
+            </button>
+        </td>
+        <td style="vertical-align: top">
+            <button class="smallbutton" type="button"
+                    onclick="loadJSONDoc('/expt/setMode?mode=Debugging')">
+                Debugging
+            </button>
+            <br />
+            <button class="smallbutton" type="button"
+                    onclick="loadJSONDoc('/expt/setMode?mode=Observing')">
+                Observing
             </button>
         </td>
     </tr>
