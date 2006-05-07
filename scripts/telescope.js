@@ -1,6 +1,14 @@
 var Telescope = {
     'base' : '/telescope/',
     'idbase' : 'telescope_',
+    
+    declinationToDegrees: function(declination) {
+        return 0;
+    },
+    
+    degreesToDeclination: function(degrees) {
+        return 0;
+    },
 
     command: function(methodName) {
         this.setError("");
@@ -62,7 +70,9 @@ var Telescope = {
     
     update: function(state) {
         dec = getElement(Telescope.idbase + 'posdec');
-        dec.innerHTML = (42.5 + state.telescopeState.degrees).toPrecision(4)
+        dec.innerHTML = Telescope.degreesToDeclination(
+                                state.telescopeState.degrees).toPrecision(4)
+        //dec.innerHTML = (42.5 + state.telescopeState.degrees).toPrecision(4)
     	ObsSvg.rotateTelescope(state.telescopeState.degrees);
     },
 
