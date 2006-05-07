@@ -58,7 +58,7 @@ var AstroProgram = {
             for (uCno=11; uCno<=8; uCno++) {
                 // note that daughterboards are number oppositely from uCs
                 if (option == "program") {
-                    //astConfigASIC(self, uCno, asicno, pixel, level):
+                    //astProgramASIC(self, uCno, asicno, pixel, level):
                     AstroProgram.command();
                 }
                 else if (option == "stop" | option == "start") {
