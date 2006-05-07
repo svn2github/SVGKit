@@ -2,12 +2,14 @@ var Telescope = {
     'base' : '/telescope/',
     'idbase' : 'telescope_',
     
+    'latitude' : 42.5,
+    
     declinationToDegrees: function(declination) {
-        return 0;
+        return declination + 90.0 - Telescope.latitude;
     },
     
     degreesToDeclination: function(degrees) {
-        return 0;
+        return Telescope.latitude + degrees - 90.0;
     },
 
     command: function(methodName) {
@@ -70,8 +72,7 @@ var Telescope = {
     
     update: function(state) {
         dec = getElement(Telescope.idbase + 'posdec');
-        dec.innerHTML = Telescope.degreesToDeclination(
-                                state.telescopeState.degrees).toPrecision(4)
+        dec.innerHTML = Telescope.degreesToDeclination(state.telescopeState.degrees).toPrecision(4)
         //dec.innerHTML = (42.5 + state.telescopeState.degrees).toPrecision(4)
     	ObsSvg.rotateTelescope(state.telescopeState.degrees);
     },

@@ -42,7 +42,7 @@ var TopBar = {
                                    myvals["shutter"].substring(1,myvals['shutter'].length);
         myvals["telescopeDeg"]   = newstate.telescopeState.degrees 
         // TO-DO: add declination (it will depend on time, of course)
-        myvals["telescope"]      = parseFloat(myvals["telescopeDeg"]) + 42.5 //convert to declination
+        myvals["telescope"]      = Telescope.degreesToDeclination(parseFloat(myvals["telescopeDeg"])) //convert to declination
         myvals["telescope"]      = myvals["telescope"].toPrecision(3) + "° dec";
         myvals["temperature"]    = newstate.weatherStationState.temperature + "°F";
         myvals["humidity"]       = newstate.weatherStationState.humidity + "%";

@@ -30,7 +30,7 @@ var ObsSvg = {
     },
     
     rotateTelescopeDeclination: function (declination) {
-        var degrees  = (parseFloat(declination) + 42.5);
+        var degrees  = Telescope.declinationToDegrees(parseFloat(declination));
         ObsSvg.rotateTelescope(degrees) ;
     },
 
