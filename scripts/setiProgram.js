@@ -68,11 +68,13 @@ var setiProgram = {
                         thresh    = getElement(document.forms[this.idbase].elements['thresh']).value;
                         veto      = getElement(document.forms[this.idbase].elements['veto']).value;
                         clockhalf = getElement(document.forms[this.idbase].elements['clockhalf']).value;
+                        autoreprogram = getElement(this.idbase + 'autoreprogram').value
                         setiProgram.command('setiProgramASIC?uCno=' + uCno + 
                                             '&asicno='             + asicNo + 
                                             '&threshold='          + thresh + 
                                             '&veto='               + veto + 
-                                            '&halfclock='          + clockhalf);
+                                            '&halfclock='          + clockhalf +
+                                            '&autoreprogram='      + autoreprogram);
                     }
                 }
             }

@@ -305,6 +305,27 @@ var Telemetry = {
     },
 }
 
+var CoincCounters = {
+    idbase: 'coinc_counts_',
+    base: '/expt/',
+    started: false,
+    toggle: function() {
+        var toggle_button = getElement(CoincCounters.idbase + 'toggle_counters');
+        //start autoload
+        if (CoincCounters.started == false) {
+            swapElementClass(toggle_button, "smallbutton", "smallbutton_depressed");
+            CoincCounters.started = true;
+            var deferred = loadJSONDoc(CoincCounters.base + "startCountingCoincs");
+        }
+        //stop autoload
+        else if (CoincCounters.started == true) {
+            swapElementClass(toggle_button, "smallbutton_depressed", "smallbutton");
+            CoincCounters.started = false;
+            var deferred = loadJSONDoc(CoincCounters.base + "stopCountingCoincs");
+        }
+    }
+}
+
 addLoadEvent(roundPanelCorners);
 addLoadEvent(topTimeFunc);
 addLoadEvent(Cookie.restorePanels);
