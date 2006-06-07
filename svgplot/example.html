@@ -10,8 +10,8 @@
 
 <script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
 <script type="text/javascript" src="interpreter.js"></script>
-<script type="text/javascript" src="../MochiKit/SVG.js" ></script>
-<script type="text/javascript" src="../MochiKit/SVGCanvas.js"></script>
+<script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
+<script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
 
 <script type="text/javascript">
 function init() {
@@ -20,14 +20,14 @@ function init() {
 }
 
 function testRect() {
-    var svg = new MochiKit.SVG('plot1o');
+    var svg = new SVGKit('plot1o');
     var newRect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
     svg.append(newRect);
     svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} ) );
 }
 
 function testCreate() {
-    var svg = new MochiKit.SVG(100, 100);
+    var svg = new SVGKit(100, 100);
     appendChildNodes(getElement('mydiv'), svg.htmlElement);
     var init = function () {
         log("htmlElemnt = " + svg.htmlElement);
@@ -40,12 +40,12 @@ function testCreate() {
     svg.whenReady(init);
 }
 function testCanvas() {
-    var svg = new MochiKit.SVG(200, 200);
+    var svg = new SVGKit(200, 200);
     log("1st svg = " + svg);
     appendChildNodes(getElement('mydiv'), svg.htmlElement);
     var init = function () {
         log("2nd svg = " + svg);
-        ctx = new MochiKit.SVGCanvas(svg);
+        ctx = new SVGKitCanvas(svg);
         ctx.fillStyle = "#5F005F";
         ctx.fillRect(20, 20, 40, 40);
     }
@@ -53,7 +53,7 @@ function testCanvas() {
 }
 function testBowTie() {
     // http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas
-    var svg = new MochiKit.SVG(200, 200);
+    var svg = new SVGKit(200, 200);
     appendChildNodes(getElement('mydiv'), svg.htmlElement);
     var init = function () {
         draw(svg);
@@ -88,7 +88,7 @@ function drawBowtie(ctx, fillStyle) {
  function draw(svg) {
    //var canvas = document.getElementById("canvas");
    //var ctx = canvas.getContext("2d");
-   var ctx = new MochiKit.SVGCanvas(svg);
+   var ctx = new SVGKitCanvas(svg);
 
    // note that all other translates are relative to this
    // one
@@ -126,14 +126,14 @@ function drawBowtie(ctx, fillStyle) {
     // http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas
     // http://developer.mozilla.org/en/docs/Canvas_tutorial:Drawing_shapes
     var init = function () {
-        var ctx = new MochiKit.SVGCanvas(svg);
+        var ctx = new SVGKitCanvas(svg);
         ctx.strokeRect(0,0,200-1,200-1);
         ctx.fillRect(25,25,100,100);
         ctx.clearRect(45,45,60,60);
         ctx.strokeRect(50,50,50,50);
         //appendChildNodes($('codediv'), PRE(null,svg.xmlSource()));
     } 
-    var svg = new MochiKit.SVG(200, 200);
+    var svg = new SVGKit(200, 200);
     addToCallStack(svg.htmlElement, 'onload', init);
     appendChildNodes(getElement('mydiv'), svg.htmlElement);
 }

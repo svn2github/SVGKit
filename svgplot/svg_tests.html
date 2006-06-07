@@ -2,25 +2,37 @@
 <!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
       
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+xmlns:svg="http://www.w3.org/2000/svg"
+xmlns:xlink="http://www.w3.org/1999/xlink">
+
 <head>
 <title>Some JavaScript SVG Plot Examples</title>
 
 <link href="simple.css" rel="stylesheet" type="text/css"></link>
 <link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
 
-<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
+
+<script type="text/javascript" src="../MochiKit/Base.js"></script>
+<script type="text/javascript" src="../MochiKit/Iter.js"></script>
+<script type="text/javascript" src="../MochiKit/Logging.js"></script>
+<script type="text/javascript" src="../MochiKit/DateTime.js"></script>
+<script type="text/javascript" src="../MochiKit/Format.js"></script>
+<script type="text/javascript" src="../MochiKit/Async.js"></script>
+<script type="text/javascript" src="../MochiKit/DOM.js"></script>
+<script type="text/javascript" src="../MochiKit/LoggingPane.js"></script>
+<script type="text/javascript" src="../MochiKit/Color.js"></script>
+<script type="text/javascript" src="../MochiKit/Visual.js"></script>
+
 <script type="text/javascript" src="interpreter/interpreter.js"></script>
 
-<script type="text/javascript" src="../MochiKit/SVG.js" ></script>
-<!--
-<script type="text/javascript" src="../MochiKit/SVGCanvas.js" ></script>
--->
+<script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
+<!-- <script type="text/javascript" src="../SVGKit/SVGCanvas.js" ></script> -->
 <script type="text/javascript">
 
 function testRect(svg_id) {
     log("Getting SVG")
-    var svg = new MochiKit.SVG(svg_id);
+    var svg = new SVGKit(svg_id);
     log("Got svg = ", svg);
     var newRect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
     svg.append(newRect);
@@ -28,9 +40,10 @@ function testRect(svg_id) {
 }
 
 function testCreate(type) {
-    var svg = new MochiKit.SVG(100, 100, 'new_'+type+'htmlElement', type);
+    var svg = new SVGKit(100, 100, 'new_'+type+'htmlElement', type);
     appendChildNodes('new_'+type, svg.htmlElement);
     var init = function () {
+        log("in testCreate's init()")
         log("htmlElemnt = " + svg.htmlElement);
         log("svgDocument = " + svg.svgDocument);
         log("svgElement = " + svg.svgElement);
@@ -42,127 +55,45 @@ function testCreate(type) {
 }
 
 function testLoad(type) {
-    var svg = new MochiKit.SVG('../svgplot/example.svg', 'load_'+type+'htmlElement', type);
-    appendChildNodes('load_'+type, svg.htmlElement);
-}
-
-/*
-function testCanvas() {
-    var svg = new MochiKit.SVG(200, 200);
-    log("1st svg = " + svg);
-    appendChildNodes(getElement('mydiv'), svg.htmlElement);
-    var init = function () {
-        log("2nd svg = " + svg);
-        ctx = new MochiKit.SVGCanvas(svg);
-        ctx.fillStyle = "#5F005F";
-        ctx.fillRect(20, 20, 40, 40);
+    var svg = new SVGKit('../svgplot/example.svg', 'load_'+type+'htmlElement', type);
+    var init = function (svg, type) {
+        appendChildNodes('load_'+type, svg.htmlElement);
     }
-    svg.whenReady(init);
+    // The mess below is a result of inline being handled differently from object and embed
+    if (svg.htmlElement != null)
+        init(svg, type)  // For object or embed
+    else
+        svg.whenReady( partial(init, svg, type) );  // For inline, must wait for XML to load.
 }
 
-function testBowTie() {
-    // http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas
-    var svg = new MochiKit.SVG(200, 200);
-    appendChildNodes(getElement('mydiv'), svg.htmlElement);
-    var init = function () {
-        draw(svg);
-        appendChildNodes($('codediv'), PRE(null,svg.toXML()));
-    }
-    svg.whenReady(init);
-}
+//addLoadEvent(partial(testLoad, 'embed'));
+//addLoadEvent(partial(testLoad, 'object'));
+//addLoadEvent(partial(testLoad, 'inline'));
+//addLoadEvent(partial(testRect, 'embed1'));
+//addLoadEvent(partial(testRect, 'object1'));
+//addLoadEvent(partial(testRect, 'inline1'));
+//addLoadEvent(partial(testCreate, 'embed'));
+//addLoadEvent(partial(testCreate, 'object'));
+//addLoadEvent(partial(testCreate, 'inline'));
 
-function drawBowtie(ctx, fillStyle) {
- 
-   ctx.fillStyle = "rgba(200,200,200,0.3)";
-   ctx.fillRect(-30, -30, 60, 60);
- 
-   ctx.fillStyle = fillStyle;
-   ctx.globalAlpha = 1.0;
-   ctx.beginPath();
-   ctx.moveTo(25, 25);
-   ctx.lineTo(-25, -25);
-   ctx.lineTo(25, -25);
-   ctx.lineTo(-25, 25);
-   ctx.closePath();
-   ctx.fill();
- }
- 
- function dot(ctx) {
-   ctx.save();
-   ctx.fillStyle = "black";
-   ctx.fillRect(-2, -2, 4, 4);
-   ctx.restore();
- }
- 
- function draw(svg) {
-   //var canvas = document.getElementById("canvas");
-   //var ctx = canvas.getContext("2d");
-   var ctx = new MochiKit.SVGCanvas(svg);
-
-   // note that all other translates are relative to this
-   // one
-   ctx.translate(45, 45);
-
-   ctx.save();
-   //ctx.translate(0, 0); // unnecessary
-   drawBowtie(ctx, "red");
-   dot(ctx);
-   ctx.restore();
- 
-   ctx.save();
-   ctx.translate(85, 0);
-   ctx.rotate(45 * Math.PI / 180);
-   drawBowtie(ctx, "green");
-   dot(ctx);
-   ctx.restore();
- 
-   ctx.save();
-   ctx.translate(0, 85);
-   ctx.rotate(135 * Math.PI / 180);
-   drawBowtie(ctx, "blue");
-   dot(ctx);
-   ctx.restore();
- 
-   ctx.save();
-   ctx.translate(85, 85);
-   ctx.rotate(90 * Math.PI / 180);
-   drawBowtie(ctx, "yellow");
-   dot(ctx);
-   ctx.restore();
- }
-
- function testBoxes() {
-    // http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas
-    // http://developer.mozilla.org/en/docs/Canvas_tutorial:Drawing_shapes
-    var init = function () {
-        var ctx = new MochiKit.SVGCanvas(svg);
-        ctx.strokeRect(0,0,200-1,200-1);
-        ctx.fillRect(25,25,100,100);
-        ctx.clearRect(45,45,60,60);
-        ctx.strokeRect(50,50,50,50);
-        //appendChildNodes($('codediv'), PRE(null,svg.xmlSource()));
-    } 
-    var svg = new MochiKit.SVG(200, 200);
-    addToCallStack(svg.htmlElement, 'onload', init);
-    appendChildNodes(getElement('mydiv'), svg.htmlElement);
-}
-*/
-addLoadEvent(partial(testLoad, 'embed'));
-addLoadEvent(partial(testLoad, 'object'));
-addLoadEvent(partial(testRect, 'embed1'));
-addLoadEvent(partial(testRect, 'object1'));
-addLoadEvent(partial(testCreate, 'embed'));
-addLoadEvent(partial(testCreate, 'object'));
-//addLoadEvent(testCreate);
-//addLoadEvent(testCanvas);
-//addLoadEvent(testBoxes);
-//addLoadEvent(testBowTie);
+addLoadEvent(partial(testRect, 'inline_ie'));
 
 </script>
 
 </head>
 
 <body>
+
+
+<!-- START Required for IE to support  inlined SVG -->
+<object id="AdobeSVG"
+classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2" width="1"
+height="1"></object>
+<?import namespace="svg" implementation="#AdobeSVG"?>
+<!-- END   Required for IE to support inlined SVG -->
+
+<!--<svg:svg width="300" height="300" baseProfile="full" version="1.1"></svg:svg>-->
+
 
 <table id="tests" border="1">
 <tr>
@@ -177,7 +108,7 @@ addLoadEvent(partial(testCreate, 'object'));
 <td>Load SVG</td>
 <td id="load_embed"></td>
 <td id="load_object"></td>
-<td id="load_svg"></td>
+<td id="load_inline"></td>
 </tr>
 
 <tr>
@@ -194,10 +125,16 @@ addLoadEvent(partial(testCreate, 'object'));
 </td>
 <td>
 <!--
-    <svg id="svg1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-        <rect x="10" y="10" width="80" height="80" style="fill:blue; stroke:black;" />
+    <svg id="inline1" xmlns="http://www.w3.org/2000/svg" width="150" height="150">
+      <rect
+           style="fill:#3362c0;fill-opacity:0.58024693;stroke:#120808;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect1381"
+           width="142.5"
+           height="142.5"
+           x="4"
+           y="4" />
     </svg>
--->
+ -->
 </td>
 </tr>
 
@@ -205,14 +142,22 @@ addLoadEvent(partial(testCreate, 'object'));
 <td>New SVG</td>
 <td id="new_embed"></td>
 <td id="new_object"></td>
-<td id="new_svg"></td>
+<td id="new_inline"></td>
 </tr>
-
-
 
 </table>
 
+<svg:svg baseProfile="full" version="1.1" id="inline_ie" xmlns="http://www.w3.org/2000/svg" width="150" height="150">
+  <svg:rect
+       style="fill:#3362c0;fill-opacity:0.58024693;stroke:#120808;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1381"
+       width="142.5"
+       height="142.5"
+       x="4"
+       y="4" />
+</svg:svg>
 
+<!--
 <p>What follows is a pool of empty SVGs 100x100</p>
 <embed  id="empty" src="../MochiKit/empty.svg" width="100" height="100"
         type="image/svg+xml"
@@ -229,8 +174,7 @@ addLoadEvent(partial(testCreate, 'object'));
 <embed  id="empty4" src="../MochiKit/empty.svg" width="100" height="100"
         type="image/svg+xml"
         pluginspage="http://www.adobe.com/svg/viewer/install/"></embed>
-
-
+-->
 
 
 <div id="mydiv"></div>

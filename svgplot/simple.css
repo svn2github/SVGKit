@@ -1,18 +1,3 @@
-a:link {
-	color: #009966;
-	text-decoration: none;
-}
-a:visited {
-	color: #33CC66;
-	text-decoration: none;
-}
-a:hover {
-	color: #9999FF;
-	text-decoration: none;
-}
-a:active {
-	color: #9999FF;
-}
 body {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: x-small;
