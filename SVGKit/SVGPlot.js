@@ -1,18 +1,19 @@
 /***
 
-SVGPlot 1.2
+SVGPlot 0.1
 
-See <http://com/> for documentation, downloads, license, etc.
+See <http://svgkit.com/> for documentation, downloads, license, etc.
 
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
+   Another kit I found:  http://www.liquidx.net/plotkit/
 
    I don't like the way  plotting programs handle things. I set out to create one that:
    * Outputs SVG and LaTeX and can easily be converted to PS and PDF
    * Works in a client-side browser for real-time manipulation of plots 
    * can hook up live data (JSON, XML, CSV)
    * server-side rendering through Mozilla's command-line JS
-   * Has good features of Matlab, Mathematica, Asymptote, Ploticus, Super Mongo, GNU Plot, Origin
+   * Has good features of Matlab, Mathematica, Asymptote, Ploticus, SuperMongo, GNU Plot, Origin
    * Can reproduce any plot in Science and Nature as strighforwardly as possible
    * Can reproduce any plot in Physics and Math books as straightforwardly as possible.
    * Clean programatic canvas-like interface and also clean SVG-like XML representation.
@@ -21,20 +22,8 @@ See <http://com/> for documentation, downloads, license, etc.
 
    Everything is object-oriented, but objects get created for you rather than 
    having to call constructors and link them in.  Complimentary like SVG DOM vs Canvas
-   You can always access the objects through the scene-tree:
-   SVGPlot  // Bad name for SVG, I guess.
-     Layout[]  // How things are arranged  PlotCanvases are independent entities that can be moved anywhere without changing properties.
-     Box[]  // Arranged in some way 2x3 or floating, etc.
-       Graphics[]  // Random circles floating around
-       Ledgend[]  // List of the names of the overlays.  Auto or manual.
-       Area // (x,y) coordinates where the all of the datasets get confined.
-       Range[]  // Independent sets of things all plotted over each other.  They share the same physical frame and know to shrink to accomodate each others axes.
-         Grid[]  // The cartesian or polar grid or checkerboard, displayed or not displayed.
-         XAxis[], YAxis[], XLabels[] XTicks[], YTicks[] // Normally you want one or none, but ability to have an array of them for related axes like both deg C and deg F.
-         Plot[] // If you have multiple line plots that all use the same axes, they get listed here.  Also area accumulations get listed here
-           Range (not all functions/data get plotted over their full x-range.)
-           Data, Label, Color, ColorFunction
-           Decorations[] // like arrows pointing to specific places on the plot.
+   You can always access the objects through the scene-tree.
+
    This is all represented in the XML structure of the SVG with custom namespace to completly reconstruct these objects uppon load like Inkscape
     API & script commands common across languages: JS, JAva, Python, C++
     Data format just Plain XML, Plain SVG, or Combined
@@ -60,23 +49,17 @@ See <http://com/> for documentation, downloads, license, etc.
    to it's children and it's parents.  When you call a high-layer method on a child, it works.
    When you call a child method on a parent, it picks either the "" one or the default (first) one.
    
-   The key to adoption is good defaults.  The key to staying is extensible options.  Have Tufte inspire the defaults.
+   The key to adoption is good defaults.
+   The key to staying is extensible options.
+   Have good practices (like Tufte) inspire the defaults.
    Web page:
      -- Galery both in PNG and in JS.  JS has "Do It" button
      -- Tutorial with inline JS.  Find interesting data sources to plot.  Census, etc.
      -- Document code, document defaults.  Document which level in the heirarchy is affected with Color Overlays
    
-   Layout information:  Since you've already got an array of a certain size, it makes sense to store the layout information
+   Box Layout information:  Since you've already got an array of a certain size, it makes sense to store the layout information
    in the children, but in some sense it doesn't belong there because you should be able to move children around freely.
    In this scheme you'd have to change the layout information explicitly.
-   
-   Actual given data should be stored in the PATH element of the SVG.
-     -- Good: it's only there once and can be parsed back out. (Beseir stuff is calculated and can be calculated again.)
-     -- Bad: Linewidths & Markers get scaled, so 1px no longer means 1px.
-     -- Bad: Linweidths & Markers get scaled differently in x and y.
-     -- Bad: Log plots and polar plots won't be able to store data this way so it's not uniform.
-   Alternate method of explicit scaling, but automatic translation (and rotation).
-     -- Bad: Must reverse calculate mouse coordinates.
    
    How to handle click on graphs:
      -- Want to do a trace where (x,y) or (r,th) components show up as float.
@@ -90,23 +73,16 @@ See <http://com/> for documentation, downloads, license, etc.
      -- Stack-based state method like Canvas
      -- Explicitly with each function like Mathematica
              plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )
-     -- Create objects and set properties with setter functions (so that they're updated.)
+     -- Create objects and set properties with setter functions like vtk
      * properties are nice for stack-based, but bad for object-based unless you're 
-         in Python where you can capture the setting or willing to register callbacks
+         in Python where you can capture the setting or you're willing to register callbacks
          that check if the  state is different than it was when it was drawn
-         Periodic updates aren't so bad.  element['width']=10 does it this way.
+         Periodic updates aren't so bad.  Mozilla's native SVG element['width']=10 does it this way.
      * Defaults are hard to deal wtih.  Should axes, ticks, and labels start up on
          automatically?  Sure.  Then there's a difference between setting the 
          ones and adding new ones.  When you change a parameter, does it affect the 
-         axes or just the drawing of the new axes?
-         
-   Layout Manager
-    -- Draw the axes as if they were full scale
-    -- Calculate height of y-axes and width of x-axes including ticks and labels
-    -- Add any margins, borders, or padding
-    -- Set the actual x/y positions, width of the x-axes and height of the y-axes
-    -- Render the axes
-    -- Render the plot
+         axes or just the drawing of the new axes?  What if you don't want all of the
+         default ticks and stuff - do you have to delete them all explicitly?
     
   Drawing Function can take all of the row and do whatever it wants.
     it draws a shape around the origin given the parameters, 
@@ -118,37 +94,63 @@ See <http://com/> for documentation, downloads, license, etc.
     -- Error elipse dx, dy, theta
     
   TODO
-    -- floating axes, drawing on the graph, the plots.
-    -- Make all lits both comma or space seperated like in SVG.
+    -- Make all list parameters both comma or space seperated like in SVG.
     -- Markers (though this is really more of a Canvas thing)
     -- Scatter plot is line plot with transparent stroke, but with markers?
-    -- Grid lines like ticks.  Extended ticks?
+    -- Grid lines function like ticks.  Just Extended ticks?  what about checkerboard/stripes?
     -- Tests with multiple boxes and box layout.
+    -- Integer-only axis labels/ticks (a parameter of the auto-axis)
+    -- Auto range has options like "always include zero"
     -- Be able to draw using lineTo and things using plot coordinates, not screen coordinates. 
+    -- You want to draw over a graph.  This means mapping into plot coordinates without distorting your
+        line widths and shapes in some crazy way.  You obviously map (x,y) to (i,j) but do you map 
+        widths, heights, and radii?  Not if you want to draw a normal looking arrow, but yes if you
+        want to draw a circle or an arc that is in a specific place on the graph.
+    -- When you change ranges, you want decorations you've drawn to move too.
     -- CSS Colors and Fonts
-    -- Move stubs to fit on plot or make plot bigger to accomodate stubs
-    -- Moving JS objects around should move XML elements around at render time.  This is not done to cache them
+    -- For tickLabels at the edge, either move them to fit on plot or make plot bigger to accomodate them.
     -- Check range for zeros better.
-    -- When axes are created automatically as a result of a plot command, they should get the default style
     -- Box background and plot area background.
-    -- Grids -- lines or stripes.
     -- Axes, ticks, and grids align themselves to nearest pixel.
-    -- Smooth connect lines
+    -- Smooth connect plot lines using bezier or quartic
     -- Autorange so that at least the line-width fits.
     -- Plot title
+    -- Pie, optional pullout of wedges, optional 2nd parameter setting slice area "Spie  Chart"
+    -- Excel has tick positions 'inside' 'outside' and 'cross'.  This makes more sense when 
+          axes are on the sides, but not when it's in the middle.  We should have a 'cross' though.
+    -- Handle axis types: number, log, category, date, time, date-time
+    -- Option like Excel to drop grid lines from plot to axis (a partial grid)
+    -- Auto ticks works differently for numberical versus category data, at least for bar graphs
+         For categories, often you want ticks/grid in between bars and labels on bars
+    -- How much to mix state-machine vs explicit options.  When you draw a box, do you take the
+         current style and transform from the current state, or as a parameter?  Some things only require
+         one or two style parameters and it's nicer just to set them.  Some like boxBG and plotAreaBG require lots and state is bad.
+         Also, setting the fillStyle for text is confusing.
+    -- How to handle polar plots?  Keep (x,y) range, but just add a polar grid/tickLabels/ticks/etc or
+         completely change to a polar range where (x,y) now mean (r,phi)
+    -- TickLabels appearing over axes or other elements should be somehow avoided.
+    -- Right now if you want to set something, you have to either:
+        * Plot a function and get the default stuff
+        * Explicitly add a box and it's defaults or whatever you want, then set it
+        * Explicitly add everything starting with the box, which is unintuitive.  Should be able to 
+               just addAxis or addXTickLabels and have it use those when I plot, even if it has to add an axis or box.
+    -- Plot with both a line and a point component.  options:
+        * Have to plot twice to get a drawingFunction for each point.
+        * 'connected' is an option of scatter plot, which uses a drawingFunction.  This is easy to do.
+        * 'markers' is an style parameter of line plot (automaticly included by SVGCanvas)
 ***/
 
 
 if (typeof(dojo) != 'undefined') {
     dojo.provide("SVGPlot");
-    dojo.require("MochiKit.SVGCanvas");
+    dojo.require("SVGCanvas");
 }
 if (typeof(JSAN) != 'undefined') {
     JSAN.use("MochiKit.Iter", []);
 }
 
 try {
-    if (typeof(MochiKit.SVGCanvas) == 'undefined') {
+    if (typeof(SVGCanvas) == 'undefined') {
         throw "";
     }
 } catch (e) {
@@ -218,12 +220,16 @@ SVGPlot.plotNS = "http://www.svgplot.org";
 SVGPlot.defaultAxisStrokeWidth = 1;
 SVGPlot.defaultMargins = 0;
 SVGPlot.defaultTickLength = 2;
-
+SVGPlot.defaultStyle = null;   // To be set by resetPlot()
 
 SVGPlot.prototype.__init__ = function (widthOrIdOrNode, height, id /*optional*/) {
     /***
         Can pass it in an SVG object, or can pass it things that the SVG constructor uses.
     ***/
+    // Aditional State:
+    SVGCanvas.startingState.plotCoordinates = false // instead of (i,j) use (x,y) or (r,theta) or (category, date) or whatever
+    SVGCanvas.startingState.pointFunction = null // a function that takes a row of data and draws a point
+    SVGCanvas.startingState.lineFunction = null // takes start and stop and draws a line (possibly smooth or of varying thickness/color.)
     SVGPlot.superclass.__init__.call(this, widthOrIdOrNode, height, id);
     this.svg.whenReady( bind(this.resetPlot, this, null) );
 }
@@ -238,6 +244,7 @@ SVGPlot.prototype.resetPlot = function() {
     //this.fontFamily = "Verdana, Arial, Helvetica, Sans";
     this.fontFamily = "Bitstream Vera Sans";
     this.fontSize = '7px';
+    SVGPlot.defaultStyle = this.getStyle();
 }
 
 
@@ -245,30 +252,63 @@ SVGPlot.prototype.resetPlot = function() {
 
 // All objects have an element and svgPlot member.
 
+                
+/*
 
-SVGPlot.Box = {}                // box
-    SVGPlot.Range = {}          // range
+
+Alternative layout where things have links to the range rather than being contained in a range.  Flatter, but more interlinked heirarchy -- harder for XML
+
+SVGPlot.Layout = {}
+SVGPlot.Box = {}     // box
+    SVGPlot.Graphic = {}  // Random shapes tied to (i,j) not (x,y) coordinates.  When plot is zoomed/moved, do these go too?
+    SVGPlot.Ledgend = {} // List of the names of the plots.  Auto or manual.
+    SVGPlot.Range = {} // becomes a list of ranges that can be linked to by everything else.
+    SVGPlot.LinePlot = {}   // plot  (xrange and yrange)
+    SVGPlot.ScatterPlot = {}   // plot  (xrange and yrange)
+    SVGPlot.Decoration = {}  // (xrange and yrange) like arrows pointing to specific places on the plot.  tied to (x,y) not (i,j).  When plot is zoomed/moved, these move around.
+    SVGPlot.Axis = {}   // xAxis, yAxis (xrange or yrange)
+        SVGPlot.AxisTitle = {}  // xAxisTitle, yAxisTitle
+        SVGPlot.Ticks = {}  // xTicks, yTicks
+        SVGPlot.TickLabels = {}  // xTickLabels, yTickLabels
+        SVGPlot.Gridlines = {} // xGridlines, yGridlines
+
+*/
+
+SVGPlot.Layout = {}
+SVGPlot.Box = {}     // box
+    SVGPlot.Graphic = {}  // Random shapes tied to (i,j) not (x,y) coordinates.  When plot is zoomed/moved, do these go too?
+    SVGPlot.Ledgend = {} // List of the names of the plots.  Auto or manual.
+    SVGPlot.View = {}   // view  Is this Heirarchy too deep with this?  You need it for xtoi()
         SVGPlot.LinePlot = {}   // plot
-        SVGPlot.Scale = {}      // xScale, yScale
+        SVGPlot.ScatterPlot = {}   // plot
+        SVGPlot.Decoration = {}  // like arrows pointing to specific places on the plot.  tied to (x,y) not (i,j).  When plot is zoomed/moved, these move around.
+        SVGPlot.Range = {}      // xRange, yRange
             SVGPlot.Axis = {}   // xAxis, yAxis
-            SVGPlot.Ticks = {}  // xTicks, yTicks
-            SVGPlot.Stubs = {}  // xStubs, yStubs
-            SVGPlot.Label = {}  // xLabel, yLabel
+                SVGPlot.AxisTitle = {}  // xAxisTitle, yAxisTitle
+                SVGPlot.Ticks = {}  // xTicks, yTicks
+                SVGPlot.TickLabels = {}  // xTickLabels, yTickLabels
+                SVGPlot.Gridlines = {} // xGridlines, yGridlines
+
+
+
 
 SVGPlot.Box.prototype = {}                // box
-    SVGPlot.Range.prototype = {}          // range
+    SVGPlot.View.prototype = {}   // view
         SVGPlot.LinePlot.prototype = {}   // plot
-        SVGPlot.Scale.prototype = {}      // xScale, yScale
+        SVGPlot.Range.prototype = {}      // xRange, yRange
             SVGPlot.Axis.prototype = {}   // xAxis, yAxis
+            SVGPlot.AxisTitle.prototype = {}  // xAxisTitle, yAxisTitle
             SVGPlot.Ticks.prototype = {}  // xTicks, yTicks
-            SVGPlot.Stubs.prototype = {}  // xStubs, yStubs
+            SVGPlot.TickLabels.prototype = {}  // xTickLabels, yTickLabels
+            SVGPlot.Gridlines.prototype = {} // xGridlines, yGridlines
+
 
 /*
 Setters set properties of current object.
     If the current object doesnt' exist, it creates a new one
     If you pass in null or don't pass anything retains current value.
         If the current value doesn't exist, it choses a reasonable default value.
-Adders create a new object, add it to the appropariate array, and call the Setter.
+Adders create a new object and call the Setter.
 Removers remove the object.
 */
 
@@ -278,177 +318,278 @@ SVGPlot.genericConstructor = function(self, svgPlot, parent) {
     self.svgPlot = svgPlot;
     self.parent = parent;
     self.element = null;
-    self._style = svgPlot.getState();
+    self.style = svgPlot.getStyle();
 }
 
 
-// Box
+// Box -- The area that the plot and axes appear.  Seperate background for box and plotArea
 
+SVGPlot.Box = function(svgPlot, parent,
+                        layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
+    SVGPlot.genericConstructor(this, svgPlot, parent);
+    this.boxBackgroundStroke = null;
+    this.boxBackgroundFill = null;
+    this.plotAreaBackgroundStroke = null;
+    this.plotAreaBackgroundFull = null;
+    this.set(layout, x, y, width, height);
+    parent.boxes.push(this)
+    this.views = [];
+}
+
+SVGPlot.Box.prototype.set = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
+    this.x = SVGPlot.firstNonNull(x, this.x, 0);
+    this.y = SVGPlot.firstNonNull(y, this.y, 0);
+    var svg_width = parseFloat(this.svgPlot.svg.svgElement.getAttribute('width'));
+    var svg_height =  parseFloat(this.svgPlot.svg.svgElement.getAttribute('height'));
+    this.width  = SVGPlot.firstNonNull(width,  this.width, svg_width);
+    this.height = SVGPlot.firstNonNull(height, this.height,svg_height);
+}
+
+SVGPlot.Box.addDefaults = function() {
+    this.save();
+    this.setStyle(SVGPlot.defaultStyle);
+    this.addView();
+    //this.coordinates._autoAdded = true;
+    this.addViewDefaults();
+    this.restore();
+}
 
 SVGPlot.prototype.setBox = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
-    this.box.x = SVGPlot.firstNonNull(x, this.box.x, 0);
-    this.box.y = SVGPlot.firstNonNull(y, this.box.y, 0);
-    this.box.width  = SVGPlot.firstNonNull(width,  this.box.width,  
-                            parseFloat(this.svg.svgElement.getAttribute('width')));
-    this.box.height = SVGPlot.firstNonNull(height, this.box.height, 
-                            parseFloat(this.svg.svgElement.getAttribute('height')));
-}
-
-SVGPlot.prototype.setBoxStyle = function() {
-    this.box._style = this.getState();
+    this.box.set(layout, x, y, width, height);
+    return this.box;
 }
 
 SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */)  {
     this.box = new SVGPlot.Box(this, this);
-    this.setBox(layout, x, y, width, height);
+    this.box.set(layout, x, y, width, height);
     return this.box;
 }
 
-SVGPlot.prototype.addBoxDefaults = function() {
-    this.addRange();
-    this.addRangeDefaults();
-}
+// View  -- View eventually defines mapping (x,y) -> (i,j).  What about polar?
 
-//SVGPlot.Box = function(svgPlot, element)
-SVGPlot.Box = function(svgPlot, parent) {
+SVGPlot.View = function(svgPlot, parent) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.boxes.push(this)
-    this.ranges = [];
+    parent.views.push(this);
+    this.xRange = new Range();
+    this.yRange = new Range();
+    this.plots = [];  // Plots to be drawn with this coordinate system
 }
 
-// Range
-
-
-SVGPlot.prototype.setXRange = function(xmin /* ='auto' */, xmax /* ='auto' */) {
-    if (this.range == null)
-        this.addRange(xmin, xmax);
-    this.range.xmin = SVGPlot.firstNonNull(xmin, this.range.xmin, 'auto');
-    this.range.xmax = SVGPlot.firstNonNull(xmax, this.range.xmax, 'auto');
+SVGPlot.View.prototype.setXRange = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/ ) {
+    this.xRange.set(xmin, xmax, xreverse, xlog);
 }
 
-SVGPlot.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */) {
-    if (this.range == null)
-        this.addRange(null, null, ymin, ymax);
-    this.range.ymin = SVGPlot.firstNonNull(ymin, this.range.ymin, 'auto');
-    this.range.ymax = SVGPlot.firstNonNull(ymax, this.range.ymax, 'auto');
+SVGPlot.View.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/ ) {
+    this.yRange.set(ymin, ymax, yreverse, ylog);
 }
 
-SVGPlot.prototype.setRange = function(xmin /* ='auto' */, xmax /* ='auto' */, ymin /* ='auto' */, ymax /* ='auto' */) {
-    this.setXRange(xmin, xmax);
-    this.setYRange(ymin, ymax);
+SVGPlot.prototype.setXRange = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/ ) {
+    if (this.views == null)
+        this.views = new SVGPlot.View(this, this.box);
+    this.views.setXRange(xmin, xmax, xreverse, xlog);
+    return this.views;
 }
 
-SVGPlot.prototype.setRangeStyle = function() {
-    this.range._style = this.getState();
+SVGPlot.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/ ) {
+    if (this.views == null)
+        this.views = new SVGPlot.View(this, this.box);
+    this.views.setYRange(ymin, ymax, yreverse, ylog);
+    return this.views;
 }
 
-SVGPlot.prototype.addRange = function(xmin /* ='auto' */, xmax /* ='auto' */, ymin /* ='auto' */, ymax /* ='auto' */) { 
-    this.range = new SVGPlot.Range(this, this.box);
-    this.setRange(xmin, xmax, ymin, ymax);
-    return this.range;
+SVGPlot.prototype.setRange = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/,
+                                       ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/) {
+    if (this.views == null)
+        this.views = new SVGPlot.View(this, this.box);
+    this.views.setXRange(xmin, xmax, xreverse, xlog);
+    this.views.setYRange(ymin, ymax, yreverse, ylog);
+    return this.views;
 }
 
+SVGPlot.prototype.addView = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/,
+                                       ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/) { 
+    this.views = new SVGPlot.View(this, this.box);
+    this.views.setXRange(xmin, xmax, xreverse, xlog);
+    this.views.setYRange(ymin, ymax, yreverse, ylog);
+    return this.views;
+}
 
-SVGPlot.prototype.addRangeDefaults = function() {
+SVGPlot.prototype.addViewDefaults = function() {
+    /***
+        Adds axes and axes defaults to current Range.
+    ***/
+    this.save();
+    this.setStyle(SVGPlot.defaultStyle);
     this.addXAxis();
+    //this.xAxis._autoAdded = true;
     this.addXAxisDefaults();
     this.addYAxis();
+    //this.yAxis._autoAdded = true;
     this.addYAxisDefaults();
+    this.restore();
 }
 
-SVGPlot.Range = function(svgPlot, parent) {
-    SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.ranges.push(this);
-    this.xAxes = [];
-    this.yAxes = [];
-    this.plots = [];
+// Range -- for one coordinate (either x or y)
+
+SVGPlot.LinearRange = null
+SVGPlot.LogRange = null
+SVGPlot.SqrtRange = null // See difference between theory and error
+SVGPlot.CagetoryRange = null
+SVGPlot.DateTimeRange = null  // Is this just an integer range and only labels and where auto-ticks go matter?
+
+SVGPlot.Range = function(min /* ='auto' */, max /* ='auto' */, reverse /*=false*/, log /*=false*/ ) {
+    this.set(min, max, reverse, log)
+}
+
+SVGPlot.Range.prototype.set = function(min /* ='auto' */, max /* ='auto' */, reverse /*=false*/, log /*=false*/ ) {
+    /***
+        Defaults are first the current ragne, 
+        then auto if that doesn't exist.
+    ***/
+    this.min = SVGPlot.firstNonNull(min, this.min, 'auto');
+    this.max = SVGPlot.firstNonNull(max, this.max, 'auto');
+    this.reverse = SVGPlot.firstNonNull(reverse, this.reverse, false);
+    this.log = SVGPlot.firstNonNull(log, this.log, false);
 }
 
 // Axis
 
-SVGPlot.prototype.setXAxis = function(position /* 'bottom' */, scale_type /* ='lnear' */) {
-    if (this.xAxis == null)
-        this.addXAxis(position, scale_type);
-    this.xAxis.type = 'x'
-    this.xAxis.position = SVGPlot.firstNonNull(position, this.xAxis.position, 'bottom');
-    this.xAxis.scale_type = SVGPlot.firstNonNull(scale_type, this.xAxis.scale_type, 'linear');
-}
-
-SVGPlot.prototype.setYAxis = function(position /* 'left' */, scale_type /* ='lnear' */) {
-    if (this.yAxis == null)
-        this.addYAxis(position, scale_type);
-    this.yAxis.type = 'y';
-    this.yAxis.position = SVGPlot.firstNonNull(position, this.yAxis.position, 'left');
-    this.yAxis.scale_type = SVGPlot.firstNonNull(scale_type, this.xAxis.scale_type, 'linear');
-}
-
-SVGPlot.prototype.setXAxisStyle = function() {
-    this.xAxis._style = this.getState();
-}
-
-SVGPlot.prototype.setYAxisStyle = function() {
-    this.yAxis._style = this.getState();
-}
-
-SVGPlot.prototype.addXAxis = function(position /* 'bottom' */, scale_type /* ='lnear' */) {
-    this.xAxis = new SVGPlot.Axis(this, this.range);
-    this.setXAxis(position, scale_type);
-    this.range.xAxes.push(this.xAxis);
-    return this.xAxis;
-}
-
-SVGPlot.prototype.addYAxis = function(position /* 'left' */, scale_type /* ='lnear' */) {
-    this.yAxis = new SVGPlot.Axis(this, this.range);
-    this.setYAxis(position, scale_type);
-    this.range.yAxes.push(this.yAxis);
-    return this.yAxis;
-}
-
-SVGPlot.Axis = function(svgPlot, parent) {
+SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' */, range_type /* ='lnear' */) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
+    this.set(type, position, range_type)
     this.ticks = [];
-    this.stubs = [];
+    this.tickLabels = [];
     this.labels = [];
 }
 
-SVGPlot.prototype.addXAxisDefaults = function() {
-    this.addXTicks();
-    this.addXStubs();
+SVGPlot.Axis.prototype.set(type, position /* 'bottom' */, range_type /* ='lnear' */) {
+    this.type = 'x'
+    this.position = SVGPlot.firstNonNull(position, this.position, 'bottom');
+    this.range_type = SVGPlot.firstNonNull(range_type, this.range_type, 'linear');
 }
 
-SVGPlot.prototype.addYAxisDefaults = function() {
-    this.addYTicks();
-    this.addYStubs();
+SVGPlot.Axis.prototype.addDefaults() {
+    this.save();
+    this.setStyle(SVGPlot.defaultStyle);
+    this.addTicks(this.type);
+    this.addTickLabels(this.type);
+    this.restore();
 }
 
-// Ticks
+SVGPlot.prototype.setXAxis = function(position /* 'bottom' */, range_type /* ='lnear' */) {
+    if (this.xAxis == null)
+        this.xAxis = new SVGPlot.Axis(this, this.views, 'x', position, range_type);
+    else
+        this.xAxis.set('x', position, range_type);
+}
 
-SVGPlot.prototype.setXTicks = function(locs /*='auto'*/, position /* ='bottom' */, length /* =2 */, 
+SVGPlot.prototype.setYAxis = function(position /* 'left' */, range_type /* ='lnear' */) {
+    if (this.yAxis == null)
+        this.yAxis = new SVGPlot.Axis(this, this.views, 'y', position, range_type);
+    else
+        this.xAxis.set('y', position, range_type);
+}
+
+SVGPlot.prototype.addXAxis = function(position /* 'bottom' */, range_type /* ='lnear' */) {
+    this.xAxis = new SVGPlot.Axis(this, this.views, 'x', position, range_type);
+    this.views.xAxes.push(this.xAxis);
+    return this.xAxis;
+}
+
+SVGPlot.prototype.addYAxis = function(position /* 'left' */, range_type /* ='lnear' */) {
+    this.yAxis = new SVGPlot.Axis(this, this.views, 'y', position, range_type);
+    this.views.yAxes.push(this.yAxis);
+    return this.yAxis;
+}
+
+
+// AxisTitle
+
+SVGPlot.AxisTitle = function(svgPlot, parent,
+                               text, location /* ='50%' */, position /* 'left' */) {
+    SVGPlot.genericConstructor(this, svgPlot, parent);
+    this.set(text, location, position);
+}
+
+SVGPlot.AxisTitle.set = function(text, location /* ='50%' */, position /* 'left' */) {
+    this.text = text;
+    this.location = SVGPlot.firstNonNull(location, this.loc, '50%');
+    this.position = SVGPlot.firstNonNull(position, this.position, 'left');
+}
+
+SVGPlot.prototype.setXAxisTitle = function(text, location /* ='50%' */, position /* 'left' */) {
+    if (this.xAxisTitle == null)
+        this.xAxisTitle = new SVGPlot.AxisTitle(this. this.xAxis, text, location, position);
+    else
+        this.xAxisTitle.set(text, location, position);
+}
+
+SVGPlot.prototype.setYAxisTitle = function(text, loc /* ='50%' */, position /* 'bottom' */) {
+    if (this.yAxisTitle == null)
+        this.yAxisTitle = new SVGPlot.AxisTitle(this. this.yAxis, text, location, position);
+    else
+        this.yAxisTitle.set(text, location, position);
+}
+
+SVGPlot.prototype.addXAxisTitle = function(text, loc /* ='50%' */, position /* 'left' */) {
+    this.xAxisTitle = new SVGPlot.AxisTitle(this. this.xAxis, text, location, position);
+    this.xAxisTitle.set(text, location, position);
+    return this.xAxisTitle;
+}
+
+SVGPlot.prototype.addYAxisTitle = function(text, loc /* ='50%' */, position /* 'bottom' */) {
+    this.yAxisTitle = new SVGPlot.AxisTitle(this. this.yAxis, text, location, position);
+    this.yAxisTitle.set(text, location, position);
+    return this.yAxisTitle;
+}
+
+
+
+// AxisItem -- Ticks, TickLabels, Gridlines
+
+SVGPlot.AxisItem = function(svgPlot, parent, locations /*='auto'*/, position /* ='bottom' */) {
+    SVGPlot.genericConstructor(this, svgPlot, parent);
+    this.set(type, locations, position);
+}
+
+SVGPlot.AxisItem.set(locations /*='auto'*/, position /* ='bottom' */) {
+    this.locations = SVGPlot.firstNonNull(locations, this.locations, 'auto');
+    this.position = SVGPlot.firstNonNull(position, this.position, 'bottom');
+}
+
+// Ticks -- includes functionality also for TickLabels and TickLines (grid)
+
+SVGPlot.Ticks = function(svgPlot, parent,
+                          locations /*='auto'*/, position /* ='bottom' */, length /* =2 */, 
+                          minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
+    this.set(locations, position, length, minorPerMajor, minorLength);
+}
+SVGPlot.Ticks.prototype = new SVGPlot.AxisItem();
+SVGPlot.Ticks.prototype.constructor = SVGPlot.AxisItem;
+SVGPlot.Ticks.superclass = SVGPlot.AxisItem.prototype;
+
+SVGPlot.Ticks.prototype.set = function(locations /*='auto'*/, position /* ='bottom' */, length /* =2 */, 
                                          minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
-    // Should have MinorTicks parameter which automatically re-calls the function first to draw the minor
-    // ticks, then the major ticks over it.
-    if (this.xTicks == null)
-        this.addXTicks(locs, position, length);
-    this.xTicks.locs = SVGPlot.firstNonNull(locs, this.xTicks.locs, 'auto');
-    this.xTicks.position = SVGPlot.firstNonNull(position, this.xTicks.position, 'bottom');
-    this.xTicks.length = SVGPlot.firstNonNull(length, this.xTicks.length, SVGPlot.defaultTickLength);
+    this.superclass.set(locations, position)
+    this.length = SVGPlot.firstNonNull(locations, this.locations, 2);
+    this.minorPerMajor = SVGPlot.firstNonNull(minorPerMajor, this.minorPerMajor, 4);
+    this.minorLength = SVGPlot.firstNonNull(minorLength, this.minorLength, this.length/2);
 }
 
-SVGPlot.prototype.setYTicks = function(locs /*='auto'*/, position /* ='left' */, length /* =2 */, 
+SVGPlot.prototype.setXTicks = function(locations /*='auto'*/, position /* ='bottom' */, length /* =2 */, 
+                                         minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
+    if (this.xTicks == null)
+        this.xTicks = new Ticks('x', locations, position, length, minorPerMajor, minorLength)
+    else
+        this.xTicks.set('x', locations, position, length, minorPerMajor, minorLength)
+}
+
+SVGPlot.prototype.setYTicks = function(locations /*='auto'*/, position /* ='left' */, length /* =2 */, 
                                          minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
     if (this.yTicks == null)
-        this.addYTicks(locs, position, length);
-    this.yTicks.locs = SVGPlot.firstNonNull(locs, this.yTicks.locs, 'auto');
-    this.yTicks.position = SVGPlot.firstNonNull(position, this.yTicks.position, 'left');
-    this.yTicks.length = SVGPlot.firstNonNull(length, this.yTicks.length, SVGPlot.defaultTickLength);
-}
-
-SVGPlot.prototype.setXTicksStyle = function() {
-    this.xTicks._style = this.getState();
-}
-
-SVGPlot.prototype.setYTicksStyle = function() {
-    this.yTicks._style = this.getState();
+        this.yTicks = new Ticks('x', locations, position, length, minorPerMajor, minorLength)
+    else
+        this.yTicks.set('x', locations, position, length, minorPerMajor, minorLength)
 }
 
 SVGPlot.prototype.removeXTicks = function() {
@@ -459,135 +600,18 @@ SVGPlot.prototype.removeYTicks = function() {
     
 }
 
-SVGPlot.prototype.addXTicks = function(locs /*='auto'*/, position /* ='left' */, length /* =2 */) {
-    this.xTicks = new SVGPlot.Ticks(this, this.xAxis);
-    this.setXTicks(locs, position, length);
+SVGPlot.prototype.addXTicks = function(locations /*='auto'*/, position /* ='left' */, length /* =2 */, 
+                                         minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
+    this.xTicks = new SVGPlot.Ticks(this, this.xAxis, 'x', locations, position, length, minorPerMajor, minorLength);
     this.xAxis.ticks.push(this.xTicks);
     return this.xTicks;
 }
 
-SVGPlot.prototype.addYTicks = function(locs /*='auto'*/, position /* ='left' */, length /* =2 */) {
-    this.yTicks = new SVGPlot.Ticks(this, this.yAxis);
-    this.setYTicks(locs, position, length);
+SVGPlot.prototype.addYTicks = function(locations /*='auto'*/, position /* ='left' */, length /* =2 */, 
+                                         minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
+    this.yTicks = new SVGPlot.Ticks(this, this.yAxis, 'y', locations, position, length, minorPerMajor, minorLength);
     this.yAxis.ticks.push(this.yTicks);
     return this.yTicks;
-}
-
-SVGPlot.Ticks = function(svgPlot, parent) {
-    SVGPlot.genericConstructor(this, svgPlot, parent);
-}
-
-// Stubs
-
-SVGPlot.prototype.setXStubs = function(locs /* ='auto'*/, labels /* = toString(locs) */, position /* ='bottom' */) {
-    if (this.xStubs == null)
-        this.addXStubs(locs, position, length);
-    this.xStubs.locs = SVGPlot.firstNonNull(locs, this.xStubs.locs, 'auto');
-    this.xStubs.labels = SVGPlot.firstNonNull(labels, this.xStubs.labels, 'auto');
-    this.xStubs.position = SVGPlot.firstNonNull(position, this.xStubs.position, 'bottom');
-}
-
-SVGPlot.prototype.setYStubs = function(locs /* ='auto'*/, labels /* = toString(locs) */, position /* ='bottom' */) {
-    if (this.yStubs == null)
-        this.addYStubs(locs, position, length);
-    this.yStubs.locs = SVGPlot.firstNonNull(locs, this.yStubs.locs, 'auto');
-    this.yStubs.labels = SVGPlot.firstNonNull(labels, this.yStubs.labels, 'auto');
-    this.yStubs.position = SVGPlot.firstNonNull(position, this.yStubs.position, 'left');
-}
-
-SVGPlot.prototype.setXStubsStyle = function() {
-    this.xStubs._style = this.getState();
-}
-
-SVGPlot.prototype.setYStubsStyle = function() {
-    this.yStubs._style = this.getState();
-}
-
-/*
-// Right now this text-positioning doesn't work in Firefox.
-SVGPlot.prototype.setStubsStyle = function(stubs) {
-    this._copyState(stubs._style, this);
-    if (stubs.position=='top' || stubs.position=='bottom')
-        stubs._style.textAnchor = 'middle'
-    else if (stubs.position=='left')
-        stubs._style.textAnchor = 'right'
-    else if (stubs.position=='right')
-        stubs._style.textAnchor = 'left'
-}
-*/
-
-SVGPlot.prototype.removeXStubs = function() {
-    
-}
-
-SVGPlot.prototype.removeYStubs = function() {
-    
-}
-
-SVGPlot.prototype.addXStubs = function(locs /* ='auto'*/, labels /* = toString(locs) */, position /* ='bottom' */) {
-    this.xStubs = new SVGPlot.Stubs(this, this.xAxis);
-    this.setXStubs(locs, labels, position);
-    this.xAxis.stubs.push(this.xStubs);
-    return this.xStubs;
-}
-
-SVGPlot.prototype.addYStubs = function(locs /* ='auto'*/, labels /* = toString(locs) */, position /* ='bottom' */) {
-    this.yStubs = new SVGPlot.Stubs(this, this.yAxis);
-    this.setYStubs(locs, labels, position);
-    this.yAxis.stubs.push(this.yStubs);
-    return this.yStubs;
-}
-
-SVGPlot.Stubs = function(svgPlot, parent) {
-    SVGPlot.genericConstructor(this, svgPlot, parent);
-}
-
-// Labels
-
-
-
-SVGPlot.prototype.setXLabel = function(label, loc /* ='50%' */, position /* 'bottom' */) {
-    if (this.xLabel == null)
-        this.addXLabel(label, loc, position);
-    this.xLabel.label = label;
-    this.xLabel.loc = SVGPlot.firstNonNull(loc, this.xLabel.loc, '50%');
-    this.xLabel.position = SVGPlot.firstNonNull(position, this.xLabel.position, 'bottom');
-    this._copyState(this.xLabel._style, this);
-}
-
-SVGPlot.prototype.setYLabel = function(label, loc /* ='50%' */, position /* 'bottom' */) {
-    if (this.yLabel == null)
-        this.addYLabel(label, loc, position);
-    this.yLabel.label = label;
-    this.yLabel.loc = SVGPlot.firstNonNull(loc, this.yLabel.loc, '50%');
-    this.yLabel.position = SVGPlot.firstNonNull(position, this.yLabel.position, 'left');
-    this._copyState(this.yLabel._style, this);
-}
-
-SVGPlot.prototype.setXLabelStyle = function() {
-    this.xLabel._style = this.getState();
-}
-
-SVGPlot.prototype.setYLabelStyle = function() {
-    this.yLabel._style = this.getState();
-}
-
-SVGPlot.prototype.addXLabel = function(label, loc /* ='50%' */, position /* 'bottom' */) {
-    this.xLabel = new SVGPlot.Label(this, this.xAxis);
-    this.setXLabel(label, loc, position);
-    this.xAxis.labels.push(this.xLabel);
-    return this.xLabel;
-}
-
-SVGPlot.prototype.addYLabel = function(label, loc /* ='50%' */, position /* 'bottom' */) {
-    this.yLabel = new SVGPlot.Label(this, this.yAxis);
-    this.setYLabel(label, loc, position);
-    this.yAxis.labels.push(this.yLabel);
-    return this.yLabel;
-}
-
-SVGPlot.Label = function(svgPlot, parent) {
-    SVGPlot.genericConstructor(this, svgPlot, parent);
 }
 
 
@@ -650,22 +674,22 @@ SVGPlot.Box.prototype.render = function () {
     
     // Transform the box to the right place
     this.element.setAttribute('transform', 'translate('+this.x+','+this.y+')');
-    // Add a clipping box (optional and not yet implimented)
+    // Add a clipping box (optional and not yet implimented) data shouldn't leak out (or should it?)
     
     
-    // Set any auto-ranges before we create any stubs because they can be 'auto' too.
-    for (var i=0; i<this.ranges.length; i++) {
-        this.ranges[i].setAutoRange();
-        this.ranges[i].createElement();
+    // Set any auto-ranges before we create any tickLabels. If the tickLabels are 'auto', they need to know the range.
+    for (var i=0; i<this.coordinatesSystem.length; i++) {
+        this.coordinatesSystem[i].setAutoView();
+        this.coordinatesSystem[i].createElement();
     }
     
-    this.svgPlot.svg.svgElement.forceRedraw();  // So that all of the stubs have bounding boxes for the layout.
+    this.svgPlot.svg.svgElement.forceRedraw();  // So that all of the tickLabels have bounding boxes for the layout.
     
     var totalXSize = {'left':0, 'right':0, 'first_left':true, 'first_right':true};
     var totalYSize = {'top':0, 'bottom':0, 'first_top':true, 'first_bottom':true};
     
-    for (var i=0; i<this.ranges.length; i++) {
-        this.ranges[i].layout(totalXSize, totalYSize);
+    for (var i=0; i<this.views.length; i++) {
+        this.views[i].layout(totalXSize, totalYSize);
     }
     
     // Find the Plot Area bounds
@@ -674,13 +698,13 @@ SVGPlot.Box.prototype.render = function () {
     var left = totalXSize.left;
     var right = this.width-totalXSize.right;
     
-    for (var i=0; i<this.ranges.length; i++) {
-        this.ranges[i].render(left, right, top, bottom)
+    for (var i=0; i<this.views.length; i++) {
+        this.views[i].render(left, right, top, bottom)
     }
     
 }
 
-SVGPlot.Range.prototype.createElement = function() {
+SVGPlot.View.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'range');
     
     for (var j=0; j<this.xAxes.length; j++) {
@@ -699,8 +723,8 @@ SVGPlot.Axis.prototype.createElement = function() {
     
     for (var k=0; k<this.ticks.length; k++)
         this.ticks[k].createElement()
-    for (var k=0; k<this.stubs.length; k++)
-        this.stubs[k].createElement()
+    for (var k=0; k<this.tickLabels.length; k++)
+        this.tickLabels[k].createElement()
     for (var k=0; k<this.labels.length; k++)
         this.labels[k].createElement()
 }
@@ -710,22 +734,22 @@ SVGPlot.Ticks.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'ticks', 'stroke');
 }
 
-SVGPlot.Stubs.prototype.createElement = function() {
-    SVGPlot.createGroupIfNeeded(this, 'stubs', 'text');
+SVGPlot.TickLabels.prototype.createElement = function() {
+    SVGPlot.createGroupIfNeeded(this, 'tickLabels', 'text');
     
-    this._locs = this.locs;
-    if (this.locs=='auto') {
+    this._locations = this.locations;
+    if (this.locations=='auto') {
         if (this.parent.type=='x')
-            this._locs = SVGPlot.defaultlocs(this.parent.parent._xmin, this.parent.parent._xmax);
+            this._locations = SVGPlot.defaultlocations(this.parent.parent._xmin, this.parent.parent._xmax);
         else if (this.parent.type=='y')
-            this._locs = SVGPlot.defaultlocs(this.parent.parent._ymin, this.parent.parent._ymax);
+            this._locations = SVGPlot.defaultlocations(this.parent.parent._ymin, this.parent.parent._ymax);
     }
     
     var label_strs = this.labels
     if (this.labels=='auto')
-        label_strs = map(SVGPlot.prettyNumber, this._locs);
+        label_strs = map(SVGPlot.prettyNumber, this._locations);
     
-    SVG.removeAllChildren(this.element);
+    SVGKit.removeAllChildren(this.element);
     this._texts = [];
     
     var p = this.svgPlot;
@@ -739,7 +763,7 @@ SVGPlot.Stubs.prototype.createElement = function() {
         this.textAnchor = 'end'
     */
     p.setGroup(this.element);
-    for (var i=0; i<this._locs.length && i<label_strs.length; i++) {
+    for (var i=0; i<this._locations.length && i<label_strs.length; i++) {
         p.applyStyles = false;
         var text = p.text(label_strs[i]);
         this._texts.push(text);
@@ -747,10 +771,10 @@ SVGPlot.Stubs.prototype.createElement = function() {
     p.restore();
 }
 
-SVGPlot.Label.prototype.createElement = function() {
+SVGPlot.AxisTitle.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'label', 'text');
 
-    SVG.removeAllChildren(this.element);
+    SVGKit.removeAllChildren(this.element);
 
     var p = this.svgPlot;
     p.save();
@@ -764,9 +788,9 @@ SVGPlot.Label.prototype.createElement = function() {
     p.restore();
 }
 
-SVGPlot.autoRangeMarginFactor = 0.05;
+SVGPlot.autoViewMarginFactor = 0.05;
 
-SVGPlot.Range.prototype.setAutoRange = function(include_zero /* =false */) {
+SVGPlot.View.prototype.setAutoView = function(include_zero /* =false */) {
     
     if (this.xmin != 'auto' && this.xmax != 'auto' && this.ymin != 'auto' && this.ymax != 'auto') {
         this._xmin = this.xmin;
@@ -796,19 +820,19 @@ SVGPlot.Range.prototype.setAutoRange = function(include_zero /* =false */) {
         var total = extents.max - extents.min;
         
         // If the max or min are close to zero, include zero.
-        if (extents.min>0.0 && ( extents.min<total*SVGPlot.autoRangeMarginFactor ||
+        if (extents.min>0.0 && ( extents.min<total*SVGPlot.autoViewMarginFactor ||
                           (typeof(include_zero) != 'undefined' && include_zero == true) ) )
             extents.min = 0.0;
-        if (extents.max<0.0 && (-extents.max<total*SVGPlot.autoRangeMarginFactor ||
+        if (extents.max<0.0 && (-extents.max<total*SVGPlot.autoViewMarginFactor ||
                           (typeof(include_zero) != 'undefined' && include_zero == true) ) )
             extents.max = 0.0;
         
         // If neither one lies on the origin, give them a little extra room.  TODO Make this an option
         /*
         if (min!=0.0)
-            min = min - total * SVGPlot.autoRangeMarginFactor;
+            min = min - total * SVGPlot.autoViewMarginFactor;
         if (max!=0.0)
-            max = max + total * SVGPlot.autoRangeMarginFactor;
+            max = max + total * SVGPlot.autoViewMarginFactor;
         */
     }
     
@@ -820,7 +844,7 @@ SVGPlot.Range.prototype.setAutoRange = function(include_zero /* =false */) {
     this._ymax = (this.ymax!='auto') ? this.ymax : yExtents.max;
 }
 
-SVGPlot.Range.prototype.layout = function (totalXSize, totalYSize) {
+SVGPlot.View.prototype.layout = function (totalXSize, totalYSize) {
     for (var i=0; i<this.xAxes.length; i++)
         this.xAxes[i].layout(totalXSize, totalYSize);
     for (var i=0; i<this.yAxes.length; i++)
@@ -833,9 +857,9 @@ SVGPlot.componentMargin = 1;
 SVGPlot.Axis.prototype.layout = function(totalXSize, totalYSize) {
     var offsets = {'above':0.5, 'below':0.5};  // TODO actually find line-width
     
-    var components = [this.ticks, this.stubs, this.labels];
+    var components = [this.ticks, this.tickLabels, this.labels];
     
-    // Layout ticks, stubs, labels
+    // Layout ticks, tickLabels, labels
     for (var i=0; i<components.length; i++) {
         extents = {'above':0, 'below':0};
         for(var j=0; j<components[i].length; j++) {
@@ -900,16 +924,16 @@ SVGPlot.Ticks.prototype.getSize = function(type) {
     return this.length;
 }
 
-SVGPlot.Stubs.prototype.getSize = function(type) {
+SVGPlot.TickLabels.prototype.getSize = function(type) {
     return SVGPlot.getTextSize(this.element, type);
 }
 
-SVGPlot.Label.prototype.getSize = function(type) {
+SVGPlot.AxisTitle.prototype.getSize = function(type) {
     return SVGPlot.getTextSize(this.element, type);
 }
 
 SVGPlot.getTextSize = function(element, type) {
-    // Add up the space that stubs and labels take up, but only if they are not covering the graph.
+    // Add up the space that tickLabels and labels take up, but only if they are not covering the graph.
     var bbox = element.getBBox();
     if (type=='x')
         return bbox.height;
@@ -917,17 +941,17 @@ SVGPlot.getTextSize = function(element, type) {
         return bbox.width;
 }
 
-SVGPlot.Label.prototype.layoutText = SVGPlot.Stubs.prototype.layoutText;
+SVGPlot.AxisTitle.prototype.layoutText = SVGPlot.TickLabels.prototype.layoutText;
 
-SVGPlot.Range.prototype.render = function(left, right, top, bottom) {
+SVGPlot.View.prototype.render = function(left, right, top, bottom) {
     this._width = right-left;
     this._height = bottom-top;
-    this._xscale = this._width/(this._xmax-this._xmin);
-    this._yscale = this._height/(this._ymax-this._ymin);
-    function xtoi(xmin, xscale, x) { return (x-xmin)*xscale }
-    this.xtoi = partial(xtoi, this._xmin, this._xscale);
-    function ytoj(ymin, yscale, height, y) { return height - (y-ymin)*yscale }
-    this.ytoj = partial(ytoj, this._ymin, this._yscale, this._height);
+    this._xrange = this._width/(this._xmax-this._xmin);
+    this._yrange = this._height/(this._ymax-this._ymin);
+    function xtoi(xmin, xrange, x) { return (x-xmin)*xrange }
+    this.xtoi = partial(xtoi, this._xmin, this._xrange);
+    function ytoj(ymin, yrange, height, y) { return height - (y-ymin)*yrange }
+    this.ytoj = partial(ytoj, this._ymin, this._yrange, this._height);
     for (var i=0; i<this.xAxes.length; i++)
         this.xAxes[i].render(left, right, top, bottom, this.xtoi, this.ytoj);
     for (var i=0; i<this.yAxes.length; i++)
@@ -996,12 +1020,12 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     else if (this.type=='y')
         path = 'M 0,'+(bottom-top)+' v '+(top-bottom);
     var pathElem = this.svgPlot.svg.PATH({'d': path});
-    //SVG.removeAllChildren(this.element);  // TODO Remove the paths.
+    //SVGKit.removeAllChildren(this.element);  // TODO Remove the paths.
     this.element.appendChild(pathElem);
     
-    var components = [this.ticks, this.stubs, this.labels];
+    var components = [this.ticks, this.tickLabels, this.labels];
     
-    // Translate and then render ticks, stubs, labels
+    // Translate and then render ticks, tickLabels, labels
     for (var i=0; i<components.length; i++) {
         for(var j=0; j<components[i].length; j++) {
             var offset = components[i][j]._offset;
@@ -1018,36 +1042,36 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
 SVGPlot.Ticks.prototype.render = function(min, max, map) {
     SVGPlot.createGroupIfNeeded(this, 'ticks', 'stroke');
     
-    var locs = this.locs
-    if (this.locs=='auto')
-        locs = SVGPlot.defaultlocs(min, max, this.interval, this.number);
+    var locations = this.locations
+    if (this.locations=='auto')
+        locations = SVGPlot.defaultlocations(min, max, this.interval, this.number);
     var path = '';
-    for (var k=0; k<locs.length; k++) {
-        if (locs[k]>min && locs[k]<max) {
+    for (var k=0; k<locations.length; k++) {
+        if (locations[k]>min && locations[k]<max) {
             if (this.position=='top')
-                path += ' M '+map(locs[k])+' 0 '+'v '+(-this.length);
+                path += ' M '+map(locations[k])+' 0 '+'v '+(-this.length);
             else if (this.position=='bottom')
-                path += ' M '+map(locs[k])+' 0 '+'v '+(this.length);
+                path += ' M '+map(locations[k])+' 0 '+'v '+(this.length);
             else if (this.position=='right')
-                path += ' M 0 '+map(locs[k])+'h '+(this.length);
+                path += ' M 0 '+map(locations[k])+'h '+(this.length);
             else if (this.position=='left')
-                path += ' M 0 '+map(locs[k])+'h '+(-this.length);
+                path += ' M 0 '+map(locations[k])+'h '+(-this.length);
         }
     }
-    SVG.removeAllChildren(this.element);
+    SVGKit.removeAllChildren(this.element);
     this.element.appendChild( this.svgPlot.svg.PATH({'d':path}) );
 }
 
-SVGPlot.Stubs.prototype.render = function(min, max, map) {
+SVGPlot.TickLabels.prototype.render = function(min, max, map) {
     SVGPlot.translateBottomText(this)
     for (var i=0; i<this._texts.length; i++) {
-        SVGPlot.renderText(this._texts[i], this._locs[i], 
+        SVGPlot.renderText(this._texts[i], this._locations[i], 
                              this._texts[i].getBBox(), 
                              this.position, min, max, map)
     }
 }
 
-SVGPlot.Label.prototype.render = function(min, max, map) {
+SVGPlot.AxisTitle.prototype.render = function(min, max, map) {
     SVGPlot.translateBottomText(this)
     // When rotation is applied to a <text>, the bounding box doens't change.
     // It does, however, change for any group that contains it.
@@ -1102,11 +1126,11 @@ SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
     
     if (this.box == null) {
         this.addBox();
-        this.addBoxDefaults();
+        this.box.addDefaults();
     }
     
     for (var i=1; i<arguments.length; i++)
-        this.plot = new SVGPlot.LinePlot(this, this.range, xorydata, arguments[i]);
+        this.plot = new SVGPlot.LinePlot(this, this.coordinates, xorydata, arguments[i]);
     return this.plot;  // Last line plot.  Not of much use, really.
 }
 
@@ -1125,7 +1149,7 @@ SVGPlot.LinePlot.prototype.createElement = function () {
 SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     
     
-    SVG.removeAllChildren(this.element);
+    SVGKit.removeAllChildren(this.element);
     
     var p = this.svgPlot;
     
@@ -1144,7 +1168,7 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
     p.beginPath();
     // Handle infinite and NaN properly.
     var drawingFunction = p.moveTo;
-    // TODO Handle cases where the plot goes WAY off the  scales.
+    // TODO Handle cases where the plot goes WAY off the  ranges.
     for (i=0; i<this.ydata.length; i++) {
         var sx = xtoi(this.xdata[i]);
         var sy = ytoj(this.ydata[i]);
@@ -1165,7 +1189,7 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
 }
 
 SVGPlot.prototype.setPlotStyle = function() {
-    this.plot._style = this.getState();
+    this.plot.style = this.getStyle();
 }
 
 SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
@@ -1371,16 +1395,16 @@ SVGPlot.defaultInterval = function(min, max, number /* =7 */) {
     return increment;
 }
 
-SVGPlot.defaultlocs = function(min, max, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
+SVGPlot.defaultlocations = function(min, max, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
     /***
-        Come up with locs for the ticks/grids/stubs, etc.
-        @param min -- the actual start of the scale (can be some non-round number)
-        @param max -- the actual end of the scale (can be some non-round number)
+        Come up with locations for the ticks/grids/tickLabels, etc.
+        @param min -- the actual start of the range (can be some non-round number)
+        @param max -- the actual end of the range (can be some non-round number)
         @param interval -- the interval at which you want the ticks, usually 1, 2, 3, 5, 10, 20, etc.
-        @param avoid -- an array of locs to avoid putting a mark (usually the axes and endpoints.)
+        @param avoid -- an array of locations to avoid putting a mark (usually the axes and endpoints.)
         @param offset -- the ticks start counting around here (defaults to zero)
         
-        @returns an array of floats which list the tick locs.
+        @returns an array of floats which list the tick locations.
         
     ***/
     if (typeof(avoid)=='undefined' || avoid==null)
@@ -1395,8 +1419,8 @@ SVGPlot.defaultlocs = function(min, max, interval /* defaultInterval */, number 
     if (interval==0)
         interval = 1;
     
-    locs = [];
-    var avoidance = (max-min)*SVGPlot.autoRangeMarginFactor;
+    locations = [];
+    var avoidance = (max-min)*SVGPlot.autoViewMarginFactor;
     var mark = Math.ceil( (min-offset)/interval ) * interval + offset;
     while (mark < max) {
         var reject = false;
@@ -1404,10 +1428,10 @@ SVGPlot.defaultlocs = function(min, max, interval /* defaultInterval */, number 
             if (Math.abs(mark-avoid[i]) < avoidance/2)
                 reject = true;
         if ( reject==false )
-            locs.push(mark)
+            locations.push(mark)
         mark += interval;
     }
-    return locs;
+    return locations;
 }
 
 
@@ -1449,8 +1473,8 @@ SVGPlot.setPlotAttributes = function(self, cmd) {
 
 SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'text' */) {
     var p = self.svgPlot
-    var backupStyle = p.getState();
-    p.setState(self._style);
+    var backupStyle = p.getStyle();
+    p.setStyle(self.style);
     
     if (style_type=='text') {
         p._setFontAttributes(self.element);
@@ -1458,11 +1482,52 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
     }
     p._setGraphicsAttributes(self.element, style_type);
     
-    p.setState(backupStyle);
+    p.setStyle(backupStyle);
 }
 
 
-
+// Override SVGCanvas functions to translate coordinates from plot coordinates to SVG coordinates
+SVGPlot.map_xtoi = function(x) {
+    if (this.plotView && typeof(x) != 'undefined' && x != null)
+        return this.xtoi(x);
+    return x;
+}
+SVGPlot.map_ytoj = function(y) {
+    if (this.plotView && typeof(y) != 'undefined' && y != null)
+        return this.ytoj(y);
+    return y;
+}
+SVGPlot.map_width = function(width) {
+    if (this.plotView && typeof(width) != 'undefined' && width != null)
+        return Math.abs(this.xtoi(width) - this.xtoi(0))
+    return width;
+}
+SVGPlot.map_height = function(height) {
+    if (this.plotView && typeof(height) != 'undefined' && height != null)
+        return Math.abs(this.ytoj(height) - this.ytoj(0))
+    return height;
+}
+SVGPlot.map_radius = function(radius) {
+}
+/*
+SVGPlot.prototype.translate = function(tx, ty) {}
+SVGPlot.prototype.moveTo = function(x, y) {}
+SVGPlot.prototype.lineTo = function(x, y) {}
+SVGPlot.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {}
+SVGPlot.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {}
+SVGPlot.prototype.rect = function (x, y, w, h) {}
+SVGPlot.prototype.arcTo = function (x1, y1, x2, y2, radius) {}
+SVGPlot.prototype.arc = function (x, y, radius, startAngle, endAngle, anticlockwise) {}
+SVGPlot.prototype.clip = function (x, y, width, height) {}
+SVGPlot.prototype.clipRect = function(x, y, w, h) {}
+SVGPlot.prototype.strokeRect = function (x, y, w, h) {}
+SVGPlot.prototype.fillRect = function (x, y, w, h) {}
+SVGPlot.prototype.clearRect = function (x, y, w, h) {}
+SVGPlot.prototype.text = function(text, x , y) {}
+SVGPlot.prototype.createLinearGradient = function (x0, y0, x1, y1) {}
+SVGPlot.prototype.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {}
+SVGPlot.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {}
+*/
 
 
 // set add delete replace actions
@@ -1487,8 +1552,8 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
 // plotPolar()  // similar implimentation to plotPie
 // plotParametric()
 
-// independent vertical scales on same plot for different types of data overlayed
-// that have the same x-axis.  Dependent scales like foot and meter.
+// independent vertical ranges on same plot for different types of data overlayed
+// that have the same x-axis.  Dependent ranges like foot and meter.
 
 // Be able to set defaults for all plots.
 // defaultColor = 'auto-increment'
