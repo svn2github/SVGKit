@@ -20,16 +20,19 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     This should work if included in an SVG to for inline scripting.
     
     Do I want to do anything with events or just let the DOM and MochiKit handle them?
+    Maybe some built-in zoom and scroll that you can turn on.
     
     toXML needs to output case-sensitive tags and attributes.
+     * How to handle namespaces? Assign aliases at top and use (have some common ones defined.)
     
     Problem of divs loading and unloading, especially with multiple writeln() in the interpreter.
     Perhaps on unload, save xml and then restore on a load.
     Can't draw anything until it's loaded.  Really annoying in the interpreter.
+    inline doesn't have this problem.  Maybe everything is going in that direction anyway.
     
     Browser SVG:
      * Should always provide fallback content -- png, pdf, (shudder) swf
-     * Interactivity requires SVG, but initial static content should have static fallback
+     * Interactivity requires SVG, but initial static content should have static fallback (for fast load)
      * Best effort to have it work on Firefox, Opera, Safari, IE+ASV, Batik
      * Text sucks -- different settings/browsers render it in vastly differens sizes.
     
@@ -39,7 +42,10 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
     1999 and here we are SEVEN years later and even I just learned about the standard.
     
-    Make a MochiMin version as an option for inclusion.
+    I want to show what can be done. I didn't have anything invested in SVG when I started, 
+    but it's the only non-proprietary interactive vector graphics format.
+    
+    Make a MochiMin version as an option for inclusion instaed of full MochiKit.
 ***/
 
 
@@ -182,7 +188,8 @@ SVGKit.EXPORT_OK = [
 ];
 
 
-SVGKit._defaultType = 'object'
+SVGKit._defaultType = 'inline';
+SVGKit._svgNS = 'http://www.w3.org/2000/svg';
 SVGKit.prototype._svgMIME = 'image/svg+xml';
 SVGKit.prototype._svgEmptyName = 'empty.svg';
 SVGKit.prototype._SVGiKitBaseURI = '';
@@ -207,29 +214,6 @@ SVGKit.prototype.setBaseURI = function() {
     }
 }
 
-SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
-    /***
-        Return the <defs> tag inside of the SVG document where definitions
-        like gradients and markers are stored.
-        
-        @param createIfNeeded -- If this is true, a <defs> element will be created if
-                                none already exists.
-                                
-        @returns the defs element.  If createIfNeeded is false, this my return null
-    ***/
-    var defs = this.svgDocument.getElementsByTagName('defs');
-    if (defs.length>0)
-        return defs[0];
-    if (typeof(createIfNeeded) != 'undefined' && createIfNeeded!=null && !createIfNeeded) {
-        return null;
-    }
-    defs = this.DEFS(null);
-    //log("Created defs", defs, "... going to append")
-    this.append(defs);
-    //log("append worked")
-    return defs;
-}
-
 SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // TODO:  Make thse work right.
     // __init__()                          For JavaScript included in an SVG.
@@ -248,7 +232,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     log("SVG.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
     if (typeof(p1)=='undefined' || p1==null) {
-        // Inside of an SVG.
+        // This JS was included inside of an SVG file.
         
     }
     else if (typeof(p1) == 'string') {
@@ -320,7 +304,64 @@ SVGKit.prototype.createSVG = function (width, height, id /* optional */, type /*
         element it lives in to the given width and height.
     ***/
     log("createSVG(", width, height, id , type,")");
-    this.loadSVG(this._svgEmptyName, id, type, width, height)
+    
+    if (typeof(type) == "undefined" || type == null) {
+        type = this.newSVGType;
+    }
+    
+    if (type=='inline') {
+        this.createInlineSVG(width, height, id);
+    }
+    else {
+        this.loadSVG(this._svgEmptyName, id, type, width, height)
+    }
+}
+
+SVGKit.prototype.createInlineSVG = function(width, height, id) {
+    /***
+        Make sure html tag has SVG namespace support: 
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+            xmlns:svg="http://www.w3.org/2000/svg">
+    ***/
+    var attrs = {};
+    
+    if (typeof(id) == "undefined" || id == null) {
+        id = null;
+    }
+    else {
+        attrs['id'] = id;
+    }
+
+    attrs['xmlns:svg'] = SVGKit._svgNS;  // for <svg:circle ...> type tags
+    attrs['xmlns'] = SVGKit._svgNS;      // for <circle> type tags
+    attrs['width'] = width;
+    attrs['height'] = height;
+
+    // Borrowed from PlotKit:
+    if (!this.isIE()) {
+        this.svgDocument = document;
+        this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
+        this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
+    }
+    else
+    {
+        var width = attrs["width"] ? attrs["width"] : "100";
+        var height = attrs["height"] ? attrs["height"] : "100";
+        var eid = attrs["id"] ? attrs["id"] : "notunique";
+
+        var html = '<svg:svg width="' + width + '" height="' + height + '" ';
+        html += 'id="' + eid + '" version="1.1" baseProfile="full">';
+
+        this.htmlElement = document.createElement(html);
+
+        // create embedded SVG inside SVG.
+        this.svgDocument = this.htmlElement.getSVGDocument()
+        this.svgElement = this.svgDocument.createElementNS(SVGKit._svgNS, 'svg');
+        this.svgElement.setAttribute("width", width);
+        this.svgElement.setAttribute("height", height);
+        log("in create: this.svgElement=",this.svgElement);
+        this.svgDocument.appendChild(this.svgElement);
+    }
 }
 
 SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =default */, width /* = from file */, height /* = from file */) {
@@ -336,6 +377,10 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
         Conversely, if you're type is embed or object, you CAN'T call whenReady to
         append the htmlElement to the document because it will ever be ready until it's
         displayed!  There must be a better way to handle this.
+        
+        For object and embed, createSVG just loads empty.svg, but for inline, create is
+        more complicated and doesn't involve empty.svg.  It's loading that's hard.
+        This code should be reworked.
 
         @param type: The tag that we will create
 
@@ -361,6 +406,7 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
     else {
         attrs['id'] = id;
     }
+    
     if (typeof(type) == "undefined" || type == null) {
         type = this.newSVGType;
     }
@@ -368,52 +414,34 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
     log("loadSVG(", filename, id, type, width, height,")");
     
     if (type=='inline') {
-        /*  Make sure html tag has SVG namespace support?
-                <html xmlns="http://www.w3.org/1999/xhtml"
-                  xmlns:svg="http://www.w3.org/2000/svg"
-                  xml:lang="en">
-        */
-        attrs['xmlns:svg'] = 'http://www.w3.org/2000/svg';  // for <svg:circle ...> type tags
-        attrs['xmlns'] = 'http://www.w3.org/2000/svg';      // for <circle> type tags
-        attrs['width'] = width;
-        attrs['height'] = height;
-        this.svgDocument = document;
-        
-        if (filename != this._svgEmptyName) {
-            this.htmlElement = null;
-            var callback = function(svg, event) {
-                var xmlDoc = event.currentTarget;
-                svg.svgElement = xmlDoc.documentElement.cloneNode(true);
-                svg.htmlElement = svg.svgElement;
-            }
-            SVGKit.importXML(filename, partial(callback, this));
+        if (this.isIE()) {
+            this.createSVG(width, height, id, type);
+            log("after create: this.svgElement=",this.svgElement);
         }
-        else {
-            var ie = navigator.appVersion.match(/MSIE (\d\.\d)/);
-            var opera = (navigator.userAgent.toLowerCase().indexOf("opera") != -1);
-            if (ie && (ie[1] >= 6) && (!opera)) {
-                var width = attrs["width"] ? attrs["width"] : "100";
-                var height = attrs["height"] ? attrs["height"] : "100";
-                var eid = attrs["id"] ? attrs["id"] : "notunique";
-                
-                var html = '<svg:svg width="' + width + '" height="' + height + '" ';
-                html += 'id="' + eid + '" version="1.1" baseProfile="full">';
-
-                this.svgElement = document.createElement(html);
-
-                // create embedded SVG inside SVG.
-                var group = canvas.getSVGDocument().createElementNS(PlotKit.SVGRenderer.SVGNS, "svg");
-                group.setAttribute("width", width);
-                group.setAttribute("height", height);
-                canvas.getSVGDocument().appendChild(group);
-
-                return canvas;
+        //this.htmlElement = null;  // This is required to tell whenReady that we won't be ready until the assynch request returns.
+        var callback = function(svg, event) {
+            if (!svg.isIE()) {
+                var xmlDoc = event.currentTarget;
+                svg.htmlElement = xmlDoc.documentElement.cloneNode(true);
+                svg.svgDocument = document;
+                svg.svgElement = svg.htmlElement;
             }
             else {
-                this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
+                document.svg = svg;
+                var newElement = event.documentElement.cloneNode(true);
+                document.newElement = newElement;
+                svg.svgDocument.replaceChild(newElement, svg.svgDocument.rootElement);
+                svg.svgElement = newElement;
+                /*
+                for (var i=0; i<newElement.childNodes.length; i++) {
+                    var clone = newElement.childNodes[i].cloneNode(true);
+                    log("in for loop svg.svgElement=",svg.svgElement);
+                    svg.svgElement.appendChild(clone);  // This doesn't work: svg.svgElement is [disposed object]
+                }
+                */
             }
-            this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
         }
+        SVGKit.importXML(filename, partial(callback, this));
     }
     else if (type=='object') {  // IE:  Cannot support
         attrs['data'] = this._SVGiKitBaseURI + filename;
@@ -452,6 +480,13 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
     }
 }
 
+SVGKit.prototype.isIE = function() {
+    // Borrowed from PlotKit:
+    var ie = navigator.appVersion.match(/MSIE (\d\.\d)/);
+    var opera = (navigator.userAgent.toLowerCase().indexOf("opera") != -1);
+    return ie && (ie[1] >= 6) && (!opera);
+}
+
 /* The problem is that each time the object or embed is shown (first time
    or after being hidden) there is a delay before the SVG content is
    accessible.
@@ -463,6 +498,12 @@ c = x.documentElement.cloneNode(true);
 */
 
 SVGKit.importXML = function (file, onloadCallback) {
+    /***
+        Pass it a URL to load, it loads it asyncronously (the only way) and then
+        calls callback when it's done.
+        
+        I use this to load SVG documents into an already existing SVG document.
+    ***/
     // http://www.sitepoint.com/article/xml-javascript-mozilla/2
     // http://www-128.ibm.com/developerworks/web/library/wa-ie2mozgd/
     // http://www.quirksmode.org/dom/importxml.html
@@ -475,17 +516,19 @@ SVGKit.importXML = function (file, onloadCallback) {
         //var parser = new DOMParser(); 
         //xmlDoc = parser.parseFromString(xmlString, "text/xml"); 
         xmlDoc = document.implementation.createDocument("", "", null);
-        if (onloadCallback)
-            xmlDoc.onload = onloadCallback;
+        xmlDoc.onload = onloadCallback;
     }
     else if (ie) {
+        log("jason = ", "jason");
         xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
         xmlDoc.async = false;
+        log("Jason was here");
+        //document.xmlDoc = xmlDoc;
         //xmlDoc.loadXML(xmlString)
         //while(xmlDoc.readyState != 4) {};
         if (onloadCallback) {
             xmlDoc.onreadystatechange = function () {
-    			if (xmlDoc.readyState == 4) onloadCallback()
+    			if (xmlDoc.readyState == 4) onloadCallback(xmlDoc)
     		};
         }
     }
@@ -500,7 +543,9 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
         get the SVGDocument object.
         If htmlElement is an 'object' use contentDocument.
         If htmlElement is an 'embed' use getSVGDocument().
-        If htmlElement is an inline SVG, return something else.
+        If htmlElement is an 'svg' or 'svg:svg' were inlnie.
+            If you're w3C compatible like Firefox, svgElement is htmlElement
+            If you're IE it's just like Embed.
         
         If is's an object or embed and it's not showing or
         the SVG file hasn't loaded, this won't work.
@@ -508,32 +553,26 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
         @param htmlElement: either an id string or a dom element ('object', 'embed', 'svg)
     ***/
     log("grabSVG htmlElement (node or id) = ", htmlElement);
-    if (typeof(htmlElement) == 'string') {
-        htmlElement = MochiKit.DOM.getElement(htmlElement);
-    }
-    this.htmlElement = htmlElement;
-    log("htmlElement (node) = ", htmlElement);
-    var tagName = htmlElement.tagName.toLowerCase();
-    log("tagName = ", tagName, "  If not svg: htmlElement.contentDocument=", htmlElement.contentDocument);
-    if (tagName == 'svg')  { // Inline
+    this.htmlElement = MochiKit.DOM.getElement(htmlElement);
+    log("htmlElement (node) = ", this.htmlElement);
+    var tagName = this.htmlElement.tagName.toLowerCase();
+    log("tagName = ", tagName, "  htmlElement.contentDocument=", this.htmlElement.contentDocument, "(this will be blank for inline)");
+    var isInline = tagName == 'svg' || tagName == 'svg:svg';  // svg:svg is IE style
+    if (isInline && !this.isIE())  {
         this.svgDocument = document;
-        this.svgElement = htmlElement;
+        this.svgElement = this.htmlElement;
     }
-    // IE Bug: <object> SVGs display, but have no property to access their contents.
-    else if (tagName == 'object' && htmlElement.contentDocument) {
-        this.svgDocument = htmlElement.contentDocument;
+    else if (tagName == 'object' && this.htmlElement.contentDocument) {
+        // IE Bug: <object> SVGs display, but have no property to access their contents.
+        this.svgDocument = this.htmlElement.contentDocument;
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
-        log("object  this.svgDocument = ", this.svgDocument);
-        log("object  this.svgElement = ", this.svgElement);
     }
-    // IE Bug:  htmlElement.getSVGDocument is nothing, but htmlElement.getSVGDocument() works.
-    else if (tagName == 'embed' /* && typeof(htmlElement.getSVGDocument) != 'undefined' */) {
-        log("embed typeof(htmlElement.getSVGDocument) = " + typeof(htmlElement.getSVGDocument));
-        this.svgDocument = htmlElement.getSVGDocument();
+    else if (tagName == 'embed' || isInline && this.isIE()) {
+        // IE Bug:  htmlElement.getSVGDocument is undefined, but htmlElement.getSVGDocument() works, so you can't test for it.
+        this.svgDocument = this.htmlElement.getSVGDocument();
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
-        log("embed  this.svgDocument = ", this.svgDocument);
-        log("embed  this.svgElement = ", this.svgElement);
     }
+    log("type=",tagName, "  this.svgDocument = ", this.svgDocument, "  this.svgElement = ", this.svgElement);
 }
 
 SVGKit.prototype.append = function (node) {
@@ -550,6 +589,12 @@ SVGKit.prototype.createUniqueID = function(base) {
         of the form 'gradient123' where the number is sequentially increasing.
         You would pass this function 'gradient' and it would look for the lowest
         number which returns no elements when you do a getElementByID.
+        
+        Right now it does a linear search because you typically don't create all
+        that many of these, but maybe a hash table could be kept of the last 
+        result for quick access.  This would have to be done on a per-SVG basis
+        and is still no garuntee that the next number will be free if a node
+        of that name/number gets created outside of this function.
     ***/
     var i=0;
     var id;
@@ -562,20 +607,21 @@ SVGKit.prototype.createUniqueID = function(base) {
 
 SVGKit.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
     /***
-        Like SVGKit.createDOM, but with the SVG namespace.
+        Like MochiKit.createDOM, but with the SVG namespace.
     ***/
     var elem;
     var dom = MochiKit.DOM;
     if (typeof(name) == 'string') {
         try {
             // W3C Complient
-            elem = this.svgDocument.createElementNS("http://www.w3.org/2000/svg", name);
+            elem = this.svgDocument.createElementNS(SVGKit._svgNS, name);
         }
         catch (e) {
             // IE
             log("Creating element with name=", name, " in SVG namespace for IE");
             elem = this.svgDocument.createElement(name);
-            elem.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            elem.setAttribute("xmlns", SVGKit._svgNS);
+            //elem = this.svgDocument.createElement('svg:'+name);
         }
     } else {
         elem = name;  // Parameter "name" was really an object
@@ -601,7 +647,7 @@ SVGKit.prototype.createSVGDOMFunc = function (/* tag, attrs, *nodes */) {
 
         @param attrs: Optionally specify the attributes to apply
 
-        @param *notes: Optionally specify any children nodes it should have
+        @param *nodes: Optionally specify any children nodes it should have
 
         @rtype: function
 
@@ -616,7 +662,9 @@ SVGKit.prototype.createSVGDOMFunc = function (/* tag, attrs, *nodes */) {
 
 SVGKit.prototype.toXML = function (decorate /* = false */) {
     /***
-        This doesn't work cuz toHTML converts everything to lower case.
+        This doesn't work yet cuz toHTML converts everything to lower case.
+        
+        @param decorate: boolean: Include <?xml version="1.0" encoding="UTF-8" standalone="no"?> ?
         
         returns a string of XML.
     ***/
@@ -625,13 +673,37 @@ SVGKit.prototype.toXML = function (decorate /* = false */) {
     }
     var source = toHTML(this.svgElement);
     //var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
-    var newsrc = source.replace(/>/g, ">\n");
+    var newsrc = source.replace(/>/g, ">\n");  // Add newlines after all closing tags.
     if (decorate) {
         return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
     }
     else {
         return newsrc;
     }
+}
+
+
+SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
+    /***
+        Return the <defs> tag inside of the SVG document where definitions
+        like gradients and markers are stored.
+        
+        @param createIfNeeded -- If this is true, a <defs> element will be created if
+                                none already exists.
+                                
+        @returns the defs element.  If createIfNeeded is false, this my return null
+    ***/
+    var defs = this.svgDocument.getElementsByTagName('defs');
+    if (defs.length>0)
+        return defs[0];
+    if (typeof(createIfNeeded) != 'undefined' && createIfNeeded!=null && !createIfNeeded) {
+        return null;
+    }
+    defs = this.DEFS(null);
+    //log("Created defs", defs, "... going to append")
+    this.append(defs);
+    //log("append worked")
+    return defs;
 }
 
 SVGKit.prototype.suspendRedraw = function (miliseconds /* = 1000 */) {
@@ -670,10 +742,18 @@ SVGKit.prototype.deleteEverything = function() {
     }
 }
 
+SVGKit.removeAllChildren = function(node) {
+    while(node.childNodes.length>0) {
+        node.removeChild(node.childNodes[0]);
+    }
+}
+
 /*
     The following take an element and transforms it.  If the last item in
-    the transform string is the same as what you're trying to do, replace it.
-    Note that translate(2,0) gets turned into translate(2).
+    the transform string is the same as the type of transformation that 
+    you're trying to do (e.g. rotate), replace it for efficiency.
+    If it's not the same, append to the end.
+    Note that translate(2,0) gets turned into translate(2) by the browser.
     Regular Expressions are hard coded so they can be compiled once on load.
 */
 
@@ -757,13 +837,6 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     return new_transform
 }
 
-
-SVGKit.removeAllChildren = function(node) {
-    while(node.childNodes.length>0) {
-        node.removeChild(node.childNodes[0]);
-    }
-}
-
 SVGKit.__new__ = function () {
     var m = MochiKit.Base;
     this.EXPORT_TAGS = {
@@ -775,6 +848,9 @@ SVGKit.__new__ = function () {
 SVGKit.__new__(this);
 
 SVGKit.prototype.circle = function() {
+    /***
+        Stupid function for quick testing.
+    ***/
     var c = this.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} );
     this.append(c);
 }
@@ -865,6 +941,7 @@ SVGKit.prototype._addDOMFunctions = function() {
     this.VKERN = this.createSVGDOMFunc("vkern")
 }
 
+// The following line probably isn't neccesary since I don't export anything:
 MochiKit.Base._exportSymbols(this, SVGKit);
 
 //var SVG = SVGKit;
