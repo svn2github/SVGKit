@@ -7,21 +7,24 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
 Why would you want this?
-* Provides a nice way to build up an SVG without explicit DOM manipulations
-    it's easier to write a my plotting software using this.
+* The Canvas API is a nice API to build up an SVG without explicit DOM manipulations.
+    It's pretty similar to SVG.
+    it's easier to write my plotting software using this.
 * SVG (with JavaScript) is a W3C standard, but canvas is not.
 * When your browser supports SVG not canvas.
 * When you have code written for canvas and you want to use it with SVG.
 * When you want to save the result of canvas calls to an SVG file for 
     later display or printing at high-res.
+* When you want to be able to apply events to objects (shapes) rather than
+    have to translate the (x,y) coordinates like you do in Canvas.
 
 When wouldn't you use this?
 * When speed matters. With this, you just stack SVG shapes on top
       of each other forever.  Even you clear it, those others will still
       be around taking memory and rendering time. For most games and many
-      others, you want to "blast it on the screen and forget it" model.
+      others, you want the "blast it on the screen and forget it" model.
 * Sometimes the simplest representation of a graphic is a program to draw it
-      (e.g. fractals, function plotting)
+      (e.g. fractals, function plotting) rather than an XML-like description.
 * When you didn't care about the SVG DOM tree
 * When your browser supports canvas but not SVG
 
@@ -39,6 +42,7 @@ TODO:
 * repetition parameter on patterns: 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'
 * shadows: rendered from image A, using the current shadow styles, creating image B.
 * arcTo doesn't work here or in Mozilla.
+* SVG Specific things like text and SVG-syntax shapes like circle.
 
 Writing the SVG:* Patters and gradients and other global <defs> that can be used at any time also
     get written uppon creation, but in the <defs> so they don't get drawn.
