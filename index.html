@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type" />
+
+  
+  <title>SVGKit Overview</title>
+
+</head>
+
+<body>
+<h2>Overview</h2>
+Each of these only relies on the previos ones, so you can pick the level of functionality you want:<br />
+<br />
+SVGKit.js -- Lowest level. &nbsp;Create a new SVG at runtime.
+&nbsp;Load SVG data from a URL. Conveniently handle quirks of three
+ways SVG can be included in browsers: object, embed, and inline. Handle
+differnet browsers and different SVG engines. &nbsp;Has convenience
+functions for DOM manipulation ala MochiKit. It manages the objects:
+HTMLElement, SVGDocument, SVGElement. &nbsp;Basic intaractive event
+handling like scroll, zoom, object select and manipulate (maybe this
+should go in SVGEvent.js)<br />
+<br />
+SVGCanvas.js -- Impliments some of the Canvas API along with some
+SVG-specific additions. Allows you to create an SVG more prodecurally
+rather than building it up with DOM manipulation (one of the
+disadvangages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vukićević</a>)
+There are parts of the Canvas API that do things like "take what you've
+drawn so far, treat it like a bitmap, and run the following filter on
+it." &nbsp;Some of these are impossible in SVG, but will get better
+with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2</a><br />
+<br />
+SVGPlot.js -- Eventually a full plotting suite to rival Excel, Matlab,
+etc. It generates clean SVG in the browser that can be saved, sent back
+to server for conversion to PDF, PS, PNG, etc. Fully interactive --
+zooming, selecting data, etc. Live updates via AJAX for real-time data
+like stocks or web stats. Allows multiple plots arranged on an SVG,
+multiple related or unrelated axes per plot, and control of styles.
+Origionaly I was going to write it in pure Canvas code so you could
+have either underneath (like PlotKit), but things like text made it
+impossible.<br />
+<br />
+(Next to each item above, show an editable code snippet and the result in SVG and PNG.)<br />
+<br />
+For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more more production quality release.<br />
+<br />
+<h2>History</h2>
+I wanted a way to do interactive web stuff for my <a href="http://brainflux.org">brainflux.org</a>
+page of physics and math education. I looked into SVG and played around
+with Batik a bit. Then one of my research groups implimented a full web
+app using Python, TurboGears, and MochiKit. We wanted to interactively
+pull data out of a web page and plot it. Also we wanted a Google Maps
+type interface for stars. I started really working on this in January
+2006.<br />
+<br />
+<h2>About Me</h2>
+<h2> Requirements</h2>
+
+<ul>
+  <li>
+      <a href="http://www.mochikit.com/">MochiKit 1.3 or higher</a></li>
+  <li>
+     SVG: Opera 9+, Firefox 1.5+, IE6 with Adobe SVG.
+ </li>
+</ul>
+
+
+
+<h2> License</h2>
+
+<ul>
+  <li>
+     SVGKit is copyright (c) 2006 Jason Gallicchio. Licensed under the BSD License.</li>
+</ul>
+<h2>SVG Complaints/Outlook:</h2>
+Fonts are a huge problem. The SVG spec is written so that you can embed
+a font and use it so you get precise alignment and pixel-perfect
+anti-aliased rendering. When you're rendering axis labels, I query the
+exact dimensions of the resulting text for optimal placement.
+&nbsp;None of this works (very well) in Firefox yet.<br />
+<br />
+News<br />
+Download<br />
+&nbsp;- latest (2006-06-12)<br />
+Documentation<br />
+Tutorial<br />
+&nbsp;- Playing with the API inline<br />
+&nbsp;- Including it in your own site.<br />
+Development<br />
+&nbsp;- Mailing List<br />
+&nbsp;- Source Code in SVN<br />
+&nbsp;- Wiki<br />
+Screen Shots<br />
+Examples<br />
+&nbsp;- PNG<br />
+&nbsp;- Static SVG<br />
+&nbsp;- Full JavaScript<br />
+<br />
+</body>
+
+</html>
