@@ -332,8 +332,8 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         attrs['id'] = id;
     }
 
-    attrs['xmlns:svg'] = SVGKit._svgNS;  // for <svg:circle ...> type tags
-    attrs['xmlns'] = SVGKit._svgNS;      // for <circle> type tags
+    attrs['xmlns:svg'] = SVGKit._svgNS;  // for <svg:circle ...> type tags with explicit namespace
+    attrs['xmlns'] = SVGKit._svgNS;      // for <circle> type tags with implicit namespace
     attrs['width'] = width;
     attrs['height'] = height;
 
