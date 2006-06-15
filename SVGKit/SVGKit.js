@@ -22,19 +22,30 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     Do I want to do anything with events or just let the DOM and MochiKit handle them?
     Maybe some built-in zoom and scroll that you can turn on.
     
-    toXML needs to output case-sensitive tags and attributes.
-     * How to handle namespaces? Assign aliases at top and use (have some common ones defined.)
+    toXML needs namespaces. Assign aliases at top and use (have some common ones defined.)
+    
+    svgDocument.getElementById(id) does not work for inline.  Is this because svgDocument is document?
+    This is used in createUniqueID and leads to failure of SVGCanvas test 21: lineargradient.
+    Probably for the same reason svgDocument.getElementsByTagName("defs") doesnt' work.
+     * After the script runs, these work in the console.
+     * After an error (or something) it seems to kind of work since test 22 works after test 21 fails, 
+       but strangely the DOM tree and the printed source code are wrong.  Indeed, switching the order
+       always makes the second of the two work graphically, but fail DOM/XML wise.
     
     Problem of divs loading and unloading, especially with multiple writeln() in the interpreter.
     Perhaps on unload, save xml and then restore on a load.
+    The problem is that each time the object or embed is shown (first time
+      or after being hidden) there is a delay before the SVG content is
+      accessible.
     Can't draw anything until it's loaded.  Really annoying in the interpreter.
     inline doesn't have this problem.  Maybe everything is going in that direction anyway.
     
-    Browser SVG:
+    Using SVG in the Browser:
      * Should always provide fallback content -- png, pdf, (shudder) swf
      * Interactivity requires SVG, but initial static content should have static fallback (for fast load)
      * Best effort to have it work on Firefox, Opera, Safari, IE+ASV, Batik
      * Text sucks -- different settings/browsers render it in vastly differens sizes.
+     * Automatically generate links to an image translation server.
     
     Add getURL and setURL to non-ASP based renders like
     http://jibbering.com/2002/5/dynamic-update-svg.html
@@ -48,6 +59,10 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     Make a MochiMin version as an option for inclusion instaed of full MochiKit.
 ***/
 
+
+////////////////////////////
+//  Setup
+////////////////////////////
 
 if (typeof(dojo) != 'undefined') {
     dojo.provide("SVGKit");
@@ -89,130 +104,31 @@ SVGKit.toString = function () {
 };
 SVGKit.prototype.toString = SVGKit.toString;
 
-// The following has been converted by Zeba Wunderlich's Perl Script
-// from http://www.w3.org/TR/SVG/eltindex.html
 
 SVGKit.EXPORT = [
-/*
-    "setCurrentSVG",
-    "currentSVGDocument",
-    "currentSVGElement",
-    "appendNode",
-    "createSVG",
-    "grabSVG",
-    "A",
-    "ALTGLYPH",
-    "ALTGLYPHDEF",
-    "ALTGLYPHITEM",
-    "ANIMATE",
-    "ANIMATECOLOR",
-    "ANIMATEMOTION",
-    "ANIMATETRANSFORM",
-    "CIRCLE",
-    "CLIPPATH",
-    "COLOR_PROFILE",
-    "CURSOR",
-    "DEFINITION_SRC",
-    "DEFS",
-    "DESC",
-    "ELLIPSE",
-    "FEBLEND",
-    "FECOLORMATRIX",
-    "FECOMPONENTTRANSFER",
-    "FECOMPOSITE",
-    "FECONVOLVEMATRIX",
-    "FEDIFFUSELIGHTING",
-    "FEDISPLACEMENTMAP",
-    "FEDISTANTLIGHT",
-    "FEFLOOD",
-    "FEFUNCA",
-    "FEFUNCB",
-    "FEFUNCG",
-    "FEFUNCR",
-    "FEGAUSSIANBLUR",
-    "FEIMAGE",
-    "FEMERGE",
-    "FEMERGENODE",
-    "FEMORPHOLOGY",
-    "FEOFFSET",
-    "FEPOINTLIGHT",
-    "FESPECULARLIGHTING",
-    "FESPOTLIGHT",
-    "FETILE",
-    "FETURBULENCE",
-    "FILTER",
-    "FONT",
-    "FONT_FACE",
-    "FONT_FACE_FORMAT",
-    "FONT_FACE_NAME",
-    "FONT_FACE_SRC",
-    "FONT_FACE_URI",
-    "FOREIGNOBJECT",
-    "G",
-    "GLYPH",
-    "GLYPHREF",
-    "HKERN",
-    "IMAGE",
-    "LINE",
-    "LINEARGRADIENT",
-    "MARKER",
-    "MASK",
-    "METADATA",
-    "MISSING_GLYPH",
-    "MPATH",
-    "PATH",
-    "PATTERN",
-    "POLYGON",
-    "POLYLINE",
-    "RADIALGRADIENT",
-    "RECT",
-    "SCRIPT",
-    "SET",
-    "STOP",
-    "STYLE",
-    "SVG",
-    "SWITCH",
-    "SYMBOL",
-    "TEXT",
-    "TEXTPATH",
-    "TITLE",
-    "TREF",
-    "TSPAN",
-    "USE",
-    "VIEW",
-    "VKERN"
-    */
 ];
 
 SVGKit.EXPORT_OK = [
 ];
 
 
-SVGKit._defaultType = 'inline';
+////////////////////////////
+//  Defaults
+////////////////////////////
+
+//SVGKit._defaultType = 'embed';
+SVGKit._defaultType = 'object';
+//SVGKit._defaultType = 'inline';
 SVGKit._svgNS = 'http://www.w3.org/2000/svg';
 SVGKit.prototype._svgMIME = 'image/svg+xml';
 SVGKit.prototype._svgEmptyName = 'empty.svg';
 SVGKit.prototype._SVGiKitBaseURI = '';
 SVGKit.prototype._errorText = "You can't display SVG. Download Firefox 1.5." ;
 
-SVGKit.prototype.setBaseURI = function() {
-    /***
-        To create an empty SVG using <object> or <embed> you need to give the tag
-        a valid SVG file, so an empty one lives in the same directory as the JavaScript.
-        This function finds that directory and sets the _SVGiKitBaseURI variable
-        for future use.
-    ***/
-    var scripts = document.getElementsByTagName("script");
-    for (var i = 0; i < scripts.length; i++) {
-        var src = scripts[i].getAttribute("src");
-        if (!src) {
-            continue;
-        }
-        if (src.match(/SVGKit\.js$/)) {
-            this._SVGiKitBaseURI = src.substring(0, src.lastIndexOf('SVGKit.js'));
-        }
-    }
-}
+
+////////////////////////////
+//  Constructor
+////////////////////////////
 
 SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // TODO:  Make thse work right.
@@ -250,7 +166,52 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
     this._addDOMFunctions();
+    document.currentSVG = this;
 }
+
+
+////////////////////////////
+//  General Utilities
+////////////////////////////
+
+SVGKit.firstNonNull = function() {
+    for (var i=0; i<arguments.length; i++)
+        if ( typeof(arguments[i])!='undefined' && arguments[i]!=null )
+            return arguments[i]
+    return null;
+}
+
+////////////////////////////
+//  Browser Related
+////////////////////////////
+
+SVGKit.prototype.setBaseURI = function() {
+    /***
+        To create an empty SVG using <object> or <embed> you need to give the tag
+        a valid SVG file, so an empty one lives in the same directory as the JavaScript.
+        This function finds that directory and sets the _SVGiKitBaseURI variable
+        for future use.
+    ***/
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute("src");
+        if (!src) {
+            continue;
+        }
+        if (src.match(/SVGKit\.js$/)) {
+            this._SVGiKitBaseURI = src.substring(0, src.lastIndexOf('SVGKit.js'));
+        }
+    }
+}
+
+
+SVGKit.prototype.isIE = function() {
+    // Borrowed from PlotKit:
+    var ie = navigator.appVersion.match(/MSIE (\d\.\d)/);
+    var opera = (navigator.userAgent.toLowerCase().indexOf("opera") != -1);
+    return ie && (ie[1] >= 6) && (!opera);
+}
+
 
 SVGKit.prototype.whenReady = function (func) {
     /***
@@ -298,6 +259,10 @@ SVGKit.prototype.setSize = function(width, height) {
 }
 
 
+////////////////////////////
+//  Getting Hold of an SVG
+////////////////////////////
+
 SVGKit.prototype.createSVG = function (width, height, id /* optional */, type /* =default */) {
     /***
         Loads a blank SVG and sets its size and the size of any HTML
@@ -342,6 +307,8 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         this.svgDocument = document;
         this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
         this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
+        //this.svgDocument = this.svgElement.getSVGDocument()
+        log("in create: this.svgDocument=",this.svgDocument);
     }
     else
     {
@@ -480,23 +447,6 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
     }
 }
 
-SVGKit.prototype.isIE = function() {
-    // Borrowed from PlotKit:
-    var ie = navigator.appVersion.match(/MSIE (\d\.\d)/);
-    var opera = (navigator.userAgent.toLowerCase().indexOf("opera") != -1);
-    return ie && (ie[1] >= 6) && (!opera);
-}
-
-/* The problem is that each time the object or embed is shown (first time
-   or after being hidden) there is a delay before the SVG content is
-   accessible.
-*/
-
-/*
-x = SVGKit.importXML('example.svg')
-c = x.documentElement.cloneNode(true);
-*/
-
 SVGKit.importXML = function (file, onloadCallback) {
     /***
         Pass it a URL to load, it loads it asyncronously (the only way) and then
@@ -575,35 +525,10 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
     log("type=",tagName, "  this.svgDocument = ", this.svgDocument, "  this.svgElement = ", this.svgElement);
 }
 
-SVGKit.prototype.append = function (node) {
-    /***
-        Convenience method for appending to the root element of the SVG.
-        Anything you draw by calling this will show up on top of everything else.
-    ***/
-    this.svgElement.appendChild(node);
-}
 
-SVGKit.prototype.createUniqueID = function(base) {
-    /***
-        For gradients and things, often you want them to have a unique id
-        of the form 'gradient123' where the number is sequentially increasing.
-        You would pass this function 'gradient' and it would look for the lowest
-        number which returns no elements when you do a getElementByID.
-        
-        Right now it does a linear search because you typically don't create all
-        that many of these, but maybe a hash table could be kept of the last 
-        result for quick access.  This would have to be done on a per-SVG basis
-        and is still no garuntee that the next number will be free if a node
-        of that name/number gets created outside of this function.
-    ***/
-    var i=0;
-    var id;
-    do {
-        id = base + i;
-        i++;
-    } while ( this.svgDocument.getElementById(id) != null );
-    return id;
-}
+////////////////////////////
+//  Graphical Manipulation
+////////////////////////////
 
 SVGKit.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
     /***
@@ -660,28 +585,48 @@ SVGKit.prototype.createSVGDOMFunc = function (/* tag, attrs, *nodes */) {
 };
 
 
-SVGKit.prototype.toXML = function (decorate /* = false */) {
+SVGKit.prototype.append = function (node) {
     /***
-        This doesn't work yet cuz toHTML converts everything to lower case.
-        
-        @param decorate: boolean: Include <?xml version="1.0" encoding="UTF-8" standalone="no"?> ?
-        
-        returns a string of XML.
+        Convenience method for appending to the root element of the SVG.
+        Anything you draw by calling this will show up on top of everything else.
     ***/
-    if (typeof(decorate) == "undefined" || decorate == null) {
-        decorate = false;
-    }
-    var source = toHTML(this.svgElement);
-    //var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
-    var newsrc = source.replace(/>/g, ">\n");  // Add newlines after all closing tags.
-    if (decorate) {
-        return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
-    }
-    else {
-        return newsrc;
-    }
+    this.svgElement.appendChild(node);
 }
 
+
+SVGKit.prototype.circle = function() {
+    /***
+        Stupid function for quick testing.
+    ***/
+    var c = this.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} );
+    this.append(c);
+}
+
+SVGKit.prototype.createUniqueID = function(base) {
+    /***
+        For gradients and things, often you want them to have a unique id
+        of the form 'gradient123' where the number is sequentially increasing.
+        You would pass this function 'gradient' and it would look for the lowest
+        number which returns no elements when you do a getElementByID.
+        
+        Right now it does a linear search because you typically don't create all
+        that many of these, but maybe a hash table could be kept of the last 
+        result for quick access.  This would have to be done on a per-SVG basis
+        and is still no garuntee that the next number will be free if a node
+        of that name/number gets created outside of this function.
+    ***/
+    var i=0;
+    var id;
+    var element;
+    do {
+        id = base + i;
+        i++;
+        element = this.svgDocument.getElementById(id);
+        //log("Going to try id=",id,"  element=", element);
+    } while ( !MochiKit.Base.isUndefinedOrNull(element) );
+    //log("Got one id=",id);
+    return id;
+}
 
 SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
     /***
@@ -693,7 +638,7 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
                                 
         @returns the defs element.  If createIfNeeded is false, this my return null
     ***/
-    var defs = this.svgDocument.getElementsByTagName('defs');
+    var defs = this.svgDocument.getElementsByTagName("defs");
     if (defs.length>0)
         return defs[0];
     if (typeof(createIfNeeded) != 'undefined' && createIfNeeded!=null && !createIfNeeded) {
@@ -702,7 +647,7 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
     defs = this.DEFS(null);
     //log("Created defs", defs, "... going to append")
     this.append(defs);
-    //log("append worked")
+    //log("append defs worked")
     return defs;
 }
 
@@ -747,6 +692,11 @@ SVGKit.removeAllChildren = function(node) {
         node.removeChild(node.childNodes[0]);
     }
 }
+
+////////////////////////////
+//  Transformations
+////////////////////////////
+
 
 /*
     The following take an element and transforms it.  If the last item in
@@ -837,6 +787,108 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     return new_transform
 }
 
+////////////////////////////
+// Output
+////////////////////////////
+
+SVGKit.prototype.toXML = function (dom /* = this.svgElement */, decorate /* = false */) {
+    /***
+        This doesn't work yet cuz toHTML converts everything to lower case.
+        
+        @param dom: Element to convert.  
+        
+        @param decorate: boolean: Include <?xml version="1.0" encoding="UTF-8" standalone="no"?> ?
+        
+        returns a string of XML.
+    ***/
+    if (typeof(decorate) == "undefined" || decorate == null) {
+        decorate = false;
+    }
+    if (typeof(dom) == "undefined" || dom == null) {
+        dom = this.svgElement;
+    }
+    
+    //var source = MochiKit.DOM.emitHTML(dom).join("");
+    var source = this.emitXML(dom).join("");
+    //var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
+    var newsrc = source.replace(/>/g, ">\n");  // Add newlines after all closing tags.
+    
+    if (decorate) {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
+    }
+    else {
+        return newsrc;
+    }
+}
+
+
+SVGKit.prototype.emitXML = function (dom, /* optional */lst) {
+    /***
+        A case insensitive and namespace aware version of MochiKit.DOM's emitHTML.
+        My changes are marked with "SVGKit" comments.
+        TODO:  Make namespace-aware.
+    ***/
+    if (typeof(lst) == 'undefined' || lst === null) {
+        lst = [];
+    }
+    // queue is the call stack, we're doing this non-recursively
+    var queue = [dom];
+    var self = MochiKit.DOM;
+    var escapeHTML = self.escapeHTML;
+    var attributeArray = self.attributeArray;
+    while (queue.length) {
+        dom = queue.pop();
+        if (typeof(dom) == 'string') {
+            lst.push(dom);
+        } else if (dom.nodeType == 1) {
+            // we're not using higher order stuff here
+            // because safari has heisenbugs.. argh.
+            //
+            // I think it might have something to do with
+            // garbage collection and function calls.
+            lst.push('<' + dom.nodeName);  // SVGKit: got rid of toLowerCase()
+            var attributes = [];
+            var domAttr = attributeArray(dom);
+            for (var i = 0; i < domAttr.length; i++) {
+                var a = domAttr[i];
+                attributes.push([
+                    " ",
+                    a.name,
+                    '="',
+                    escapeHTML(a.value),
+                    '"'
+                ]);
+            }
+            attributes.sort();
+            for (i = 0; i < attributes.length; i++) {
+                var attrs = attributes[i];
+                for (var j = 0; j < attrs.length; j++) {
+                    lst.push(attrs[j]);
+                }
+            }
+            if (dom.hasChildNodes()) {
+                lst.push(">");
+                // queue is the FILO call stack, so we put the close tag
+                // on first
+                queue.push("</" + dom.nodeName + ">");  // SVGKit: got rid of toLowerCase()
+                var cnodes = dom.childNodes;
+                for (i = cnodes.length - 1; i >= 0; i--) {
+                    queue.push(cnodes[i]);
+                }
+            } else {
+                lst.push('/>');
+            }
+        } else if (dom.nodeType == 3) {
+            lst.push(escapeHTML(dom.nodeValue));
+        }
+    }
+    return lst;
+}
+
+////////////////////////////
+// Class Utilities
+////////////////////////////
+
 SVGKit.__new__ = function () {
     var m = MochiKit.Base;
     this.EXPORT_TAGS = {
@@ -847,17 +899,10 @@ SVGKit.__new__ = function () {
 }
 SVGKit.__new__(this);
 
-SVGKit.prototype.circle = function() {
-    /***
-        Stupid function for quick testing.
-    ***/
-    var c = this.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} );
-    this.append(c);
-}
-
 SVGKit.prototype._addDOMFunctions = function() {
+    // The following has been converted by Zeba Wunderlich's Perl Script
+    // from http://www.w3.org/TR/SVG/eltindex.html
     this.$ = function(id) { return this.svgDocument.getElementById(id) }
-    //var createSVGDOMFunc = this.createSVGDOMFunc;
     this.A = this.createSVGDOMFunc("a")
     this.ALTGLYPH = this.createSVGDOMFunc("altGlyph")
     this.ALTGLYPHDEF = this.createSVGDOMFunc("altGlyphDef")
@@ -942,6 +987,4 @@ SVGKit.prototype._addDOMFunctions = function() {
 }
 
 // The following line probably isn't neccesary since I don't export anything:
-MochiKit.Base._exportSymbols(this, SVGKit);
-
-//var SVG = SVGKit;
+// MochiKit.Base._exportSymbols(this, SVGKit);
