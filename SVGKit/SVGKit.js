@@ -134,8 +134,8 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // TODO:  Make thse work right.
     // __init__()                          For JavaScript included in an SVG.
     // __init__(node)                      Already have an HTML element
-    // __init__(id)                        Have the id for an HTML element (if your id ends in .svg, pass in the node instead)
-    // __init__(filename, id, type, width, height)        Create a new HTML element that references filename (ends in .svg)
+    // __init__(id)                        Have the id for an HTML element (if your id ends in .svg, pass in the node instead because strings ending in .svg will be treated as filenames.)
+    // __init__(filename, id, type, width, height)        Create a new HTML element that references filename (must end in .svg)
     // __init__(width, height, id, type)   Create a new SVG from scratch with width, height, and id
     
     // The following are described at http://www.w3.org/TR/SVG/struct.html
@@ -308,6 +308,7 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         this.svgElement = this.createSVGDOM('svg', attrs);  // Create an element in the SVG namespace
         this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
         //this.svgDocument = this.svgElement.getSVGDocument()
+        this.svgDocument = this.svgElement.ownerDocument;
         log("in create: this.svgDocument=",this.svgDocument);
     }
     else
@@ -527,7 +528,7 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
 
 
 ////////////////////////////
-//  Graphical Manipulation
+//  Content Manipulation
 ////////////////////////////
 
 SVGKit.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
