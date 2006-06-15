@@ -263,7 +263,7 @@ var testFunctions = {
     
     'graphImage' : function(context) {
         var image = new Image();
-        image.src = '../svgplot/canvas_tests_images/graphImage.png';
+        image.src = '../tests/canvas_tests_images/graphImage.png';
         log("outter image function called for ", image.src);
         var imageStuff = function(ctx, img) {
             log("inner imageStuff called for ", image.src);
@@ -460,8 +460,6 @@ var testFunctions = {
         // draw shapes
         ctx.fillRect(10,10,130,130);
         ctx.strokeRect(50,50,50,50);
-        if (ctx.svg)
-            log(ctx.svg.toXML());
     },
     
     'radialgradient' : function(ctx) {
@@ -602,7 +600,7 @@ var testFunctions = {
     'createpattern' : function (context) {
         // create new image object to use as pattern
         var image = new Image();
-        image.src = '../svgplot/canvas_tests_images/createpattern.png';
+        image.src = '../tests/canvas_tests_images/createpattern.png';
         log("outter image function called for ", image.src);
         var imageStuff3 = function(ctx, img) {
             // create pattern
@@ -610,8 +608,6 @@ var testFunctions = {
             var ptrn = ctx.createPattern(img,'repeat');
             ctx.fillStyle = ptrn;
             ctx.fillRect(0,0,150,150);
-            if (ctx.svg)
-                log(ctx.svg.toXML());
         }
         if (image.complete)
             imageStuff3(context, image);
@@ -700,9 +696,9 @@ var testFunctions = {
         var sun = new Image();
         var moon = new Image();
         var earth = new Image();
-        sun.src = '../svgplot/canvas_tests_images/sun.png';
-        moon.src = '../svgplot/canvas_tests_images/moon.png';
-        earth.src = '../svgplot/canvas_tests_images/earth.png';
+        sun.src = '../tests/canvas_tests_images/sun.png';
+        moon.src = '../tests/canvas_tests_images/moon.png';
+        earth.src = '../tests/canvas_tests_images/earth.png';
         //setInterval( partial(drawSolarSystem, context) ,10000);
     },
     
@@ -802,7 +798,209 @@ var testFunctions = {
         }
         doClock(context);
         //setInterval( partial(doClock, context) ,2000);
-    }
+    },
+    
+    'arcTo' :  function(ctx) {
+        ctx.beginPath();
+        ctx.strokeStyle='rgba(0,0,255,.25)'
+        var x0=0, y0=100, x1=200, y1=0, x2=200, y2=200;
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        
+        ctx.strokeStyle='rgba(255,0,0,.5)'
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.arcTo(x1, y1, x2, y2,60);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        
+        x0=200, y0=200, x1=50, y1=100, x2=0, y2=200;
+        ctx.strokeStyle='rgba(255,0,0,.2)'
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        
+        ctx.strokeStyle='rgba(0,0,255,.2)'
+        for (var r=30; r<300; r+=30) {
+            ctx.moveTo(x0, y0);
+            ctx.arcTo(x1, y1, x2, y2, r);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+    },
+    
+    'pollygon' : function(ctx) {
+        ctx.translate(200/12,200/12);
+        for (i=0;i<6;i++){
+          for (j=0;j<6;j++){
+            ctx.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
+                             Math.floor(255-42.5*j) + ')';
+            ctx.save();
+            ctx.translate(i*200/6,j*200/6);
+            ctx.pollygon(i+3, 10+10/(j+1), Math.PI/6/(i+3)*j);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+    },
+    
+    'star' : function(ctx) {
+        ctx.translate(200/12,200/12);
+        for (i=0;i<6;i++){
+          for (j=0;j<6;j++){
+            ctx.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
+                             Math.floor(255-42.5*j) + ')';
+            ctx.save();
+            ctx.translate(i*200/6,j*200/6);
+            ctx.star(i+3, 10+10/(j+1), (10+10/j)/(i+1), Math.PI/6/(i+3)*j);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+    },
+    
+    'asterisk' : function(ctx) {
+        ctx.translate(200/12,200/12);
+        for (i=0;i<6;i++){
+          for (j=0;j<6;j++){
+            ctx.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
+                             Math.floor(255-42.5*j) + ')';
+            ctx.save();
+            ctx.translate(i*200/6,j*200/6);
+            ctx.asterisk(i+3, 10+10/(j+1), (5+5/j)/(i+1), Math.PI/6/(i+3)*j);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+    },
+    
+    'svg_shapes' : function(ctx) {
+        ctx.scale(.5,.5);
+        
+        ctx.beginPath();
+        ctx.moveTo(125,75)
+        ctx.ellipticalArc(100,50, 0, 0,0, 100,50);
+        ctx.stroke();
+        ctx.strokeStyle='blue'
+        ctx.beginPath();
+        ctx.moveTo(125,75)
+        ctx.ellipticalArc(100,50, 0, 1,0, 100,50);
+        ctx.stroke();
+        ctx.strokeStyle='green'
+        ctx.beginPath();
+        ctx.moveTo(125,75)
+        ctx.ellipticalArc(100,50, 0, 0,1, 100,50);
+        ctx.stroke();
+        ctx.strokeStyle='red'
+        ctx.beginPath();
+        ctx.moveTo(125,75)
+        ctx.ellipticalArc(100,50, 0, 1,1, 100,50);
+        ctx.stroke();
+        
+        ctx.translate(-25,50);
+        ctx.strokeStyle='black'
+        ctx.fillStyle='rgba(100,100,100,.3)'
+        ctx.beginPath();
+        ctx.moveTo(50,50)
+        ctx.smoothCurveTo(150,50)
+        ctx.smoothCurveTo(150,150)
+        ctx.smoothCurveTo(50,150)
+        ctx.smoothCurveTo(50,50)
+        ctx.draw();
+        
+        ctx.translate(100,20);
+        ctx.strokeStyle='black'
+        ctx.fillStyle='rgba(255,0,0,.3)'
+        ctx.strokePath("M50,50 T150,50 T150,150 T50,150 T50,50");
+        ctx.fillPath("M50,50 T150,50 T150,150 T50,150 T50,50");
+        ctx.translate(20,0);
+        ctx.drawPath("M50,50 T150,50 T150,150 T50,150 T50,50");
+        
+        ctx.translate(100,-20);
+        ctx.fillStyle='rgba(0,255,0,.3)'
+        ctx.strokeRoundedRect(10,10,100,100,10,10);
+        ctx.fillRoundedRect(10,10,100,100,10,10);
+        ctx.translate(20,20);
+        ctx.drawRoundedRect(10,10,100,100,10,10);
+        
+        ctx.translate(70,25);
+        ctx.fillStyle='rgba(0,0,255,.3)'
+        ctx.strokeCircle(50, 50, 40);
+        ctx.fillCircle(50, 50, 40);
+        ctx.translate(20,0);
+        ctx.drawCircle(50, 50, 40);
+        
+        ctx.translate(-240,100);
+        ctx.fillStyle='rgba(150,0,150,.3)'
+        ctx.strokeEllipse(50, 50, 100, 40);
+        ctx.fillEllipse(50, 50, 100, 40);
+        ctx.translate(20,20);
+        ctx.drawEllipse(50, 50, 100, 40);
+        
+        ctx.translate(130,-20);
+        ctx.fillStyle='rgba(150,150,0,.3)'
+        ctx.strokePolyline("50,50 150,50 150,150 50,150");
+        ctx.fillPolyline("50,50 150,50 150,150 50,150");
+        ctx.translate(20,20);
+        ctx.drawPolyline("50,50 150,50 150,150 50,150");
+        
+        ctx.translate(-130,20);
+        ctx.fillStyle='rgba(0,150,150,.3)'
+        ctx.strokePolygon("50,50 150,50 150,150 50,150");
+        ctx.fillPolygon("50,50 150,50 150,150 50,150");
+        ctx.translate(20,20);
+        ctx.drawPolygon("50,50 150,50 150,150 50,150");
+        
+    },
+    
+    'markers' : function(ctx) {
+        var markers = [ ctx.pollygon(5, 10) ];
+        var n = markers.length;
+        for (var i=0; i<n; i++) {
+            ctx.startMarker();
+            ctx.pollygon(5, 10);
+            ctx.stroke();
+            var marker = ctx.endMarker();
+            
+            ctx.markerStart = marker;
+            ctx.markerMid = marker;
+            ctx.markerEnd = marker;
+            ctx.moveTo(10,10);
+            ctx.lineTo(100,100);
+            ctx.lineTo(200-10,200-10);
+            ctx.stroke();
+        }
+    },
+    
+    'inkscape_markers' : function(c) {
+        var markers = [c.inkscapeArrow1, c.inkscapeArrow1Lstart, c.inkscapeArrow1Lend, c.inkscapeArrow1Mstart, c.inkscapeArrow1Mend, c.inkscapeArrow1Sstart, c.inkscapeArrow1Send, 
+                        c.inkscapeArrow2, c.inkscapeArrow2Lstart, c.inkscapeArrow2Lend, c.inkscapeArrow2Mstart, c.inkscapeArrow2Mend, c.inkscapeArrow2Sstart, c.inkscapeArrow2Send, 
+                        c.inkscapeTail, c.inkscapeDistance, c.inkscapeDistanceIn, c.inkscapeDistanceOut, c.inkscapeDot, c.inkscapeDot_l, c.inkscapeDot_m, c.inkscapeDot_s, 
+                        c.inkscapeSquare, c.inkscapeSquareL, c.inkscapeSquareS, c.inkscapeDiamond, c.inkscapeDiamondM, c.inkscapeDiamondS, 
+                        c.inkscapeTriangle, c.inkscapeTriangleInL, c.inkscapeTriangleInM, c.inkscapeTriangleInS, c.inkscapeTriangleOutL, c.inkscapeTriangleOutM, c.inkscapeTriangleOutS, 
+                        c.inkscapeStop, c.inkscapeStopL, c.inkscapeStopS, c.inkscapeSemiCircleIn, c.inkscapeSemiCircleOut, c.inkscapeSemiCurveIn, c.inkscapeSemiCurveOut, 
+                        c.inkscapeSemiScissors, c.inkscapeSemiClub]
+        var n = markers.length;
+        var across = Math.ceil(Math.sqrt(n));
+        for (var j=0; j<across; j++) {
+            for (var i=0; i<across && j*across+i<n; i++) {
+                c.startMarker();
+                markers[j*across+i].call(c);
+                var marker = c.endMarker();
+                c.markerStart = marker;
+                c.markerMid = marker;
+                c.markerEnd = marker;
+                c.moveTo((i+.2)*200/across,(j+.2)*200/across);
+                c.lineTo((i+.3)*200/across,(j+.5)*200/across);
+                c.lineTo((i+.4)*200/across,(j+.8)*200/across);
+                c.stroke();
+            }
+        }
+    },
     
     /*
     'a1' : function(ctx) {
@@ -822,7 +1020,12 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
     if (canvas.getContext) {
         var ctx = canvas.getContext("2d");
         ctx.clearRect(0,0,200,200);
-        testFunction(ctx);
+        try{
+            testFunction(ctx);
+        }
+        catch (e) {
+            log(""+e);
+        }
     }
     
     ctx = new SVGCanvas(200, 200);
@@ -837,13 +1040,13 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 0, number = 999;
+    var i = 0, start = 36, number = 10;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
-            log("doing test", test);
+            log("doing test number ", i, "name ", test);
             var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
             var functionArea, svgSrcArea, button, canvasTD, svgTD, button;
-            var tr = TR(null, TD(null, test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ), 
+            var tr = TR(null, TD(null, ""+i+": "+test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ), 
                               canvasTD=TD(null), 
                               TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, plotSrc),
                                        BR(null),
