@@ -237,25 +237,43 @@ SVGKit.prototype.whenReady = function (func) {
     }
 }
 
-SVGKit.prototype.setSize = function(width, height) {
+SVGKit.prototype.resize = function(width, height) {
     /***
-        Sets the size of the svgElement and any 
-        htmlElement that contains it.  If no size is given, it's assumed you
-        want to set the size of the HTML element based on the size of the SVG.
+        Sets the size of the htmlElement and svgElement.  No defaults given.
+    ***/
+    this.setSize(this.svgElement, width, height);
+    this.setSize(this.htmlElement, width, height);
+}
+
+SVGKit.prototype.resizeSVGElement = function(width, height) {
+    /***
+        Sets the size of the svgElement 
+        If no size is given, it's assumed you wnat to set the size
+        based on the size of the htmlElement to get rid of scroll bars or something.
+    ***/
+    if (typeof(width)=='undefined' || width==null)
+        width = getNodeAttribute(this.htmlElement, 'width')
+    if (typeof(height)=='undefined' || height==null)
+        height = getNodeAttribute(this.htmlElement, 'height')
+    this.setSize(this.svgElement, width, height);
+}
+
+SVGKit..prototype.resizeSVGHTMLElement = function(width, height) {
+    /***
+        Sets the size of the htmlElement
+        If no size is given, it's assumed you
+        want to set it based on the size of the SVG it contains
     ***/
     if (typeof(width)=='undefined' || width==null)
         width = getNodeAttribute(this.svgElement, 'width')
-    else
-        setNodeAttribute(this.svgElement, 'width', width);
     if (typeof(height)=='undefined' || height==null)
         height = getNodeAttribute(this.svgElement, 'height')
-    else
-        setNodeAttribute(this.svgElement, 'height', height);
-    if (this.htmlElement != null && this.htmlElement != this.svgElement) {
-        // For inline images, this was just accomplished above.
-        setNodeAttribute(this.htmlElement, 'width', width);
-        setNodeAttribute(this.htmlElement, 'height', height);
-    }
+    this.setSize(this.htmlElement, width, height);
+}
+
+SVGKit.prototype.setSize = function(element, width, height) {
+    setNodeAttribute(element, 'width', width);
+    setNodeAttribute(element, 'height', height);
 }
 
 
@@ -422,7 +440,7 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
             // that add themselves to a list uppon load.
             svg.svgDocument = svg.htmlElement.contentDocument;
             svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
-            svg.setSize(width, height);
+            svg.resizeHTMLElement(width, height);
         }
         this.whenReady( partial(finishObject, svg, width, height) );
     }
@@ -442,7 +460,7 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
             log("new embed: Going to svg.htmlElement.getSVGDocumen() )") ;
             svg.svgDocument = svg.htmlElement.getSVGDocument();
             svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
-            svg.setSize(width, height);
+            svg.resizeHTMLElement(width, height);
         }
         this.whenReady( partial(finishEmbed, svg, width, height) );
     }
