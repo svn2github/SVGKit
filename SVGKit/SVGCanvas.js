@@ -38,13 +38,19 @@ TODO:
       <rect x="0" y="0" width="800" height="300" fill="url(#Gradient)"  />
   </mask>
   <text id="Text" x="400" y="200" font-size="100" fill="blue" mask="url(#Mask)" />
-* linearGradient doesn't work in inline mode. Namespace?
+* linearGradient doesn't work in inline mode. See bugs in SVGKit
 * repetition parameter on patterns: 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'
 * shadows: rendered from image A, using the current shadow styles, creating image B.
 * arcTo doesn't work here or in Mozilla.
 * SVG Specific things like text and SVG-syntax shapes like circle.
+* fill() then stroke() should just modify properties of current path.  This is hard,
+   because you have to record when you did ANYTHING like changing an attribute or adding a segment.
+   Keeping track of all this and/or doing this check will slow things down.  I added draw() instead.
+* markers work, but SVG output crashes Inkscape when I click on it, get properties, 
+    and look at markers.  Could be Inkscape problem.
 
-Writing the SVG:* Patters and gradients and other global <defs> that can be used at any time also
+Building the SVG DOM from Canvas Calls (Notes):
+* Patters and gradients and other global <defs> that can be used at any time also
     get written uppon creation, but in the <defs> so they don't get drawn.
 * Test by issuing commands in a random order and make sure you get the same result for Canvas and SVG.
 * Graphics only get written to the SVG when you do a fill(), stroke() or clip() 
@@ -124,6 +130,12 @@ Writing the SVG:* Patters and gradients and other global <defs> that can be used
         append( CIRCLE({'r':12})
 ***/
 
+
+
+////////////////////////////
+//  Setup
+////////////////////////////
+
 if (typeof(dojo) != 'undefined') {
     dojo.provide("SVGCanvas");
     dojo.require("SVGKit");
@@ -157,7 +169,7 @@ if (typeof(SVGCanvas) == 'undefined') {
 }
 
 SVGCanvas.NAME = "SVGCanvas";
-SVGCanvas.VERSION = "1.2";
+SVGCanvas.VERSION = "0.1";
 SVGCanvas.__repr__ = function () {
     return "[" + SVGCanvas.NAME + " " + SVGCanvas.VERSION + "]";
 };
@@ -176,6 +188,10 @@ SVGCanvas.EXPORT = [
 SVGCanvas.EXPORT_OK = [
 ];
 
+
+////////////////////////////
+//  Defaults
+////////////////////////////
 
 SVGCanvas.startingState = 
     { 'fillStyle': "#000000",  // Can be: "#RRGGBB", "rgba(r, g, b, alpha)" where rgb in (0-255), or from a gradient
@@ -211,9 +227,13 @@ SVGCanvas.startingState =
       'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
       'transformations' : "",  // Applys to all subpaths.
       'drawGroup' : null, // When you start, there is no clipping and you're not in a marker.
-      'currentGroup' : null
+      //'currentGroup' : null
     };  // if this is changed, you also have to change the drawGroup
 
+
+////////////////////////////
+//  Constructor
+////////////////////////////
 
 /* Create a SVGCanvas object that acts just like a canvas context */
 SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
@@ -226,6 +246,11 @@ SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100
     //log("Working with svg: ", this.svg, " this: ", this);
     this.svg.whenReady( bind(this.reset, this, null) );
 }
+
+
+////////////////////////////
+//  Utility Functions
+////////////////////////////
 
 SVGCanvas.prototype.reset = function(startingGroup /*=_startingGroup or svg.svgElement*/) {
     /***
@@ -254,9 +279,11 @@ SVGCanvas.prototype.setGroup = function(group) {
     /***
         SVG ONLY
         should probably come between a save() and restore().
+        Sets the drawGroup and currentGroup so that future 
+        fill() and stroke() add their shapes to the given group.
     ***/
     this.drawGroup = group;
-    this.currentGroup = group;
+    //this.currentGroup = group;
     this.transformations = "";
     this.currentTransformationMatrix = null;
 }
@@ -278,8 +305,8 @@ SVGCanvas.prototype._copyState = function(dest, src, just_style /*=false*/) {
         if (just_style==false || just_style==true && 
                 stateKeys[i] != 'currentTransformationMatrix' &&
                 stateKeys[i] != 'transformations' &&
-                stateKeys[i] != 'drawGroup' &&
-                stateKeys[i] != 'currentGroup') {
+                stateKeys[i] != 'drawGroup' /*&&
+                stateKeys[i] != 'currentGroup'*/) {
             dest[stateKeys[i]] = src[stateKeys[i]];
         }
     }
@@ -323,7 +350,9 @@ SVGCanvas.prototype.getStyle = function() {
     return style;
 }
 
-//Canvas State Methods
+////////////////////////////
+//  Canvas State Methods
+////////////////////////////
 
 SVGCanvas.prototype.save = function() {
     /***
@@ -345,6 +374,11 @@ SVGCanvas.prototype.restore = function() {
         this._copyState(this, prevState);
     }
 }
+
+
+////////////////////////////
+//  Canvas Transformation Methods
+////////////////////////////
 
 SVGCanvas.prototype._hasOnlyMoveZero = function() {
     /***
@@ -374,6 +408,8 @@ SVGCanvas.prototype.scale = function(sx, sy) {
         you could get rid of the transform attribute bit and always explicitly
         multiply coordinaets.
     ***/
+    if (typeof(sy) == 'undefined' || sy==null)
+        sy = sx;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero())
         this.transformations += "scale(" + sx +"," + sy + ")";
     else{
@@ -405,6 +441,8 @@ SVGCanvas.prototype.translate = function(tx, ty) {
         argument represents the translation distance in the vertical 
         direction. The arguments are in coordinate space units.
     ***/
+    if (typeof(sy) == 'undefined' || sy==null)
+        sy = 0;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
         this.transformations += "translate(" + tx +"," + ty + ")";
     else {
@@ -414,7 +452,6 @@ SVGCanvas.prototype.translate = function(tx, ty) {
     }
 }
 
-// Helper method
 SVGCanvas.prototype._transformWithCTM = function(x,y) {
     /***
         When a transformation happens in the middle of a path, you 
@@ -436,9 +473,10 @@ SVGCanvas.prototype._transformWithCTM = function(x,y) {
     }
 }
 
-// Working With Paths
+////////////////////////////
+//  Canvas Path Methods
+////////////////////////////
 
-    
 SVGCanvas.prototype.beginPath = function() {
     /***
         resets the list of subpaths to an empty list, and calls 
@@ -487,7 +525,7 @@ but would be output as "L30 762 40 563", removing the unnecessary
 repetition of the L command).
 */
 
-SVGCanvas.prototype.moveTo = function(x, y) {
+SVGCanvas.prototype.moveTo = function(x, y, relative /* =false */) {
     /***
         method sets the current position to the given coordinate and creates 
         a new subpath with that point as its first (and only) point. If there 
@@ -496,11 +534,12 @@ SVGCanvas.prototype.moveTo = function(x, y) {
         
         We don't error check or optimize.
     ***/
+    var cmd = !MochiKit.Base.isUndefinedOrNull(relative) || relative ? ' m ' : ' M ';
     //log("moveTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
     //log("moveTo("+x+","+y+")");
     this._newSubPath();
     var p = this._transformWithCTM(x,y);
-    this._subpaths[this._subpaths.length-1] = " M " + p.x + "," + p.y;  // This must pass the hasDrawing RegExp
+    this._subpaths[this._subpaths.length-1] = cmd + p.x + "," + p.y;  // This must pass the hasDrawing RegExp
     this._lastx = p.x;
     this._lasty = p.y;
 }
@@ -518,11 +557,13 @@ SVGCanvas.prototype.closePath = function() {
 }
 
     
-SVGCanvas.prototype.lineTo = function(x, y) {
+SVGCanvas.prototype.lineTo = function(x, y, relative /* =false */) {
     /***
         adds the given coordinate (x, y) to the list of points of the subpath, 
         and connects the current position to that point with a straight line.
+        relative is an SVG-only feature.
     ***/
+    var cmd = !MochiKit.Base.isUndefinedOrNull(relative) || relative ? ' l ' : ' L ';
     //log("lineTo("+x+","+y+"): path = ", this._subpaths[this._subpaths.length-1]);
     //log("lineTo("+x+","+y+")");
     if (this._subpaths[this._subpaths.length-1] == '') {
@@ -531,34 +572,36 @@ SVGCanvas.prototype.lineTo = function(x, y) {
         return;
     }
     var p = this._transformWithCTM(x,y);
-    this._subpaths[this._subpaths.length-1] += " L " + p.x + "," + p.y;
+    this._subpaths[this._subpaths.length-1] += cmd + p.x + "," + p.y;
     this._lastx = p.x;
     this._lasty = p.y;
 }
     
-SVGCanvas.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {
+SVGCanvas.prototype.quadraticCurveTo = function (cpx, cpy, x, y, relative /* =false */) {
     /***
         adds the given coordinate (x, y) to the list of points of the subpath,
         and connects the current position to that point with a quadratic 
         curve with control point (cpx, cpy)
     ***/
+    var cmd = !MochiKit.Base.isUndefinedOrNull(relative) || relative ? ' q ' : ' Q ';
     var cp = this._transformWithCTM(cpx,cpy);
     var p = this._transformWithCTM(x,y);
-    this._subpaths[this._subpaths.length-1] += " Q " + cp.x + "," + cp.y + " " + p.x + "," + p.y;
+    this._subpaths[this._subpaths.length-1] += cmd + cp.x + "," + cp.y + " " + p.x + "," + p.y;
     this._lastx = p.x;
     this._lasty = p.y;
 }
 
-SVGCanvas.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+SVGCanvas.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y, relative /* =false */) {
     /***
         adds the given coordinate (x, y) to the list of points of the 
         subpath, and connects the two points with a bezier curve with 
         control points (cp1x, cp1y) and (cp2x, cp2y).
     ***/
+    var cmd = !MochiKit.Base.isUndefinedOrNull(relative) || relative ? ' c ' : ' C ';
     var cp1 = this._transformWithCTM(cp1x,cp1y);
     var cp2 = this._transformWithCTM(cp2x,cp2y);
     var p = this._transformWithCTM(x,y);
-    this._subpaths[this._subpaths.length-1] += " C " + cp1.x + "," + cp1.y + " " + cp2.x + "," + cp2.y + " " + p.x + "," + p.y;
+    this._subpaths[this._subpaths.length-1] += cmd + cp1.x + "," + cp1.y + " " + cp2.x + "," + cp2.y + " " + p.x + "," + p.y;
     this._lastx = p.x;
     this._lasty = p.y;
 }
@@ -593,7 +636,6 @@ SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
      of the arc (the second tangent point). 
     */
     /* Looks like Mozilla hasn't implimented it yet either. */
-    return
     var t1x, t1y, t2x, t2y; // Tangent points 1 and 2
     var x0 = this._lastx
     var y0 = this._lasty;
@@ -607,17 +649,21 @@ SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
     var b = Math.sqrt(bx*bx+by*by);
     var dot = ax*bx + ay*by;
     var ab = a*b;
-    var s = Math.sqrt(2*ab/(ab + dot) - 1);  // The result of some calculations.
+    var s = radius*Math.tan( Math.acos(-dot/ab)/2 );
+    //var s = radius*Math.sqrt(2*ab/(ab + dot) - 1);  // The fraction of the way from (x1,y1) to the other two points.
+    log('arcTo x0',x0,'y0',y0,'ax',ax,'ay',ay,'a',a,'bx',bx,'by',by,'b',b,'dot',dot,'ab',ab,'s',s);
     
     t1x = x1 + s*ax/a;
     t1y = y1 + s*ay/a;
     t2x = x1 + s*bx/b;
     t2y = y1 + s*by/b;
 
-    this.lineTo(tp1x, tp1y);  // The path may already be close enough.
-    this._subpaths[this._subpaths.length-1] += " A " + radius + "," + radius + " 0 0,1 " + t2x + "," + t2y;
-    this._lastx = x;
-    this._lasty = y;
+    var sweep = (ax*by-ay*bx)>0 ? '0' : '1';
+        
+    this.lineTo(t1x, t1y);  // The path may already be close enough.
+    this._subpaths[this._subpaths.length-1] += " A " + radius + "," + radius + " 0 0," + sweep + " " + t2x + "," + t2y;
+    this._lastx = t2x;
+    this._lasty = t2y;
 }
 
 
@@ -716,7 +762,50 @@ SVGCanvas.prototype.arc = function (x, y, radius, startAngle, endAngle, anticloc
     }
 }
 
-   
+
+    
+SVGCanvas.prototype.smoothCurveTo = function (x, y, relative /* =false */) {
+    /***
+        SVG ONLY
+        adds the given coordinate (x, y) to the list of points of the subpath,
+        and connects the current position to that point with a smooth quadratic 
+        curve.  Control point is calculated.
+    ***/
+    var cmd = !MochiKit.Base.isUndefinedOrNull(relative) || relative ? ' t ' : ' T ';
+    var p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] += cmd + p.x + "," + p.y;
+    this._lastx = p.x;
+    this._lasty = p.y;
+}
+
+
+SVGCanvas.prototype.ellipticalArc = function (rx, ry, xdegrees, large_arc, sweep, x, y, relative /* =false */) {
+    /***
+     SVG ONLY
+     Draws an elliptical arc from the current point to (x, y). The size and 
+     orientation of the ellipse are defined by two radii (rx, ry) and an 
+     x-axis-rotation, which indicates how the ellipse as a whole is rotated 
+     relative to the current coordinate system. The center (cx, cy) of the 
+     ellipse is calculated automatically to satisfy the constraints imposed 
+     by the other parameters. large-arc-flag and sweep-flag contribute to 
+     the automatic calculations and help determine how the arc is drawn.
+    ***/
+    var cmd = !MochiKit.Base.isUndefinedOrNull(relative) || relative ? ' a ' : ' A ';
+    var rp = this._transformWithCTM(rx,ry);
+    var p = this._transformWithCTM(x,y);
+    this._subpaths[this._subpaths.length-1] += cmd + rp.x + "," + rp.y + " " + 
+                                                 xdegrees + " " + 
+                                                 large_arc + "," + sweep + " " +
+                                                 p.x + "," + p.y;
+    this._lastx = p.x;
+    this._lasty = p.y;
+}
+
+
+////////////////////////////
+//  Canvas Render Methods
+////////////////////////////
+
 SVGCanvas.prototype._setShapeTransform = function(shape) {
     var m = this.currentTransformationMatrix;
     // Add the current transformation matrix to the transformation list only if it's not the identity matrix.
@@ -735,7 +824,7 @@ SVGCanvas.prototype._setPathTransformAttribute = function (node) {
 SVGCanvas.prototype._emitPaths = function () {
     /***
         Go through the subpath list and pick out only the ones that have drawing content
-        
+        Returns a single element, either a <path> or a <g> containing many paths. Could return null.
     ***/
     var pathcount = this._subpaths.length;
     var paths = [];
@@ -768,28 +857,7 @@ SVGCanvas.prototype._emitPaths = function () {
     }
 }
 
-
-    //Stroking a Path
-
-SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
-    /***
-        type is 'stroke' or 'fill'  (not 'clip')
-    ***/
-
-    if (this.applyStyles==false)
-        return;
-    
-    var style, other;
-    if (type=='stroke') {
-        style = this.strokeStyle;
-        other = 'fill';
-    }
-    else if (type=='fill') {
-        style = this.fillStyle;
-        other = 'stroke';
-    }
-    //log('_setGraphicsAttributes(): type =', type, 'style = ', style, 'this.strokeStyle=', this.strokeStyle);
-    
+SVGCanvas.prototype._setGraphicsStyle = function(node, type, style) {
     if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'
         var c = Color.fromString(style);
         setNodeAttribute(node, type, c.toHexString());
@@ -807,14 +875,39 @@ SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         setNodeAttribute(node, type, 'url(#'+ style.id +')');
         setNodeAttribute(node, type+'-opacity', this.globalAlpha);
     }
+}
+
+SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
+    /***
+        type is 'stroke' or 'fill'  (not 'clip')
+        TODO:  If you fill, then stroke a path, you should add attributes to the same path,
+        not make a new one.
+    ***/
+
+    if (this.applyStyles==false)
+        return;
     
-    setNodeAttribute(node, other, 'none');
-    setNodeAttribute(node, other+'-opacity', 0);
+    var style, other;
+    if (type=='stroke') {
+        this._setGraphicsStyle(node, 'stroke', this.strokeStyle);
+        setNodeAttribute(node, 'fill', 'none');
+        setNodeAttribute(node, 'fill-opacity', 0);
+    }
+    else if (type=='fill') {
+        this._setGraphicsStyle(node, 'fill', this.fillStyle);
+        setNodeAttribute(node, 'stroke', 'none');
+        setNodeAttribute(node, 'stroke-opacity', 0);
+    }
+    else {
+        this._setGraphicsStyle(node, 'stroke', this.strokeStyle);
+        this._setGraphicsStyle(node, 'fill', this.fillStyle);
+    }
     
-    if (type=='fill') {
+    
+    if (type=='fill' || type=='both') {
         setNodeAttribute(node, 'fill-rule', 'nonzero');
     }
-    else if (type=='stroke') {
+    if (type=='stroke' || type=='both') {
         setNodeAttribute(node, 'stroke-width', this.lineWidth);
         setNodeAttribute(node, 'stroke-linejoin', this.lineJoin);
         if (this.miterLimit != null)
@@ -831,9 +924,27 @@ SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
     if (this.markerStart != null)
         setNodeAttribute(node, 'marker-start', 'url(#'+this.markerStart+')')
     if (this.markerMid != null)
-        setNodeAttribute(node, 'marker-start', 'url(#'+this.markerMid+')')
+        setNodeAttribute(node, 'marker-mid', 'url(#'+this.markerMid+')')
     if (this.markerEnd != null)
-        setNodeAttribute(node, 'marker-start', 'url(#'+this.markerEnd+')')
+        setNodeAttribute(node, 'marker-end', 'url(#'+this.markerEnd+')')
+}
+
+SVGCanvas.prototype.append = function (element) {
+    /***
+        Appends the given element to the current drawingGroup.
+        This is used in stroke, fill, and clip, but also can
+        be generally useful.
+    ***/
+    this.drawGroup.appendChild(element);
+}
+
+SVGCanvas.prototype._doPath = function(type) {
+    var paths = this._emitPaths();
+    if (paths != null) {
+        this._setGraphicsAttributes(paths, type);
+        this.append(paths);
+    }
+    return paths;
 }
 
 SVGCanvas.prototype.stroke = function () {
@@ -842,14 +953,7 @@ SVGCanvas.prototype.stroke = function () {
         
         returns SVG ONLY svg path element
     ***/
-    var paths = this._emitPaths();
-    if (paths != null) {
-        //log("stroke(): this.drawGroup=", this.drawGroup);
-        this._setGraphicsAttributes(paths, 'stroke');
-        this.drawGroup.appendChild(paths);
-        //log("  in stroke(): finished appending child nodes");
-    }
-    return paths;
+    return this._doPath('stroke');
 }
 
 SVGCanvas.prototype.fill = function () {
@@ -860,13 +964,15 @@ SVGCanvas.prototype.fill = function () {
         
         returns SVG ONLY svg path element
     ***/
-    var paths = this._emitPaths();
-    if (paths != null) {
-        //log("fill(): this.drawGroup=", this.drawGroup);
-        this._setGraphicsAttributes(paths, 'fill');
-        this.drawGroup.appendChild(paths);
-    }
-    return paths;
+    return this._doPath('fill');
+}
+
+SVGCanvas.prototype.draw = function () {
+    /***
+        SVG ONLY
+        strokes and fills path
+    ***/
+    return this._doPath('both');
 }
 
 SVGCanvas.prototype._doClip = function(clippingContents) {
@@ -877,8 +983,11 @@ SVGCanvas.prototype._doClip = function(clippingContents) {
     var clipPath = this.svg.CLIPPATH({'id':clipId});  // , 'clipPathUnits':'userSpaceOnUse'  default
     clipPath.appendChild(clippingContents);
     this.svg.append(clipPath);
-    this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
-    this.currentGroup.appendChild(this.drawGroup);
+    var clipedGroup = this.svg.G({'clip-path':'url(#'+clipId+')'});
+    this.drawGroup.appendChild(clipedGroup);
+    this.drawGroup = clipedGroup;
+    //this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
+    //this.currentGroup.appendChild(this.drawGroup);
     return clipPath;
 }
 
@@ -906,15 +1015,21 @@ SVGCanvas.prototype.clipRect = function(x, y, w, h) {
     return this._doClip(rect);
 }
 
+
+SVGCanvas.prototype.outputShape = function(shape, style) {
+    this._setShapeTransform(shape);
+    this._setGraphicsAttributes(shape, style);
+    this.append(shape);
+    return shape;
+}
+
 SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
     //log("strokeRect(): this.drawGroup=", this.drawGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
                               'height':h});
-    this._setShapeTransform(rect);
-    this._setGraphicsAttributes(rect, 'stroke');
-    this.drawGroup.appendChild(rect);
+    this.outputShape(rect, 'stroke');
     return rect;
 }
 
@@ -924,9 +1039,7 @@ SVGCanvas.prototype.fillRect = function (x, y, w, h) {
                               'y':y,
                               'width':w,
                               'height':h});
-    this._setShapeTransform(rect);
-    this._setGraphicsAttributes(rect, 'fill');
-    this.drawGroup.appendChild(rect);
+    this.outputShape(rect, 'fill');
     return rect;
 }
 
@@ -940,12 +1053,168 @@ SVGCanvas.prototype.clearRect = function (x, y, w, h) {
                               'fill-opacity':1.0,
                               'fill-rule':'nonzero'});
     this._setShapeTransform(rect);
-    this.drawGroup.appendChild(rect);
+    this.append(rect);
     return rect;
 }
 
 
-// SVG Only text
+
+////////////////////////////
+//  SVG Native Shapes
+////////////////////////////
+
+
+
+SVGCanvas.prototype.path = function (data) {
+    var path = this.svg.PATH({'d':data});
+    return path;
+}
+
+SVGCanvas.prototype.strokePath = function (data) {
+    var shape = this.path(data);
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.fillPath = function (data) {
+    var shape = this.path(data);
+    return this.outputShape(shape, 'fill');
+}
+
+SVGCanvas.prototype.drawPath = function (data) {
+    var shape = this.path(data);
+    return this.outputShape(shape, 'both');
+}
+
+SVGCanvas.prototype.roundedRect = function (x, y, w, h, rx, ry) {
+    var rect = this.svg.RECT({'x':x,
+                              'y':y,
+                              'width':w,
+                              'height':h,
+                              'rx':rx,
+                              'ry':ry});
+    return rect;
+}
+
+SVGCanvas.prototype.strokeRoundedRect = function (x, y, w, h, rx, ry) {
+    var shape = this.roundedRect(x, y, w, h, rx, ry);
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.fillRoundedRect = function (x, y, w, h, rx, ry) {
+    var shape = this.roundedRect(x, y, w, h, rx, ry);
+    return this.outputShape(shape, 'fill');
+}
+
+SVGCanvas.prototype.drawRoundedRect = function (x, y, w, h, rx, ry) {
+    var shape = this.roundedRect(x, y, w, h, rx, ry);
+    return this.outputShape(shape, 'both');
+}
+
+
+SVGCanvas.prototype.circle = function (cx, cy, r) {
+    var circle = this.svg.CIRCLE({'cx':cx,
+                              'cy':cy,
+                              'r':r});
+    return circle;
+}
+
+SVGCanvas.prototype.strokeCircle = function (cx, cy, r) {
+    var shape = this.circle(cx, cy, r)
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.fillCircle = function (cx, cy, r) {
+    var shape = this.circle(cx, cy, r)
+    return this.outputShape(shape, 'fill');
+}
+
+SVGCanvas.prototype.drawCircle = function (cx, cy, r) {
+    var shape = this.circle(cx, cy, r)
+    return this.outputShape(shape, 'both');
+}
+
+
+
+SVGCanvas.prototype.ellipse = function (cx, cy, rx, ry) {
+    var ellipse = this.svg.ELLIPSE({'cx':cx,
+                              'cy':cy,
+                              'rx':rx,
+                              'ry':ry});
+    return ellipse;
+}
+
+SVGCanvas.prototype.strokeEllipse = function (cx, cy, rx, ry) {
+    var shape = this.ellipse(cx, cy, rx, ry)
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.fillEllipse = function (cx, cy, rx, ry) {
+    var shape = this.ellipse(cx, cy, rx, ry)
+    return this.outputShape(shape, 'fill');
+}
+
+SVGCanvas.prototype.drawEllipse = function (cx, cy, rx, ry) {
+    var shape = this.ellipse(cx, cy, rx, ry)
+    return this.outputShape(shape, 'both');
+}
+
+
+SVGCanvas.prototype.line = function (x1, y1, x2, y2) {
+    var line = this.svg.LINE({'x1':x1,
+                              'y1':y1,
+                              'x2':x2,
+                              'y2':y2});
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.polyline = function(points) {
+    var polyline = this.svg.POLYLINE({'points':points});
+    return polyline
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.strokePolyline = function (points) {
+    var shape = this.polyline(points)
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.fillPolyline = function (points) {
+    var shape = this.polyline(points)
+    return this.outputShape(shape, 'fill');
+}
+
+SVGCanvas.prototype.drawPolyline = function (points) {
+    var shape = this.polyline(points)
+    return this.outputShape(shape, 'both');
+}
+
+SVGCanvas.prototype.polygon = function(points) {
+    var polygon = this.svg.POLYGON({'points':points});
+    return polygon
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.strokePolygon = function (points) {
+    var shape = this.polygon(points)
+    return this.outputShape(shape, 'stroke');
+}
+
+SVGCanvas.prototype.fillPolygon = function (points) {
+    var shape = this.polygon(points)
+    return this.outputShape(shape, 'fill');
+}
+
+SVGCanvas.prototype.drawPolygon = function (points) {
+    var shape = this.polygon(points)
+    return this.outputShape(shape, 'both');
+}
+
+
+
+
+////////////////////////////
+//  Text Methods SVG Only
+////////////////////////////
 
 SVGCanvas.prototype.text = function(text, x /* =0 */ , y /* =0 */) {
     //log("text(): this.drawGroup=", this.drawGroup);
@@ -973,7 +1242,10 @@ SVGCanvas.prototype._setFontAttributes = function(node) {
     if (this.textAnchor!=null)    setNodeAttribute(node, 'text-anchor', this.textAnchor);
 }
 
-// Creating Gradient, Pattern, and (SVG Only) Marker Styles
+
+////////////////////////////
+//  Creating Gradient, Pattern, and (SVG Only) Marker Styles
+////////////////////////////
 
 SVGCanvas.Gradient = function(self, svg) {
     /***
@@ -1108,43 +1380,636 @@ SVGCanvas.prototype.endPattern = function (repetition) {
     ***/
     var pattern = new this.createPattern(this.drawGroup, repetition);
     this.restore();
+    this.beginPath();
     return pattern;
 }
 
-SVGCanvas.prototype.startMarker = SVGCanvas.prototype._startDefineGroup
-SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */) {
+SVGCanvas.prototype.startMarker = function() {
+    this._startDefineGroup();
+    this.markerStart = null;
+    this.markerMid = null;
+    this.markerEnd = null;
+}
+SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */, markerUnits /* ='strokeWidth' */, 
+                                            overflow /* ='visible' */, 
+                                            markerWidth /* =3 */, markerHeight /* =3 */, 
+                                            refX /* =0 */, refY /* =0 */) {
     /***
         SVG Only
         Returns the marker object to be used in markerStart, markerMid, or markerEnd
     ***/
     // Note that stroke style and fill properties (including with patterns or gradients) do not affect markers
+    var attrs = {};
     if (typeof(orient) == 'undefined' || orient==null)
-        orient = 'auto';
+        attrs['orient'] = 'auto';
+    else
+        attrs['orient'] = orient;  
+    if (typeof(orient) == 'undefined' || orient==null)
+        attrs['style'] = 'overflow:visible;';
+    else
+        attrs['orient'] = 'overflow:'+overflow+';';
+    if (!MochiKit.Base.isUndefinedOrNull(markerUnits))
+        attrs['markerUnits'] = markerUnits;  //  'strokeWidth' | 'userSpaceOnUse'
+    if (!MochiKit.Base.isUndefinedOrNull(markerWidth))
+        attrs['markerWidth'] = markerWidth;
+    if (!MochiKit.Base.isUndefinedOrNull(markerHeight))
+        attrs['markerHeight'] = markerHeight;
+    if (!MochiKit.Base.isUndefinedOrNull(refX))
+        attrs['refX'] = refX;
+    if (!MochiKit.Base.isUndefinedOrNull(refY))
+        attrs['refY'] = refY;
 
-    var id = svg.createUniqueID('marker');
-    //log(' marker id=', this.id);
-    var defs = svg.getDefs(true);
+    var id = this.svg.createUniqueID('marker');
+    //log(' marker id=', id);
+    attrs['id'] = id;
+    var defs = this.svg.getDefs(true);
+    //log(' defs=', defs);
     
-    var marker = this.svg.MARKER({'orient':orient,  // 'auto'
-                                     'id':this.id});
-    //log("  marker: ", this.marker);
-    this.defs.appendChild(this.marker);
-    this.marker.appendChild(this.drawGroup);
+    // http://www.w3.org/TR/SVG/painting.html
+    var marker = this.svg.MARKER(attrs);
+    //log("  marker: ", marker);
+    marker.appendChild(this.drawGroup);
+    defs.appendChild(marker);
 
     this.restore();
+    this.beginPath();
     return id;
 }
 
-// Drawing an Image
+////////////////////////////
+//  Standard Paths (can be used as Markers)
+////////////////////////////
 
-/*
-this.drawImage(image, dx, dy) {}
-this.drawImage(image, dx, dy, dw, dh) {}
-this.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {}
-this.drawImage(image, dx, dy) {}
-this.drawImage(image, dx, dy, dw, dh) {}
-*/
+
+SVGCanvas.prototype.pollygon = function(n, size /* =10 */, rotation /* =0 */, method /* ='area' */) {
+    /***
+        Issue commands (but don't stroke or fill) for a pollygon based on its:
+        'outer' radiu, 'inner' radius, or 'area'
+        The area method is good for plots where people perceive area as magnitude, not direction.
+        TODO: Inkscape's rounded corners, randomization, and non-regular stars.
+    ***/
+    if (typeof(rotation)=='undefined' || rotation==null)
+        rotation = 0;
+    if (typeof(method)=='undefined' || method==null)
+        method = 'area';
+    if (typeof(size)=='undefined' || size==null) {
+        size = 10;
+    }
+    
+    var outer_radius = size;
+    if (method == 'area')
+        outer_radius = Math.sqrt(2*size*size/n/Math.sin(2*Math.PI/n));
+    if (method == 'inner')
+        outer_radius = Math.sqrt(size*Math.Sin(Math.PI/n));
+        
+    this.beginPath();
+    var th = rotation - Math.PI/2;
+    this.moveTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+    for (var i=1; i<n; i++) {
+        th = th + 2*Math.PI/n;
+        this.lineTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+    }
+    this.closePath();
+}
+
+SVGCanvas.prototype.star = function(n, outer_radius /* =10 */, inner_radius /* =outer_radius/3 */, rotation /* =0 */) {
+    /***
+        Issue commands (but don't stroke or fill) for a star based on its inner and outer radius
+    ***/
+    if (typeof(outer_radius)=='undefined' || outer_radius==null)
+        outer_radius = 10;
+    if (typeof(inner_radius)=='undefined' || inner_radius==null)
+        inner_radius = outer_radius/3;
+    if (typeof(rotation)=='undefined' || rotation==null)
+        rotation = 0;
+    this.beginPath();
+    var th = rotation - Math.PI/2;
+    this.moveTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+    for (var i=0; i<n; i++) {
+        this.lineTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+        th = th + Math.PI/(n);
+        this.lineTo(inner_radius*Math.cos(th), inner_radius*Math.sin(th));
+        th = th + Math.PI/(n);
+    }
+    this.closePath();
+}
+
+SVGCanvas.prototype.asterisk = function(n, outer_radius /* =10 */, inner_radius /* =0 */, rotation /* = 0 */) {
+    /***
+        Issue commands (but don't stroke or fill) for an open star or asterisk based on its inner and outer radius
+    ***/
+    if (typeof(outer_radius)=='undefined' || outer_radius==null)
+        outer_radius = 10;
+    if (typeof(inner_radius)=='undefined' || inner_radius==null)
+        inner_radius = 0;
+    if (typeof(rotation)=='undefined' || rotation==null)
+        rotation = 0;
+    this.beginPath();
+    var th = rotation - Math.PI/2;
+    for (var i=0; i<n; i++) {
+        this.moveTo(inner_radius*Math.cos(th), inner_radius*Math.sin(th));
+        this.lineTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+        th = th + 2*Math.PI/n;
+    }
+}
+
+
+////////////////////////////
+//  Inkscape Stock Markers (all but Torso and Legs)
+////////////////////////////
+
+
+SVGCanvas.prototype.inkscapeArrow1 = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+    d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+    */
+    this.lineWidth = 1.0;
+    this.beginPath();
+    this.moveTo(0.0,0.0);
+    this.lineTo(5.0,-5.0);
+    this.lineTo(-12.5,0.0);
+    this.lineTo(5.0,5.0);
+    this.lineTo(0.0,0.0);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeArrow1Lstart = function() {
+    this.scale(0.8);
+    this.inkscapeArrow1();
+}
+
+SVGCanvas.prototype.inkscapeArrow1Lend = function() {
+    this.scale(0.8);
+    this.rotate(Math.PI);
+    this.inkscapeArrow1();
+}
+
+SVGCanvas.prototype.inkscapeArrow1Mstart = function() {
+    this.scale(0.4);
+    this.inkscapeArrow1()
+}
+
+SVGCanvas.prototype.inkscapeArrow1Mend = function() {
+    this.scale(0.4);
+    this.rotate(Math.PI);
+    this.inkscapeArrow1();
+}
+
+SVGCanvas.prototype.inkscapeArrow1Sstart = function() {
+    this.scale(0.2);
+    this.inkscapeArrow1();
+}
+
+SVGCanvas.prototype.inkscapeArrow1Send = function() {
+    this.scale(0.2);
+    this.rotate(Math.PI);
+    this.inkscapeArrow1();
+}
+
+SVGCanvas.prototype.inkscapeArrow2 = function() {
+    /*
+    style="font-size:12.0;fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round"   
+    d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "      
+    */
+    this.translate(-5,0);
+    this.lineWidth = 0.62500000;
+    this.lineJoin = 'round';
+    this.beginPath();
+    this.moveTo(8.7185878,4.0337352);
+    this.lineTo(-2.2072895,0.016013256);
+    this.lineTo(8.7185884,-4.0017078);
+    this.bezierCurveTo(6.9730900,-1.6296469, 6.9831476,1.6157441, 8.7185878,4.0337352);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+
+SVGCanvas.prototype.inkscapeArrow2Lstart = function() {
+    this.scale(1.1);
+    this.inkscapeArrow2()
+}
+
+SVGCanvas.prototype.inkscapeArrow2Lend = function() {
+    this.scale(1.1);
+    this.rotate(Math.PI);
+    this.inkscapeArrow2();
+}
+
+SVGCanvas.prototype.inkscapeArrow2Mstart = function() {
+    this.scale(0.6);
+    this.inkscapeArrow2()
+}
+
+SVGCanvas.prototype.inkscapeArrow2Mend = function() {
+    this.scale(0.6);
+    this.rotate(Math.PI);
+    this.inkscapeArrow2();
+}
+
+SVGCanvas.prototype.inkscapeArrow2Sstart = function() {
+    this.scale(0.3);
+    this.inkscapeArrow2()
+}
+
+SVGCanvas.prototype.inkscapeArrow2Send = function() {
+    this.scale(0.3);
+    this.rotate(Math.PI);
+    this.inkscapeArrow2();
+}
+
+SVGCanvas.prototype.inkscapeTail = function() {
+    /*
+    style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;marker-start:none;marker-end:none;stroke-linecap:round" />
+    d="M -3.8048674,-3.9585227 L 0.54352094,-0.00068114835"
+    d="M -1.2866832,-3.9585227 L 3.0617053,-0.00068114835"
+    d="M 1.3053582,-3.9585227 L 5.6537466,-0.00068114835"
+    d="M -3.8048674,4.1775838 L 0.54352094,0.21974226"
+    d="M -1.2866832,4.1775838 L 3.0617053,0.21974226"
+    d="M 1.3053582,4.1775838 L 5.6537466,0.21974226"
+    */
+    this.scale(-1.2)
+    this.lineWidth = 0.8;
+    this.lineJoin = 'round';
+    this.beginPath();
+    this.moveTo(-3.8048674,-3.9585227);
+    this.lineTo(0.54352094,-0.00068114835);
+    this.stroke();
+    this.moveTo(-1.2866832,-3.9585227);
+    this.lineTo(3.0617053,-0.00068114835);
+    this.stroke();
+    this.moveTo(1.3053582,-3.9585227);
+    this.lineTo(5.6537466,-0.00068114835);
+    this.stroke();
+    this.moveTo(-3.8048674,4.1775838);
+    this.lineTo(0.54352094,0.21974226);
+    this.stroke();
+    this.moveTo(-1.2866832,4.1775838);
+    this.lineTo(3.0617053,0.21974226);
+    this.stroke();
+    this.moveTo(1.3053582,4.1775838);
+    this.lineTo(5.6537466,0.21974226);
+    this.stroke();
+}
+
+
+SVGCanvas.prototype.inkscapeDistance = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none" />
+    d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+    style="fill:none;fill-opacity:0.75000000;fill-rule:evenodd;stroke:#000000;stroke-width:1.2pt;marker-start:none" 
+    d="M -14.759949,-7 L -14.759949,65"
+    */
+    this.translate(8,0)
+    this.inkscapeArrow1()
+    this.strokeWidth = 1.2;
+    this.beginPath();
+    this.moveTo(-14.759949,-7);
+    this.lineTo(-14.759949,65);
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeDistanceIn = function() {
+    this.scale(0.6,0.6)
+    this.inkscapeDistance();
+}
+
+SVGCanvas.prototype.inkscapeDistanceOut = function() {
+    this.scale(-0.6,0.6)
+    this.inkscapeDistance();
+}
+
+SVGCanvas.prototype.inkscapeDot = function() {
+    /*
+    d="M -2.5,-1.0 C -2.5,1.7600000 -4.7400000,4.0 -7.5,4.0 C -10.260000,4.0 -12.5,1.7600000 -12.5,-1.0 C -12.5,-3.7600000 -10.260000,-6.0 -7.5,-6.0 C -4.7400000,-6.0 -2.5,-3.7600000 -2.5,-1.0 z "
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;marker-end:none"
+    transform="scale(0.8) translate(7.125493, 1)"
+    */
+    this.strokeWidth = 1.0;
+    this.translate(7.125493, 1);
+    this.beginPath();
+    this.moveTo(-2.5,-1.0);
+    this.bezierCurveTo(-2.5,1.76, -4.74,4.0, -7.5,4.0);
+    this.bezierCurveTo(-10.26,4.0, -12.5,1.76, -12.5,-1.0);
+    this.bezierCurveTo(-12.5,-3.76, -10.26,-6.0, -7.5,-6.0);
+    this.bezierCurveTo( -4.74,-6.0, -2.5,-3.76, -2.5,-1.0);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeDot_l = function() {
+    this.scale(0.8)
+    this.inkscapeDot();
+}
+
+SVGCanvas.prototype.inkscapeDot_m = function() {
+    this.scale(0.4)
+    this.inkscapeDot();
+}
+
+SVGCanvas.prototype.inkscapeDot_s = function() {
+    this.scale(0.2)
+    this.inkscapeDot();
+}
+
+SVGCanvas.prototype.inkscapeSquare = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+    d="M -5.0,-5.0 L -5.0,5.0 L 5.0,5.0 L 5.0,-5.0 L -5.0,-5.0 z "
+    */
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(-5.0,-5.0);
+    this.lineTo(-5.0,5.0);
+    this.lineTo(5.0,5.0);
+    this.lineTo(5.0,-5.0);
+    this.lineTo(-5.0,-5.0);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeSquareL = function() {
+    this.scale(0.8)
+    this.inkscapeSquare();
+}
+
+SVGCanvas.prototype.inkscapeSquareM = function() {
+    this.scale(0.4)
+    this.inkscapeSquare();
+}
+
+SVGCanvas.prototype.inkscapeSquareS = function() {
+    this.scale(0.2)
+    this.inkscapeSquare();
+}
+
+
+SVGCanvas.prototype.inkscapeDiamond = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+    d="M -2.1579186e-005,-7.0710768 L -7.0710894,-8.9383918e-006 L -2.1579186e-005,7.0710589 L 7.0710462,-8.9383918e-006 L -2.1579186e-005,-7.0710768 z "
+    */
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(0,-7.0710768);
+    this.lineTo(-7.0710894,0);
+    this.lineTo(0,7.0710589);
+    this.lineTo(7.0710462,0);
+    this.lineTo(0,-7.0710768);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeDiamondL = function() {
+    this.scale(0.8)
+    this.inkscapeDiamond();
+}
+
+SVGCanvas.prototype.inkscapeDiamondM = function() {
+    this.scale(0.4)
+    this.inkscapeDiamond();
+}
+
+SVGCanvas.prototype.inkscapeDiamondS = function() {
+    this.scale(0.2)
+    this.inkscapeDiamond();
+}
+
+SVGCanvas.prototype.inkscapeTriangle = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+    d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+    */
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(5.77,0.0);
+    this.lineTo(-2.88,5.0);
+    this.lineTo(-2.88,-5.0);
+    this.lineTo(5.77,0.0);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeTriangleInL = function() {
+    this.scale(-0.8)
+    this.inkscapeTriangle();
+}
+
+SVGCanvas.prototype.inkscapeTriangleInM = function() {
+    this.scale(-0.4)
+    this.inkscapeTriangle();
+}
+
+SVGCanvas.prototype.inkscapeTriangleInS = function() {
+    this.scale(-0.2)
+    this.inkscapeTriangle();
+}
+
+SVGCanvas.prototype.inkscapeTriangleOutL = function() {
+    this.scale(0.8)
+    this.inkscapeTriangle();
+}
+
+SVGCanvas.prototype.inkscapeTriangleOutM = function() {
+    this.scale(0.4)
+    this.inkscapeTriangle();
+}
+
+SVGCanvas.prototype.inkscapeTriangleOutS = function() {
+    this.scale(0.2)
+    this.inkscapeTriangle();
+}
+
+SVGCanvas.prototype.inkscapeStop = function() {
+    /*
+    style="fill:none;fill-opacity:0.75000000;fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+    d="M 0.0,5.65 L 0.0,-5.65"
+    */
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(0.0,5.65);
+    this.lineTo(0.0,-5.65);
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeStopL = function() {
+    this.scale(0.8)
+    this.inkscapeStop();
+}
+
+SVGCanvas.prototype.inkscapeStopM = function() {
+    this.scale(0.4)
+    this.inkscapeStop();
+}
+
+SVGCanvas.prototype.inkscapeStopS = function() {
+    this.scale(0.2)
+    this.inkscapeStop();
+}
+
+
+SVGCanvas.prototype.inkscapeSemiCircleIn = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;marker-end:none"
+    d="M -0.37450702,-0.045692580 C -0.37450702,2.7143074 1.8654930,4.9543074 4.6254930,4.9543074 L 4.6254930,-5.0456926 C 1.8654930,-5.0456926 -0.37450702,-2.8056926 -0.37450702,-0.045692580 z "
+    */
+    this.scale(0.6);
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(-0.37450702,-0.045692580);
+    this.bezierCurveTo(-0.37450702,2.7143074, 1.8654930,4.9543074, 4.6254930,4.9543074);
+    this.lineTo(4.6254930,-5.0456926);
+    this.bezierCurveTo(1.8654930,-5.0456926, -0.37450702,-2.8056926, -0.37450702,-0.045692580);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeSemiCircleOut = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;marker-end:none"
+    M -2.5,-0.80913858 C -2.5,1.9508614 -4.7400000,4.1908614 -7.5,4.1908614 L -7.5,-5.8091386 C -4.7400000,-5.8091386 -2.5,-3.5691386 -2.5,-0.80913858 z
+    */
+    this.scale(0.6)
+    this.translate(7.125493,0.763446)
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(-2.5,-0.80913858);
+    this.bezierCurveTo(-2.5,1.9508614, -4.7400000,4.1908614, -7.5,4.1908614);
+    this.lineTo( -7.5,-5.8091386);
+    this.bezierCurveTo(-4.7400000,-5.8091386, -2.5,-3.5691386, -2.5,-0.80913858);
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeSemiCurveIn = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;marker-end:none;fill:none"
+    d="M 4.6254930,-5.0456926 C 1.8654930,-5.0456926 -0.37450702,-2.8056926 -0.37450702,-0.045692580 C -0.37450702,2.7143074 1.8654930,4.9543074 4.6254930,4.9543074"
+    */
+    this.scale(0.6);
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(4.6254930,-5.0456926);
+    this.bezierCurveTo(1.8654930,-5.0456926, -0.37450702,-2.8056926, -0.37450702,-0.045692580);
+    this.bezierCurveTo( -0.37450702,2.7143074, 1.8654930,4.9543074, 4.6254930,4.9543074);
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeSemiCurveOut = function() {
+    /*
+    style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;marker-end:none"
+    d="M -5.4129913,-5.0456926 C -2.6529913,-5.0456926 -0.41299131,-2.8056926 -0.41299131,-0.045692580 C -0.41299131,2.7143074 -2.6529913,4.9543074 -5.4129913,4.9543074"
+    */
+    this.scale(0.6);
+    this.strokeWidth = 1.0;
+    this.beginPath();
+    this.moveTo(-5.4129913,-5.0456926);
+    this.bezierCurveTo(-2.6529913,-5.0456926, -0.41299131,-2.8056926, -0.41299131,-0.045692580);
+    this.bezierCurveTo(-0.41299131,2.7143074, -2.6529913,4.9543074, -5.4129913,4.9543074);
+    this.stroke();
+}
+
+
+SVGCanvas.prototype.inkscapeSemiCurvyCross = function() {
+    this.save();
+    this.inkscapeSemiCurveIn()
+    this.restore();
+    this.inkscapeSemiCurveOut()
+}
+
+
+SVGCanvas.prototype.inkscapeSemiScissors = function() {
+    this.beginPath();
+    this.moveTo(9.0898857,-3.6061018);
+    this.bezierCurveTo(8.1198849,-4.7769976, 6.3697607,-4.7358294, 5.0623558,-4.2327734 );
+    this.lineTo(-3.1500488,-1.1548705 );
+    this.bezierCurveTo(-5.5383421,-2.4615840, -7.8983361,-2.0874077, -7.8983361,-2.7236578 );
+    this.bezierCurveTo(-7.8983361,-3.2209742, -7.4416699,-3.1119800, -7.5100293,-4.4068519 );
+    this.bezierCurveTo(-7.5756648,-5.6501286, -8.8736064,-6.5699315, -10.100428,-6.4884954 );
+    this.bezierCurveTo(-11.327699,-6.4958500, -12.599867,-5.5553341, -12.610769,-4.2584343 );
+    this.bezierCurveTo(-12.702194,-2.9520479, -11.603560,-1.7387447, -10.304005,-1.6532027 );
+    this.bezierCurveTo(-8.7816644,-1.4265411, -6.0857470,-2.3487593, -4.8210600,-0.082342643 );
+    this.bezierCurveTo(-5.7633447,1.6559151, -7.4350844,1.6607341, -8.9465707,1.5737277 );
+    this.bezierCurveTo(-10.201445,1.5014928, -11.708664,1.8611256, -12.307219,3.0945882 );
+    this.bezierCurveTo(-12.885586,4.2766744, -12.318421,5.9591904, -10.990470,6.3210002 );
+    this.bezierCurveTo(-9.6502788,6.8128279, -7.8098011,6.1912892, -7.4910978,4.6502760 );
+    this.bezierCurveTo(-7.2454393,3.4624530, -8.0864637,2.9043186, -7.7636052,2.4731223 );
+    this.bezierCurveTo(-7.5199917,2.1477623, -5.9728246,2.3362771, -3.2164999,1.0982979 );
+    this.lineTo(5.6763468,4.2330688 );
+    this.bezierCurveTo(6.8000164,4.5467672, 8.1730685,4.5362646, 9.1684433,3.4313614 );
+    this.lineTo(-0.051640930,-0.053722219 );
+    this.lineTo(9.0898857,-3.6061018 );
+    this.closePath();
+    this.moveTo(-9.2179159,-5.5066058 );
+    this.bezierCurveTo(-7.9233569,-4.7838060, -8.0290767,-2.8230356, -9.3743431,-2.4433169 );
+    this.bezierCurveTo(-10.590861,-2.0196559, -12.145370,-3.2022863, -11.757521,-4.5207817 );
+    this.bezierCurveTo(-11.530373,-5.6026336, -10.104134,-6.0014137, -9.2179159,-5.5066058 );
+    this.closePath();
+    this.moveTo(-9.1616516,2.5107591);
+    this.bezierCurveTo(-7.8108215,3.0096239, -8.0402087,5.2951947, -9.4138723,5.6023681 );
+    this.bezierCurveTo(-10.324932,5.9187072, -11.627422,5.4635705, -11.719569,4.3902287 );
+    this.bezierCurveTo(-11.897178,3.0851737, -10.363484,1.9060805, -9.1616516,2.5107591 );
+    this.closePath();
+    this.stroke();
+}
+
+SVGCanvas.prototype.inkscapeSemiClub = function() {
+    /*
+    style="fill-rule:evenodd;stroke:#000000;stroke-width:0.74587913pt;marker-start:none"
+    */
+    this.scale(0.6);
+    this.strokeWidth = 0.74587913;
+    this.beginPath();
+    this.moveTo(-1.5971367,-7.0977635 );
+    this.bezierCurveTo(-3.4863874,-7.0977635, -5.0235187,-5.5606321, -5.0235187,-3.6713813 );
+    this.bezierCurveTo(-5.0235187,-3.0147015, -4.7851656,-2.4444556, -4.4641095,-1.9232271 );
+    this.bezierCurveTo(-4.5028609,-1.8911157, -4.5437814,-1.8647646, -4.5806531,-1.8299921 );
+    this.bezierCurveTo(-5.2030765,-2.6849849, -6.1700514,-3.2751330, -7.3077730,-3.2751330 );
+    this.bezierCurveTo(-9.1970245,-3.2751331, -10.734155,-1.7380016, -10.734155,0.15124914 );
+    this.bezierCurveTo(-10.734155,2.0404999, -9.1970245,3.5776313, -7.3077730,3.5776313 );
+    this.bezierCurveTo(-6.3143268,3.5776313, -5.4391540,3.1355702, -4.8137404,2.4588126 );
+    this.bezierCurveTo(-4.9384274,2.8137041, -5.0235187,3.1803000, -5.0235187,3.5776313 );
+    this.bezierCurveTo(-5.0235187,5.4668819, -3.4863874,7.0040135, -1.5971367,7.0040135 );
+    this.bezierCurveTo(0.29211394,7.0040135, 1.8292454,5.4668819, 1.8292454,3.5776313 );
+    this.bezierCurveTo(1.8292454,2.7842354, 1.5136868,2.0838028, 1.0600576,1.5031550 );
+    this.bezierCurveTo(2.4152718,1.7663868, 3.7718375,2.2973711, 4.7661444,3.8340272 );
+    this.bezierCurveTo(4.0279463,3.0958289, 3.5540908,1.7534117, 3.5540908,-0.058529361); 
+    this.lineTo(2.9247554,-0.10514681 );
+    this.lineTo(3.5074733,-0.12845553 );
+    this.bezierCurveTo(3.5074733,-1.9403966, 3.9580199,-3.2828138, 4.6962183,-4.0210121 );
+    this.bezierCurveTo(3.7371277,-2.5387813, 2.4390549,-1.9946496, 1.1299838,-1.7134486 );
+    this.bezierCurveTo(1.5341802,-2.2753578, 1.8292454,-2.9268556, 1.8292454,-3.6713813 );
+    this.bezierCurveTo(1.8292454,-5.5606319, 0.29211394,-7.0977635, -1.5971367,-7.0977635 );
+    this.closePath();
+    this.fill();
+    this.stroke();
+}
+
+
+////////////////////////////
+//  Canvas Image Methods
+////////////////////////////
+
+
 SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+    /***
+        Usage:
+        
+        drawImage(image, dx, dy) {}
+        drawImage(image, dx, dy, dw, dh) {}
+        drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {}
+        drawImage(image, dx, dy) {}
+        drawImage(image, dx, dy, dw, dh) {}
+    ***/
     //log("drawImage(", image, sx, sy, sw, sh, dx, dy, dw, dh, ")");
     //log("  img: ", image.width, image.height, image.src);
     var x = sx;
@@ -1169,6 +2034,11 @@ SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh)
     this.svg.append(img);
 }
 
+////////////////////////////
+// Class Utilities
+////////////////////////////
+
+
 SVGCanvas.__new__ = function (win) {
 
     var m = MochiKit.Base;
@@ -1183,6 +2053,4 @@ SVGCanvas.__new__ = function (win) {
 
 SVGCanvas.__new__(this);
 
-MochiKit.Base._exportSymbols(this, SVGCanvas);
-
-var SVGCanvas = SVGCanvas;
+//MochiKit.Base._exportSymbols(this, SVGCanvas);
