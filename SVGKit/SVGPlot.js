@@ -178,7 +178,7 @@ SVGPlot.prototype.constructor = SVGPlot;
 SVGPlot.superclass = SVGCanvas.prototype;
 
 SVGPlot.NAME = "SVGPlot";
-SVGPlot.VERSION = "1.2";
+SVGPlot.VERSION = "0.1";
 SVGPlot.__repr__ = function () {
     return "[" + SVGPlot.NAME + " " + SVGPlot.VERSION + "]";
 };
