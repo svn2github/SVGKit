@@ -6,27 +6,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
 
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
-Why would you want this?
-* The Canvas API is a nice API to build up an SVG without explicit DOM manipulations.
-    It's pretty similar to SVG.
-    it's easier to write my plotting software using this.
-* SVG (with JavaScript) is a W3C standard, but canvas is not.
-* When your browser supports SVG not canvas.
-* When you have code written for canvas and you want to use it with SVG.
-* When you want to save the result of canvas calls to an SVG file for 
-    later display or printing at high-res.
-* When you want to be able to apply events to objects (shapes) rather than
-    have to translate the (x,y) coordinates like you do in Canvas.
 
-When wouldn't you use this?
-* When speed matters. With this, you just stack SVG shapes on top
-      of each other forever.  Even you clear it, those others will still
-      be around taking memory and rendering time. For most games and many
-      others, you want the "blast it on the screen and forget it" model.
-* Sometimes the simplest representation of a graphic is a program to draw it
-      (e.g. fractals, function plotting) rather than an XML-like description.
-* When you didn't care about the SVG DOM tree
-* When your browser supports canvas but not SVG
 
 Maybe this should auto-export its methods to the SVG object when included.
 Convenient, but very confusing to users.
@@ -41,8 +21,7 @@ TODO:
 * linearGradient doesn't work in inline mode. See bugs in SVGKit
 * repetition parameter on patterns: 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'
 * shadows: rendered from image A, using the current shadow styles, creating image B.
-* arcTo doesn't work here or in Mozilla.
-* SVG Specific things like text and SVG-syntax shapes like circle.
+* arcTo doesn't work in Mozilla so it's not well tested.
 * fill() then stroke() should just modify properties of current path.  This is hard,
    because you have to record when you did ANYTHING like changing an attribute or adding a segment.
    Keeping track of all this and/or doing this check will slow things down.  I added draw() instead.
@@ -126,8 +105,6 @@ Building the SVG DOM from Canvas Calls (Notes):
         fill  // should make <g style="one"> <path/> <path style="two"/> </g>
         fillRect // should make <g style="one"> <path/> <g style="two"> <path/> <rect/> </g> </g>
         
-    * SVG Specific: Add SVG element to the current group:
-        append( CIRCLE({'r':12})
 ***/
 
 
@@ -219,7 +196,7 @@ SVGCanvas.startingState =
       'fontStyle' : null,    // SVG's font-style = normal | italic | oblique |  inherit
       'fontVariant' : null,    // SVG's font-variant= normal | small-caps |  inherit
       'fontStretch' : null,  // SVT's font-stretch = normal | wider | narrower | ultra-condensed | extra-condensed | condensed | semi-condensed | semi-expanded | expanded | extra-expanded | ultra-expanded | inherit
-      'textAnchor' : null, // 'text-anchor' start | middle | end | inherit (defaults to start.  null implicitly means inherit
+      'textAnchor' : null, // 'text-anchor' {start | middle | end | inherit} defaults to start.  null implicitly means inherit
       
       'applyStyles' : true,  // Apply all of these styles to a given SVG element or let them be inherited.
       
@@ -267,6 +244,11 @@ SVGCanvas.prototype.reset = function(startingGroup /*=_startingGroup or svg.svgE
     this._startingGroup = startingGroup;  // Set it so next time we can just call reset()
     this.setState(SVGCanvas.startingState);
     this.setGroup(startingGroup);
+    
+    // To detect a fill followed by a stroke that should just add fill attributes.
+    this.filledSubpaths = null;
+    this.filledStyle = null;
+    this.filledNode =  null;
     
     // If we don't already have a state stack for save() and restore(), create one.
     if (typeof(this._stateStack)=='undefined' || this._stateStack==null)
@@ -330,6 +312,16 @@ SVGCanvas.prototype.getState = function() {
     var state = {};
     this._copyState(state, this);
     return state;
+}
+
+SVGCanvas.prototype.compareState = function(state) {
+    var stateKeys = keys(SVGCanvas.startingState)
+    for (var i=0; i<stateKeys.length; i++) {
+        if (this[stateKeys[i]] != state[stateKeys[i]]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 SVGCanvas.prototype.setStyle = function(style) {
@@ -651,7 +643,7 @@ SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
     var ab = a*b;
     var s = radius*Math.tan( Math.acos(-dot/ab)/2 );
     //var s = radius*Math.sqrt(2*ab/(ab + dot) - 1);  // The fraction of the way from (x1,y1) to the other two points.
-    log('arcTo x0',x0,'y0',y0,'ax',ax,'ay',ay,'a',a,'bx',bx,'by',by,'b',b,'dot',dot,'ab',ab,'s',s);
+    //log('arcTo x0',x0,'y0',y0,'ax',ax,'ay',ay,'a',a,'bx',bx,'by',by,'b',b,'dot',dot,'ab',ab,'s',s);
     
     t1x = x1 + s*ax/a;
     t1y = y1 + s*ay/a;
@@ -891,12 +883,12 @@ SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
     if (type=='stroke') {
         this._setGraphicsStyle(node, 'stroke', this.strokeStyle);
         setNodeAttribute(node, 'fill', 'none');
-        setNodeAttribute(node, 'fill-opacity', 0);
+        //setNodeAttribute(node, 'fill-opacity', 0);
     }
     else if (type=='fill') {
         this._setGraphicsStyle(node, 'fill', this.fillStyle);
         setNodeAttribute(node, 'stroke', 'none');
-        setNodeAttribute(node, 'stroke-opacity', 0);
+        //setNodeAttribute(node, 'stroke-opacity', 0);
     }
     else {
         this._setGraphicsStyle(node, 'stroke', this.strokeStyle);
@@ -953,6 +945,18 @@ SVGCanvas.prototype.stroke = function () {
         
         returns SVG ONLY svg path element
     ***/
+    /*
+    document.can = this
+    if (this.filledSubpaths != null && this.filledSubpaths == this._subpaths && 
+            this.filledStyle != null && this.compareState(this.filledStyle)) {
+        this._setGraphicsAttributes(this.filledNode, 'both')
+        return this.filledNode;
+    }
+    else {
+        //this.filledSubpaths = null;
+        return this._doPath('stroke');
+    }
+    */
     return this._doPath('stroke');
 }
 
@@ -964,6 +968,12 @@ SVGCanvas.prototype.fill = function () {
         
         returns SVG ONLY svg path element
     ***/
+    /*
+    this.filledSubpaths = this._subpaths;
+    this.filledStyle = this.getState();
+    this.filledNode =  this._doPath('fill');
+    return this.filledNode;
+    */
     return this._doPath('fill');
 }
 
@@ -1017,6 +1027,13 @@ SVGCanvas.prototype.clipRect = function(x, y, w, h) {
 
 
 SVGCanvas.prototype.outputShape = function(shape, style) {
+    /*
+    if (style=='fill')
+        this._saveFilledState();
+    else if (style=='stroke' && this._compareFilledState()) {
+        this._setGraphicsAttributes(shape, style);
+    }
+    */
     this._setShapeTransform(shape);
     this._setGraphicsAttributes(shape, style);
     this.append(shape);
@@ -1244,6 +1261,47 @@ SVGCanvas.prototype._setFontAttributes = function(node) {
 
 
 ////////////////////////////
+//  Canvas Image Methods
+////////////////////////////
+
+
+SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+    /***
+        Usage:
+        
+        drawImage(image, dx, dy) {}
+        drawImage(image, dx, dy, dw, dh) {}
+        drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {}
+        drawImage(image, dx, dy) {}
+        drawImage(image, dx, dy, dw, dh) {}
+    ***/
+    //log("drawImage(", image, sx, sy, sw, sh, dx, dy, dw, dh, ")");
+    //log("  img: ", image.width, image.height, image.src);
+    var x = sx;
+    var y = sy;
+    var width = (typeof(sw)=='undefined' || sw == null) ? image.width : sw;
+    var height = (typeof(sw)=='undefined' || sw == null) ? image.width : sh;
+    var viewBox = null;
+    if (typeof(dh)!='undefined' && dh != null) {
+        viewBox = sx + " " + sy + " " + sw + " " + sh;
+        x = dx;
+        y = dy;
+        width = dw;
+        height = dh;
+    }
+    var img = this.svg.IMAGE({'x':x, 
+                              'y':y, 
+                              'width':width,
+                              'height':height,
+                              'xlink:href':image.src});
+    if (viewBox != null)
+        setNodeAttribute(node, 'viewBox', viewBox);
+    this._setShapeTransform(img);
+    this.svg.append(img);
+}
+
+
+////////////////////////////
 //  Creating Gradient, Pattern, and (SVG Only) Marker Styles
 ////////////////////////////
 
@@ -1316,6 +1374,19 @@ SVGCanvas.prototype.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {
     return new SVGCanvas.RadialGradient(this.svg, x0, y0, r0, x1, y1, r1);
 }
 
+
+SVGCanvas.prototype._startDefineGroup = function () {
+    /***
+        SVG Only
+        Until endMarker or endPattern are called, all drawing will be done in a group that doesn't get displayed.
+        Reset the transformations, but not the fillStyle, strokeStyle and things like that.
+    ***/
+    this.save();
+    this.currentTransformationMatrix = null;
+    this.transformations = '';
+    this.drawGroup = this.svg.G();
+}
+
 SVGCanvas.Pattern = function(svg, contents, repetition) {
     /***
         Firefox doesn't seem to support patterns from images in SVG
@@ -1359,19 +1430,6 @@ SVGCanvas.prototype.createPattern = function (image, repetition) {
     return new SVGCanvas.Pattern(this.svg, image, repetition);
 }
 
-SVGCanvas.prototype._startDefineGroup = function () {
-    /***
-        SVG Only
-        Until endMarker or endPattern are called, all drawing will be done in a group that doesn't get displayed.
-        Reset the transformations, but not the fillStyle, strokeStyle and things like that.
-    ***/
-    this.save();
-    this.currentTransformationMatrix = null;
-    this.transformations = '';
-    this.drawGroup = this.svg.G();
-}
-
-
 SVGCanvas.prototype.startPattern = SVGCanvas.prototype._startDefineGroup
 SVGCanvas.prototype.endPattern = function (repetition) {
     /***
@@ -1383,6 +1441,7 @@ SVGCanvas.prototype.endPattern = function (repetition) {
     this.beginPath();
     return pattern;
 }
+
 
 SVGCanvas.prototype.startMarker = function() {
     this._startDefineGroup();
@@ -1992,46 +2051,6 @@ SVGCanvas.prototype.inkscapeSemiClub = function() {
     this.closePath();
     this.fill();
     this.stroke();
-}
-
-
-////////////////////////////
-//  Canvas Image Methods
-////////////////////////////
-
-
-SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
-    /***
-        Usage:
-        
-        drawImage(image, dx, dy) {}
-        drawImage(image, dx, dy, dw, dh) {}
-        drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {}
-        drawImage(image, dx, dy) {}
-        drawImage(image, dx, dy, dw, dh) {}
-    ***/
-    //log("drawImage(", image, sx, sy, sw, sh, dx, dy, dw, dh, ")");
-    //log("  img: ", image.width, image.height, image.src);
-    var x = sx;
-    var y = sy;
-    var width = (typeof(sw)=='undefined' || sw == null) ? image.width : sw;
-    var height = (typeof(sw)=='undefined' || sw == null) ? image.width : sh;
-    var viewBox = null;
-    if (typeof(dh)!='undefined' && dh != null) {
-        viewBox = sx + " " + sy + " " + sw + " " + sh;
-        x = dx;
-        y = dy;
-        width = dw;
-        height = dh;
-    }
-    var img = this.svg.IMAGE({'x':x, 
-                              'y':y, 
-                              'width':width,
-                              'height':height,
-                              'xlink:href':image.src,
-                              'viewBox':viewBox});
-    this._setShapeTransform(img);
-    this.svg.append(img);
 }
 
 ////////////////////////////
