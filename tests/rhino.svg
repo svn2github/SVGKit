@@ -1,1 +1,15 @@
-<svg height="200" version="1.0" width="200" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <image height="38" viewBox="" width="50" x="0" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="0"/> <image height="38" viewBox="" width="50" x="50" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="0"/> <image height="38" viewBox="" width="50" x="100" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="0"/> <image height="38" viewBox="" width="50" x="0" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="38"/> <image height="38" viewBox="" width="50" x="50" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="38"/> <image height="38" viewBox="" width="50" x="100" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="38"/> <image height="38" viewBox="" width="50" x="0" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="76"/> <image height="38" viewBox="" width="50" x="50" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="76"/> <image height="38" viewBox="" width="50" x="100" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="76"/> <image height="38" viewBox="" width="50" x="0" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="114"/> <image height="38" viewBox="" width="50" x="50" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="114"/> <image height="38" viewBox="" width="50" x="100" xlink:href="file:///Z:/allsky/controlsw/static/svgplot/rhino.jpg" y="114"/> </svg>
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<image height="38" width="50" x="0" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="0"/>
+<image height="38" width="50" x="50" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="0"/>
+<image height="38" width="50" x="100" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="0"/>
+<image height="38" width="50" x="0" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="38"/>
+<image height="38" width="50" x="50" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="38"/>
+<image height="38" width="50" x="100" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="38"/>
+<image height="38" width="50" x="0" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="76"/>
+<image height="38" width="50" x="50" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="76"/>
+<image height="38" width="50" x="100" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="76"/>
+<image height="38" width="50" x="0" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="114"/>
+<image height="38" width="50" x="50" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="114"/>
+<image height="38" width="50" x="100" xlink:href="file:///D:/Documents/svgkit/tests/canvas_tests_images/rhino.jpg" y="114"/>
+</svg>
