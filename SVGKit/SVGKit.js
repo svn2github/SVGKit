@@ -31,6 +31,11 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
      * After an error (or something) it seems to kind of work since test 22 works after test 21 fails, 
        but strangely the DOM tree and the printed source code are wrong.  Indeed, switching the order
        always makes the second of the two work graphically, but fail DOM/XML wise.
+       
+    IE doesn't seem to be able to pull anything out once it's put in:
+      >>> document.svg.svgElement.getElementsByTagName('path')
+      [undefined, undefined, undefined, undefined]
+    It knows that I added four paths, but I can't get them out.  Same for svgElement.childNodes
     
     Problem of divs loading and unloading, especially with multiple writeln() in the interpreter.
     Perhaps on unload, save xml and then restore on a load.
@@ -80,7 +85,7 @@ try {
     throw "SVGKit depends on MochiKit.DOM!";
 }
 
-if (typeof(SVGKit) == 'undefined') {
+if (typeof(SVGKit) == 'undefined' || SVGCanvas == null) {
     // Constructor
     SVGKit = function(widthOrIdOrNode, height, id, type) {
         if (typeof(this.__init__)=='undefined' || this.__init__ == null){
@@ -117,8 +122,8 @@ SVGKit.EXPORT_OK = [
 ////////////////////////////
 
 //SVGKit._defaultType = 'embed';
-SVGKit._defaultType = 'object';
-//SVGKit._defaultType = 'inline';
+//SVGKit._defaultType = 'object';
+SVGKit._defaultType = 'inline';
 SVGKit._svgNS = 'http://www.w3.org/2000/svg';
 SVGKit.prototype._svgMIME = 'image/svg+xml';
 SVGKit.prototype._svgEmptyName = 'empty.svg';
@@ -166,7 +171,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
     this._addDOMFunctions();
-    document.currentSVG = this;
+    document.svg = this;
 }
 
 
@@ -224,8 +229,12 @@ SVGKit.prototype.whenReady = function (func) {
         If it hasn't loaded yet, func will get added to the elemen's onload 
         event callstack.
     ***/
-    if (this.svgElement != null && this.svgDocument != null) {
-        func();
+    if (this.svgElement != null && this.svgDocument != null && 
+        func != null && typeof(func)!='undefined') {
+        //log("func=",func);
+        func.call(this);
+        //func.apply(this);
+        //func();
     }
     else if (this.htmlElement != null) {
         //log("adding to onload event for htmlElement=", this.htmlElement, " the function", func);
@@ -258,7 +267,7 @@ SVGKit.prototype.resizeSVGElement = function(width, height) {
     this.setSize(this.svgElement, width, height);
 }
 
-SVGKit..prototype.resizeSVGHTMLElement = function(width, height) {
+SVGKit.prototype.resizeHTMLElement = function(width, height) {
     /***
         Sets the size of the htmlElement
         If no size is given, it's assumed you
@@ -306,7 +315,13 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
             xmlns:svg="http://www.w3.org/2000/svg">
     ***/
-    var attrs = {};
+    var attrs = {'xmlns:svg': SVGKit._svgNS,  // for <svg:circle ...> type tags with explicit namespace
+        'xmlns': SVGKit._svgNS,      // for <circle> type tags with implicit namespace
+        'xmlns:xlink': 'http://www.w3.org/1999/xlink',
+        'version': '1.1',
+        'width': width,
+        'height': height 
+    };
     
     if (typeof(id) == "undefined" || id == null) {
         id = null;
@@ -314,11 +329,6 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
     else {
         attrs['id'] = id;
     }
-
-    attrs['xmlns:svg'] = SVGKit._svgNS;  // for <svg:circle ...> type tags with explicit namespace
-    attrs['xmlns'] = SVGKit._svgNS;      // for <circle> type tags with implicit namespace
-    attrs['width'] = width;
-    attrs['height'] = height;
 
     // Borrowed from PlotKit:
     if (!this.isIE()) {
@@ -341,10 +351,11 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         this.htmlElement = document.createElement(html);
 
         // create embedded SVG inside SVG.
-        this.svgDocument = this.htmlElement.getSVGDocument()
+        this.svgDocument = this.htmlElement.getSVGDocument();
         this.svgElement = this.svgDocument.createElementNS(SVGKit._svgNS, 'svg');
         this.svgElement.setAttribute("width", width);
         this.svgElement.setAttribute("height", height);
+        this.svgElement.setAttribute('xmlns:xlink', attrs['xmlns:xlink']);
         log("in create: this.svgElement=",this.svgElement);
         this.svgDocument.appendChild(this.svgElement);
     }
@@ -413,7 +424,6 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
                 svg.svgElement = svg.htmlElement;
             }
             else {
-                document.svg = svg;
                 var newElement = event.documentElement.cloneNode(true);
                 document.newElement = newElement;
                 svg.svgDocument.replaceChild(newElement, svg.svgDocument.rootElement);
@@ -621,6 +631,7 @@ SVGKit.prototype.circle = function() {
     this.append(c);
 }
 
+SVGKit.prototype.uniqueIdCount = 0;
 SVGKit.prototype.createUniqueID = function(base) {
     /***
         For gradients and things, often you want them to have a unique id
@@ -634,16 +645,17 @@ SVGKit.prototype.createUniqueID = function(base) {
         and is still no garuntee that the next number will be free if a node
         of that name/number gets created outside of this function.
     ***/
-    var i=0;
+    //var uniqueIdCount=0;
     var id;
     var element;
     do {
-        id = base + i;
-        i++;
-        element = this.svgDocument.getElementById(id);
-        //log("Going to try id=",id,"  element=", element);
+        id = base + this.uniqueIdCount;
+        this.uniqueIdCount++;
+        element = this.svgDocument.getElementById(id);  // Works in IE and Firefox
+        //element = this.svgElement.getElementById(id);  // Works in IE, not Firefox
+        log("createUniqueID: Going to try id=",id,"  element=", element);
     } while ( !MochiKit.Base.isUndefinedOrNull(element) );
-    //log("Got one id=",id);
+    log("Got unique id=",id);
     return id;
 }
 
@@ -657,16 +669,22 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
                                 
         @returns the defs element.  If createIfNeeded is false, this my return null
     ***/
-    var defs = this.svgDocument.getElementsByTagName("defs");
-    if (defs.length>0)
+    var defs = this.svgElement.getElementsByTagName("defs");
+    if (defs.length>0) {
+        log("getDefs... found defs: defs.length=",defs.length, " defs[0]=",defs[0])
         return defs[0];
+    }
     if (typeof(createIfNeeded) != 'undefined' && createIfNeeded!=null && !createIfNeeded) {
+        log("getDefs... returning null cuz createIfNeeded=",createIfNeeded)
         return null;
     }
     defs = this.DEFS(null);
-    //log("Created defs", defs, "... going to append")
+    log("Created defs", defs, "... going to append")
     this.append(defs);
-    //log("append defs worked")
+    log("append defs worked")
+    //var defs2 = this.svgDocument.getElementsByTagName("defs");
+    var defs2 = this.svgElement.getElementsByTagName("defs");
+    log("ending getDefs...defs2.length=",defs2.length, " defs2[0]=",defs2[0])
     return defs;
 }
 
@@ -729,6 +747,10 @@ SVGKit.removeAllChildren = function(node) {
 
 SVGKit.rotateRE = /(.*)rotate\(\s*(.*)\s*\)\s*$/
 SVGKit.prototype.rotate = function(elem, degrees) {
+    if (typeof(elem) == 'string') {
+        return this._oneParameter(elem, degrees, 
+                                   SVGKit.rotateRE, 'rotate')
+    }
     var old_transform = elem.getAttribute('transform')
     var new_transform = this._oneParameter(old_transform, degrees, 
                                             SVGKit.rotateRE, 'rotate')
@@ -738,18 +760,25 @@ SVGKit.prototype.rotate = function(elem, degrees) {
 
 SVGKit.translateRE = /(.*)translate\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
 SVGKit.prototype.translate = function(elem, tx, ty) {
+    if (typeof(elem) == 'string') {
+        return this._twoParameter(elem, tx, ty, 
+                                   SVGKit.translateRE, 'translate')
+    }
     var old_transform = elem.getAttribute('transform')
     var new_transform = this._twoParameter(old_transform, sx, sy, 
-                                            SVGKit.translateRE,
-                                            'translate')
+                                            SVGKit.translateRE,'translate');
     elem.setAttribute('transform', new_transform);
 }
 
 SVGKit.scaleRE = /(.*)scale\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
 SVGKit.prototype.scale = function(elem, sx, sy) {
+    if (typeof(elem) == 'string') {
+        return this._twoParameter(elem, sx, sy, 
+                                   SVGKit.scaleRE, 'scale');
+    }
     var old_transform = elem.getAttribute('transform')
     var new_transform = this._twoParameter(old_transform, sx, sy, 
-                                            SVGKit.scaleRE, 'scale')
+                                            SVGKit.scaleRE, 'scale');
     elem.setAttribute('transform', new_transform);
 }
 
@@ -760,14 +789,14 @@ SVGKit.prototype._oneParameter = function(old_transform, degrees,
         rotate('translate(1,2)rotate(12)', -11)  -> 'translate(1,2)rotate(1)'
         rotate('rotate( 4 ) rotate( 12 )', -12)  -> 'rotate( 4 ) '
     ***/
-    SVGKit.rotateRE.lastIndex = 0;
-    var transform = elem.getAttribute('transform')
+    regexp.lastIndex = 0;
+    //var transform = elem.getAttribute('transform')
     //var transform = elem;
     var new_transform, array;
     
-    if (old_transform==null)
-        new_transform = 'rotate('+degrees+')'
-    else if ( (array = SVGKit.rotateRE.exec(old_transform)) != null ) {
+    if (old_transform==null || old_transform=='')
+        new_transform = name+'('+degrees+')'
+    else if ( (array = regexp.exec(old_transform)) != null ) {
         var old_angle = parseFloat(array[2]);
         var new_angle = old_angle+degrees;
         new_transform = array[1];
@@ -775,7 +804,7 @@ SVGKit.prototype._oneParameter = function(old_transform, degrees,
             new_transform += 'rotate('+new_angle+')';
     }
     else
-        new_transform = transform + 'rotate('+degrees+')';
+        new_transform = old_transform + 'rotate('+degrees+')';
     return new_transform;
 }
 
@@ -783,12 +812,12 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
                                                  regexp, name) {
     // Test: SVGKit.prototype._twoParameter('transform( 1 ,2 ) scale( 3 , 4  )', 1, 1, SVGKit.scaleRE, 'scale')
     regexp.lastIndex = 0;
-    var transform = elem
+    //var transform = elem
     var new_transform, array;
     
-    if (old_transform==null)
+    if (old_transform==null || old_transform=='')
         new_transform = name+'('+x+','+y+')';
-    else if ( (array = regexp.exec(transform)) != null ) {
+    else if ( (array = regexp.exec(old_transform)) != null ) {
         var old_x = parseFloat(array[2]);
         var new_x = old_x+x;
         var old_y;
