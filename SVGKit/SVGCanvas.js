@@ -129,12 +129,9 @@ try {
     throw "SVGCanvas depends on SVGKit!";
 }
 
-if (typeof(SVGCanvas) == 'undefined') {
+if (typeof(SVGCanvas) == 'undefined' || SVGCanvas == null) {
+    // Constructor
     SVGCanvas = function (widthOrIdOrNode, height, id /* optional */) {
-        if (arguments.length==0) {
-            //log('Called SVGCanvas constructor with no arguments.');
-            return;
-        }
         if (typeof(this.__init__)=='undefined' || this.__init__ == null){
             //log("You called SVGCanvas() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
             return new SVGCanvas(widthOrIdOrNode, height, id, type);
@@ -159,7 +156,7 @@ SVGCanvas.prototype.toString = SVGCanvas.toString;
 
 
 SVGCanvas.EXPORT = [
-    "SVGContext"
+    "SVGCanvas"
 ];
 
 SVGCanvas.EXPORT_OK = [
@@ -203,7 +200,7 @@ SVGCanvas.startingState =
       // Internal State (not copied when you do getStyle or setStyle):
       'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
       'transformations' : "",  // Applys to all subpaths.
-      'drawGroup' : null, // When you start, there is no clipping and you're not in a marker.
+      'drawGroup' : null // When you start, there is no clipping and you're not in a marker.
       //'currentGroup' : null
     };  // if this is changed, you also have to change the drawGroup
 
@@ -222,6 +219,7 @@ SVGCanvas.prototype.__init__ = function (widthOrIdOrNode /*=100*/, height /*=100
     this.svg = isSVG ? widthOrIdOrNode : new SVGKit(widthOrIdOrNode, height, id);
     //log("Working with svg: ", this.svg, " this: ", this);
     this.svg.whenReady( bind(this.reset, this, null) );
+    document.canvas = this;
 }
 
 
@@ -403,7 +401,7 @@ SVGCanvas.prototype.scale = function(sx, sy) {
     if (typeof(sy) == 'undefined' || sy==null)
         sy = sx;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero())
-        this.transformations += "scale(" + sx +"," + sy + ")";
+        this.transformations = this.svg.scale(this.transformations, sx, sy); //+= "scale(" + sx +"," + sy + ")";
     else{
         if (this.currentTransformationMatrix==null)
             this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
@@ -418,7 +416,7 @@ SVGCanvas.prototype.rotate = function(angle) {
     ***/
     var deg = angle*180/Math.PI;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
-        this.transformations += "rotate(" + deg + ")";
+        this.transformations = this.svg.rotate(this.transformations, deg); //+= "rotate(" + deg + ")";
     else {
         if (this.currentTransformationMatrix==null)
             this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
@@ -436,7 +434,7 @@ SVGCanvas.prototype.translate = function(tx, ty) {
     if (typeof(sy) == 'undefined' || sy==null)
         sy = 0;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
-        this.transformations += "translate(" + tx +"," + ty + ")";
+        this.transformations = this.svg.translate(this.transformations, tx, ty); //+= "translate(" + tx +"," + ty + ")";
     else {
         if (this.currentTransformationMatrix==null)
             this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
@@ -946,7 +944,6 @@ SVGCanvas.prototype.stroke = function () {
         returns SVG ONLY svg path element
     ***/
     /*
-    document.can = this
     if (this.filledSubpaths != null && this.filledSubpaths == this._subpaths && 
             this.filledStyle != null && this.compareState(this.filledStyle)) {
         this._setGraphicsAttributes(this.filledNode, 'both')
@@ -1314,6 +1311,7 @@ SVGCanvas.Gradient = function(self, svg) {
     self.need1 = true;
     //log('  id=', self.id);
     self.defs = svg.getDefs(true);
+    log('self.defs=', self.defs);
 }
 
 SVGCanvas.LinearGradient = function(svg, x0, y0, x1, y1) {
@@ -2059,14 +2057,11 @@ SVGCanvas.prototype.inkscapeSemiClub = function() {
 
 
 SVGCanvas.__new__ = function (win) {
-
     var m = MochiKit.Base;
-
     this.EXPORT_TAGS = {
         ":common": this.EXPORT,
         ":all": m.concat(this.EXPORT, this.EXPORT_OK)
     };
-
     m.nameFunctions(this);
 };
 
