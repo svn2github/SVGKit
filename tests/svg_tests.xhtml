@@ -33,15 +33,26 @@
     <script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
     
     <script type="text/javascript">
+      function drawStuff(svg) {
+        try {
+          log("Drawing with svg = ", svg,
+                "htmlElemnt = " + svg.htmlElement,
+                "svgDocument = " + svg.svgDocument,
+                "svgElement = " + svg.svgElement);
+          var newRect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+          svg.append(newRect);
+          svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} ) );
+        }
+        catch (e) {
+          logError("Exception in Create's init subfunction: ", e);
+        }
+      }
+      
       function testManipulate(svg_id) {
         try {
           log("Getting SVG")
           var svg = new SVGKit(svg_id);
-          // var svg = new SVGKit('inline_ie');
-          log("Got svg = ", svg);
-          var newRect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
-          svg.append(newRect);
-          svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3} ) );
+          drawStuff(svg)
         }
         catch (e) {
             logError("Exception in Manipulate: ", e);
@@ -52,45 +63,19 @@
         try {
           var svg = new SVGKit(100, 100, 'new_'+type+'htmlElement', type);
           appendChildNodes('new_'+type, svg.htmlElement);
-          var init = function () {
-            try {
-              log("in testCreate's init()")
-              log("htmlElemnt = " + svg.htmlElement);
-              log("svgDocument = " + svg.svgDocument);
-              log("svgElement = " + svg.svgElement);
-              var newRect = svg.RECT( {'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue'} );
-              svg.append(newRect);
-              svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'red'} ) ); 
-            }
-            catch (e) {
-                logError("Exception in Create: ", e);
-            }
-          }
-          svg.whenReady(init);
+          svg.whenReady(partial(drawStuff,svg));
         }
         catch (e) {
-            logError("Exception in Create: ", e);
+            logError("Exception in testCreate: ", e);
         }
       }
 
       function testLoad(type) {
         try {
           var svg = new SVGKit('../tests/example.svg', 'load_'+type+'htmlElement', type);  // Path is with respect to JS code for some reason.
-          /*
-          appendChildNodes('load_'+type, svg.htmlElement);  // Dangerous
-          var init = function () {
-              log("in testCreate's init()")
-              log("htmlElemnt = " + svg.htmlElement);
-              log("svgDocument = " + svg.svgDocument);
-              log("svgElement = " + svg.svgElement);
-              var newRect = svg.RECT( {'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue'} );
-              svg.append(newRect);
-              svg.append( svg.CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'red'} ) ); 
-          }
-          svg.whenReady(init);
-          */
           
-          var init = function (svg, type) {
+          
+          var appendHtmlElement = function (svg, type) {
             try {
               appendChildNodes('load_'+type, svg.htmlElement);
             }
@@ -98,11 +83,14 @@
                 logError("Exception in Create: ", e);
             }
           }
+          
           // The mess below is a result of inline being handled differently from object and embed
           if (svg.htmlElement != null)
-              init(svg, type)  // For object or embed
+              appendHtmlElement(svg, type)  // For object or embed
           else
-              svg.whenReady( partial(init, svg, type) );  // For inline, must wait for XML to load.
+              svg.whenReady( partial(appendHtmlElement, svg, type) );  // For inline, must wait for XML to load.
+              
+          svg.whenReady(partial(drawStuff,svg));
         }
         catch (e) {
             logError("Exception in Load: ", e);
