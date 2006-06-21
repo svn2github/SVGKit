@@ -47,7 +47,9 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     
     Integration with MochiKit:
      * See if it's any slower using iterators
-     * See if MochiKit.Style and MochiKit.Visual effects work
+     * See if MochiKit.Style and MochiKit.Visual effects work.
+       yes: hideElement(circle) showElement(circle) setOpacity(circle, 0.2)
+       no: elementDimensions(circle)
     
     Using SVG in the Browser:
      * Should always provide fallback content -- png, pdf, (shudder) swf
@@ -58,6 +60,9 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     
     Add getURL and setURL to non-ASP based renders like
     http://jibbering.com/2002/5/dynamic-update-svg.html
+    
+    Look at SMIL animation:
+    http://www.vectoreal.com/smilscript/
     
     SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
     1999 and here we are SEVEN years later and even I just learned about the standard.
@@ -175,7 +180,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
     this._addDOMFunctions();
-    document.svg = this;
+    document.svg = this;  // For debugging, especially in IE
 }
 
 
@@ -672,9 +677,10 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
         return null;
     }
     defs = this.DEFS(null);
-    log("Created defs", defs, "... going to append")
-    this.append(defs);
-    log("append defs worked")
+    log("Created defs", defs, "... going to insert first")
+    this.svgElement.insertBefore(defs, this.svgElement.firstChild);
+    //this.append(defs);
+    log("insert first worked")
     
     // Check to see if it actually got appended:
     //var defs2 = this.svgDocument.getElementsByTagName("defs");
