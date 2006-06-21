@@ -9,26 +9,26 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
    Another kit I found:  http://www.liquidx.net/plotkit/
 
    I don't like the way  plotting programs handle things. I set out to create one that:
-   * Outputs SVG and LaTeX and can easily be converted to PS and PDF
+   * Outputs SVG and LaTeX and can easily be converted to PDF, PS, PNG
    * Works in a client-side browser for real-time manipulation of plots 
    * can hook up live data (JSON, XML, CSV)
    * server-side rendering through Mozilla's command-line JS
    * Has good features of Matlab, Mathematica, Asymptote, Ploticus, SuperMongo, GNU Plot, Origin
    * Can reproduce any plot in Science and Nature as strighforwardly as possible
-   * Can reproduce any plot in Physics and Math books as straightforwardly as possible.
+   * Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible.
    * Clean programatic canvas-like interface and also clean SVG-like XML representation.
    * Reasonable defaults, but ability to tweak everything.
    * Client-side features of zooming, panning, and exploring the data.
 
    Everything is object-oriented, but objects get created for you rather than 
-   having to call constructors and link them in.  Complimentary like SVG DOM vs Canvas
+   having to call constructors and link them in.  Complimentary like SVG DOM vs Canvas.
    You can always access the objects through the scene-tree.
 
-   This is all represented in the XML structure of the SVG with custom namespace to completly reconstruct these objects uppon load like Inkscape
-    API & script commands common across languages: JS, JAva, Python, C++
-    Data format just Plain XML, Plain SVG, or Combined
-    Easily converted to other formats: PDF, PS, PNG
-    Write quickly with small script, but have ability to modify tree later.
+   This is all represented in the XML structure of the SVG with custom namespace to 
+   completly reconstruct these objects uppon load like Inkscape
+    * API & script commands common across languages: JS, Java, Python, C++
+    * Data format just Plain XML, Plain SVG, or Combined
+    * Write quickly with small script, but have ability to modify tree later.
    Select plot or layer by color (or some other characteristic) rather than reference.
    in a histogram, you want steps and not column plot.
    
@@ -43,7 +43,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
    autoColorIncrement = true // cycle through predefined nice default colors
 
    be able to pass in error bars or stock ranges with any plot
-   ledgend and/or labeling of plots
+   ledgend and/or labeling of plots is automatic, alpha blended, unobtrusive, and auto-positioned.
    
    Programming interface concept:  Too many objects and layers, so expose each one's functionality
    to it's children and it's parents.  When you call a high-layer method on a child, it works.
@@ -95,8 +95,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     
   TODO
     -- Make all list parameters both comma or space seperated like in SVG.
-    -- Markers (though this is really more of a Canvas thing)
-    -- Scatter plot is line plot with transparent stroke, but with markers?
+    -- Scatter plot is line plot with transparent stroke, but with markers? Can't have data-dependent markers.
     -- Grid lines function like ticks.  Just Extended ticks?  what about checkerboard/stripes?
     -- Tests with multiple boxes and box layout.
     -- Integer-only axis labels/ticks (a parameter of the auto-axis)
@@ -106,7 +105,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
         line widths and shapes in some crazy way.  You obviously map (x,y) to (i,j) but do you map 
         widths, heights, and radii?  Not if you want to draw a normal looking arrow, but yes if you
         want to draw a circle or an arc that is in a specific place on the graph.
-    -- When you change ranges, you want decorations you've drawn to move too.
+    -- When you change ranges, you want decorations you've drawn to move too.  Decorations tied to point on plot.
     -- CSS Colors and Fonts
     -- For tickLabels at the edge, either move them to fit on plot or make plot bigger to accomodate them.
     -- Check range for zeros better.
@@ -128,7 +127,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
          Also, setting the fillStyle for text is confusing.
     -- How to handle polar plots?  Keep (x,y) range, but just add a polar grid/tickLabels/ticks/etc or
          completely change to a polar range where (x,y) now mean (r,phi)
-    -- TickLabels appearing over axes or other elements should be somehow avoided.
+    -- TickLabels appearing over axes or other elements should be somehow avoided -- constrained layout?
     -- Right now if you want to set something, you have to either:
         * Plot a function and get the default stuff
         * Explicitly add a box and it's defaults or whatever you want, then set it
@@ -139,6 +138,11 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
         * 'connected' is an option of scatter plot, which uses a drawingFunction.  This is easy to do.
         * 'markers' is an style parameter of line plot (automaticly included by SVGCanvas)
 ***/
+
+
+////////////////////////////
+//  Setup
+////////////////////////////
 
 
 if (typeof(dojo) != 'undefined') {
@@ -157,20 +161,19 @@ try {
     throw "SVGPlot depends on SVGCanvas!";
 }
 
-if (typeof(SVGPlot) == 'undefined') {
-    SVGPlot = {};
+if (typeof(SVGPlot) == 'undefined' || SVGCanvas == null) {
+    // Constructor
+    SVGPlot = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
+        if (arguments.length>0)
+            this.__init__(widthOrIdOrNode, height, id);
+        if (typeof(this.__init__)=='undefined' || this.__init__ == null) {
+            //log("You called SVGPlot() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
+            return new SVGPlot(widthOrIdOrNode, height, id);  // Ends up calling this constructor again, but returning an object.
+        }
+        return null;
+    };
 }
 
-
-SVGPlot = function (widthOrIdOrNode /*=100*/, height /*=100*/, id /*optional*/) {
-    if (arguments.length>0)
-        this.__init__(widthOrIdOrNode, height, id);
-    if (typeof(this.__init__)=='undefined' || this.__init__ == null) {
-        //log("You called SVGPlot() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
-        return new SVGPlot(widthOrIdOrNode, height, id);  // Ends up calling this constructor again, but returning an object.
-    }
-    return null;
-};
 
 // Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
 SVGPlot.prototype = new SVGCanvas();
@@ -199,21 +202,9 @@ SVGPlot.EXPORT_OK = [
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+////////////////////////////
+//  Defaults
+////////////////////////////
 
 
 SVGPlot.plotNS = "http://www.svgplot.org";
@@ -221,6 +212,11 @@ SVGPlot.defaultAxisStrokeWidth = 1;
 SVGPlot.defaultMargins = 0;
 SVGPlot.defaultTickLength = 2;
 SVGPlot.defaultStyle = null;   // To be set by resetPlot()
+
+
+////////////////////////////
+//  Constructor
+////////////////////////////
 
 SVGPlot.prototype.__init__ = function (widthOrIdOrNode, height, id /*optional*/) {
     /***
@@ -248,13 +244,16 @@ SVGPlot.prototype.resetPlot = function() {
 }
 
 
-// Constructors
+
+////////////////////////////
+//  Plot Class Initializations
+////////////////////////////
+
 
 // All objects have an element and svgPlot member.
 
                 
 /*
-
 
 Alternative layout where things have links to the range rather than being contained in a range.  Flatter, but more interlinked heirarchy -- harder for XML
 
@@ -615,7 +614,10 @@ SVGPlot.prototype.addYTicks = function(locations /*='auto'*/, position /* ='left
 }
 
 
-// Rendering and Layout
+
+////////////////////////////
+//  createElement(), layout() and render()
+////////////////////////////
 
 SVGPlot.prototype.render = function () {
     /***
@@ -749,7 +751,7 @@ SVGPlot.TickLabels.prototype.createElement = function() {
     if (this.labels=='auto')
         label_strs = map(SVGPlot.prettyNumber, this._locations);
     
-    SVGKit.removeAllChildren(this.element);
+    MochiKit.DOM.replaceChildNodes(this.element);
     this._texts = [];
     
     var p = this.svgPlot;
@@ -774,7 +776,7 @@ SVGPlot.TickLabels.prototype.createElement = function() {
 SVGPlot.AxisTitle.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'label', 'text');
 
-    SVGKit.removeAllChildren(this.element);
+    MochiKit.DOM.replaceChildNodes(this.element);
 
     var p = this.svgPlot;
     p.save();
@@ -1020,7 +1022,7 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     else if (this.type=='y')
         path = 'M 0,'+(bottom-top)+' v '+(top-bottom);
     var pathElem = this.svgPlot.svg.PATH({'d': path});
-    //SVGKit.removeAllChildren(this.element);  // TODO Remove the paths.
+    //MochiKit.DOM.replaceChildNodes(this.element);  // TODO Remove the paths.
     this.element.appendChild(pathElem);
     
     var components = [this.ticks, this.tickLabels, this.labels];
@@ -1058,7 +1060,7 @@ SVGPlot.Ticks.prototype.render = function(min, max, map) {
                 path += ' M 0 '+map(locations[k])+'h '+(-this.length);
         }
     }
-    SVGKit.removeAllChildren(this.element);
+    MochiKit.DOM.replaceChildNodes(this.element);
     this.element.appendChild( this.svgPlot.svg.PATH({'d':path}) );
 }
 
@@ -1112,7 +1114,11 @@ SVGPlot.renderText = function (text, loc, bbox, position, min, max, map) {
 
 
 
-// Line Plot
+
+////////////////////////////
+//  Line Plot
+////////////////////////////
+
 
 SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
 
@@ -1149,7 +1155,7 @@ SVGPlot.LinePlot.prototype.createElement = function () {
 SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     
     
-    SVGKit.removeAllChildren(this.element);
+    MochiKit.DOM.replaceChildNodes(this.element);
     
     var p = this.svgPlot;
     
@@ -1264,7 +1270,10 @@ SVGPlot.prototype.markerColor = function() {
 
 
 
+
+////////////////////////////
 // Utility Functions
+////////////////////////////
 
 
 
@@ -1486,7 +1495,12 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
 }
 
 
-// Override SVGCanvas functions to translate coordinates from plot coordinates to SVG coordinates
+
+////////////////////////////
+//  Override SVGCanvas to use Plot Coordinates
+////////////////////////////
+
+
 SVGPlot.map_xtoi = function(x) {
     if (this.plotView && typeof(x) != 'undefined' && x != null)
         return this.xtoi(x);
