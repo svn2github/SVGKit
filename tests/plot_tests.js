@@ -186,6 +186,30 @@ var testFunctions = {
             p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
         }
         p.render();
+    },
+    
+    'draw_on_plot' : function(p) {
+        p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.circle(Math.PI/2, Math.sin(Math.PI/2), 10);
+        p.render();
+    },
+    
+    'label' : function(p) {
+        p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.label(Math.PI/2, Math.sin(Math.PI/2), "sin(pi/2)");
+        p.label(Math.PI/2, Math.sin(-Math.PI/2), "sin(-pi/2)", 'arrow');
+        p.label(Math.PI/2, Math.sin(3*Math.PI/2), "sin(3pi/2)", 'dot');
+        p.label(Math.PI/2, Math.sin(-3*Math.PI/2), "sin(-3pi/2)", 'line');
+        p.render();
+    },
+    
+    'post_style' : function(p) {
+        p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
+        p.box.background = 'red'
+        p.xaxis.strokeStyle = 'blue'
+        p.xgrid.spacing = .3
+        p.ygrid.fillStyle = "rgba(100, 0, 100, .5)";
+        p.render();
     }
     
 };
