@@ -92,7 +92,6 @@ Building the SVG DOM from Canvas Calls (Notes):
         styleAtLastGrphics
         singletonPath   // null if we're in a group with two paths already
         singletonStyleDifferences  // The style of the singleton that we'll have to apply to the group
-        currentGroup
         currentStyle
 
         fillStyle=one
@@ -200,9 +199,8 @@ SVGCanvas.startingState =
       // Internal State (not copied when you do getStyle or setStyle):
       'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
       'transformations' : "",  // Applys to all subpaths.
-      'drawGroup' : null // When you start, there is no clipping and you're not in a marker.
-      //'currentGroup' : null
-    };  // if this is changed, you also have to change the drawGroup
+      'currentGroup' : null // When you start, there is no clipping and you're not in a marker.
+    };  // if this is changed, you also have to change the currentGroup
 
 
 ////////////////////////////
@@ -235,21 +233,19 @@ SVGCanvas.prototype.reset = function(startingGroup /*=_startingGroup or svg.svgE
         This can be used to set the drawingGroup if you happen to also want to reset.
     ***/
     
-    if (typeof(startingGroup) == 'undefined' || startingGroup==null)
-        this._startingGroup = startingGroup;
-    if (typeof(this._startingGroup) == 'undefined' || this._startingGroup==null)
-        startingGroup = this.svg.svgElement;
-    this._startingGroup = startingGroup;  // Set it so next time we can just call reset()
+    this._startingGroup = SVGKit.firstNonNull(startingGroup,
+        this._startingGroup, this.svg.svgElement)
     this.setState(SVGCanvas.startingState);
-    this.setGroup(startingGroup);
+    this.setGroup(this._startingGroup);
     
-    // To detect a fill followed by a stroke that should just add fill attributes.
+    // These are used to detect a fill followed by a stroke.
+    // This should just add fill attributes to the already existing path.
     this.filledSubpaths = null;
     this.filledStyle = null;
     this.filledNode =  null;
     
     // If we don't already have a state stack for save() and restore(), create one.
-    if (typeof(this._stateStack)=='undefined' || this._stateStack==null)
+    if (MochiKit.Base.isUndefinedOrNull(this._stateStack))
         this._stateStack = [];
     // Canvas spec says that on initialization, begin path is called.
     this.beginPath();  // clears _subpaths, and calls and calls moveTo(0,0)
@@ -259,11 +255,10 @@ SVGCanvas.prototype.setGroup = function(group) {
     /***
         SVG ONLY
         should probably come between a save() and restore().
-        Sets the drawGroup and currentGroup so that future 
+        Sets the currentGroup so that future 
         fill() and stroke() add their shapes to the given group.
     ***/
-    this.drawGroup = group;
-    //this.currentGroup = group;
+    this.currentGroup = group;
     this.transformations = "";
     this.currentTransformationMatrix = null;
 }
@@ -278,16 +273,13 @@ SVGCanvas.prototype._copyState = function(dest, src, just_style /*=false*/) {
         If just_style is true, only style information (as opposed to
         transform and group information) is copied
     ***/
-    if (typeof(just_style) == 'undefined' || just_style==null)
-        just_style = false;
-    var stateKeys = keys(SVGCanvas.startingState)
-    for (var i=0; i<stateKeys.length; i++) {
+    just_style = SVGKit.firstNonNull(just_style, false);
+    for (var key in SVGCanvas.startingState) {
         if (just_style==false || just_style==true && 
-                stateKeys[i] != 'currentTransformationMatrix' &&
-                stateKeys[i] != 'transformations' &&
-                stateKeys[i] != 'drawGroup' /*&&
-                stateKeys[i] != 'currentGroup'*/) {
-            dest[stateKeys[i]] = src[stateKeys[i]];
+                key != 'currentTransformationMatrix' &&
+                key != 'transformations' &&
+                key != 'currentGroup') {
+            dest[key] = src[key];
         }
     }
 }
@@ -296,7 +288,7 @@ SVGCanvas.prototype.setState = function(state) {
     /***
         SVG ONLY
         Overwrites the current state,
-        including the drawGroup and currentGroup
+        including the currentGroup 
     ***/
     this._copyState(this, state);
 }
@@ -305,7 +297,7 @@ SVGCanvas.prototype.getState = function() {
     /***
         SVG ONLY
         Copies and returns the current state, 
-        including the drawGroup and currentGroup
+        including the currentGroup
     ***/
     var state = {};
     this._copyState(state, this);
@@ -313,9 +305,8 @@ SVGCanvas.prototype.getState = function() {
 }
 
 SVGCanvas.prototype.compareState = function(state) {
-    var stateKeys = keys(SVGCanvas.startingState)
-    for (var i=0; i<stateKeys.length; i++) {
-        if (this[stateKeys[i]] != state[stateKeys[i]]) {
+    for (var key in SVGCanvas.startingState) {
+        if (this[key] != state[key]) {
             return false;
         }
     }
@@ -431,8 +422,8 @@ SVGCanvas.prototype.translate = function(tx, ty) {
         argument represents the translation distance in the vertical 
         direction. The arguments are in coordinate space units.
     ***/
-    if (typeof(sy) == 'undefined' || sy==null)
-        sy = 0;
+    if (typeof(ty) == 'undefined' || ty==null)
+        ty = 0;
     if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
         this.transformations = this.svg.translate(this.transformations, tx, ty); //+= "translate(" + tx +"," + ty + ")";
     else {
@@ -810,7 +801,6 @@ SVGCanvas.prototype._setPathTransformAttribute = function (node) {
         setNodeAttribute(node, 'transform', this.transformations);
     }
 }
-
 SVGCanvas.prototype._emitPaths = function () {
     /***
         Go through the subpath list and pick out only the ones that have drawing content
@@ -848,22 +838,30 @@ SVGCanvas.prototype._emitPaths = function () {
 }
 
 SVGCanvas.prototype._setGraphicsStyle = function(node, type, style) {
+    if (this.globalAlpha < 1)
+        setNodeAttribute(node, 'opacity', this.globalAlpha);
     if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'
         var c = Color.fromString(style);
         setNodeAttribute(node, type, c.toHexString());
-        setNodeAttribute(node, type+'-opacity', c.asRGB()['a']*this.globalAlpha);
+        var alpha = c.asRGB()['a'];
+        if (alpha < 1)
+            setNodeAttribute(node, type+'-opacity', alpha);
+        //if (this.globalAlpha < 1)
+        //    setNodeAttribute(node, 'opacity', this.globalAlpha);
     }
     else if ( style.constructor == SVGCanvas.LinearGradient || 
                style.constructor == SVGCanvas.RadialGradient ) {
         //log("Trying to draw with gradient id=", style.id);
         style.applyGradient();
         setNodeAttribute(node, type, 'url(#'+ style.id +')');
-        setNodeAttribute(node, type+'-opacity', this.globalAlpha);
+        //if (this.globalAlpha < 1)
+        //    setNodeAttribute(node, 'opacity', this.globalAlpha);
+            //setNodeAttribute(node, type+'-opacity', this.globalAlpha);
     }
     else if ( style.constructor == SVGCanvas.Pattern ) {
         //log("Trying to stroke with pattern id=", style.id);
         setNodeAttribute(node, type, 'url(#'+ style.id +')');
-        setNodeAttribute(node, type+'-opacity', this.globalAlpha);
+        //setNodeAttribute(node, type+'-opacity', this.globalAlpha);
     }
 }
 
@@ -893,29 +891,30 @@ SVGCanvas.prototype._setGraphicsAttributes = function(node, type) {
         this._setGraphicsStyle(node, 'fill', this.fillStyle);
     }
     
-    
+    /*
     if (type=='fill' || type=='both') {
-        setNodeAttribute(node, 'fill-rule', 'nonzero');
+        //setNodeAttribute(node, 'fill-rule', 'nonzero');  // This is the SVG Initial value.
     }
+    */
     if (type=='stroke' || type=='both') {
         setNodeAttribute(node, 'stroke-width', this.lineWidth);
         setNodeAttribute(node, 'stroke-linejoin', this.lineJoin);
-        if (this.miterLimit != null)
-            setNodeAttribute(node, 'stroke-miterlimit', this.miterLimit);
         setNodeAttribute(node, 'stroke-linecap', this.lineCap);
+        if (this.miterLimit)
+            setNodeAttribute(node, 'stroke-miterlimit', this.miterLimit);
         // SVG Only:
         if (this.dasharray)
             setNodeAttribute(node, 'stroke-dasharray', this.dasharray);
-        if (this.dashoffset != null)
+        if (this.dashoffset)
             setNodeAttribute(node, 'stroke-dashoffset', this.dashoffset);
     }
     
     // SVG Only:  Markers
-    if (this.markerStart != null)
+    if (this.markerStart)
         setNodeAttribute(node, 'marker-start', 'url(#'+this.markerStart+')')
-    if (this.markerMid != null)
+    if (this.markerMid)
         setNodeAttribute(node, 'marker-mid', 'url(#'+this.markerMid+')')
-    if (this.markerEnd != null)
+    if (this.markerEnd)
         setNodeAttribute(node, 'marker-end', 'url(#'+this.markerEnd+')')
 }
 
@@ -925,7 +924,7 @@ SVGCanvas.prototype.append = function (element) {
         This is used in stroke, fill, and clip, but also can
         be generally useful.
     ***/
-    this.drawGroup.appendChild(element);
+    this.currentGroup.appendChild(element);
 }
 
 SVGCanvas.prototype._doPath = function(type) {
@@ -991,10 +990,8 @@ SVGCanvas.prototype._doClip = function(clippingContents) {
     clipPath.appendChild(clippingContents);
     this.svg.append(clipPath);
     var clipedGroup = this.svg.G({'clip-path':'url(#'+clipId+')'});
-    this.drawGroup.appendChild(clipedGroup);
-    this.drawGroup = clipedGroup;
-    //this.drawGroup = this.svg.G({'clip-path':'url(#'+clipId+')'})
-    //this.currentGroup.appendChild(this.drawGroup);
+    this.currentGroup.appendChild(clipedGroup);
+    this.currentGroup = clipedGroup;
     return clipPath;
 }
 
@@ -1038,7 +1035,7 @@ SVGCanvas.prototype.outputShape = function(shape, style) {
 }
 
 SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
-    //log("strokeRect(): this.drawGroup=", this.drawGroup);
+    //log("strokeRect(): this.currentGroup=", this.currentGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
@@ -1048,7 +1045,7 @@ SVGCanvas.prototype.strokeRect = function (x, y, w, h) {
 }
 
 SVGCanvas.prototype.fillRect = function (x, y, w, h) {
-    //log("fillRect(): this.drawGroup=", this.drawGroup);
+    //log("fillRect(): this.currentGroup=", this.currentGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
@@ -1058,7 +1055,7 @@ SVGCanvas.prototype.fillRect = function (x, y, w, h) {
 }
 
 SVGCanvas.prototype.clearRect = function (x, y, w, h) {
-    //log("clearRect(): this.drawGroup=", this.drawGroup);
+    //log("clearRect(): this.currentGroup=", this.currentGroup);
     var rect = this.svg.RECT({'x':x,
                               'y':y,
                               'width':w,
@@ -1231,14 +1228,16 @@ SVGCanvas.prototype.drawPolygon = function (points) {
 ////////////////////////////
 
 SVGCanvas.prototype.text = function(text, x /* =0 */ , y /* =0 */) {
-    //log("text(): this.drawGroup=", this.drawGroup);
+    //log("text(): this.currentGroup=", this.currentGroup);
     var text = this.svg.TEXT(null, text);
-    if (x!=null)                   setNodeAttribute(node, 'x', x);
-    if (y!=null)                   setNodeAttribute(node, 'y', y);
+    if (!MochiKit.Base.isUndefinedOrNull(x))
+        setNodeAttribute(node, 'x', x);
+    if (!MochiKit.Base.isUndefinedOrNull(y))
+        setNodeAttribute(node, 'y', y);
     this._setShapeTransform(text);
     this._setGraphicsAttributes(text, 'fill');
     this._setFontAttributes(text);
-    this.drawGroup.appendChild(text);
+    this.currentGroup.appendChild(text);
     return text;
 }
 
@@ -1276,10 +1275,10 @@ SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh)
     //log("  img: ", image.width, image.height, image.src);
     var x = sx;
     var y = sy;
-    var width = (typeof(sw)=='undefined' || sw == null) ? image.width : sw;
-    var height = (typeof(sw)=='undefined' || sw == null) ? image.width : sh;
+    var width = MochiKit.Base.isUndefinedOrNull(sw) ? image.width : sw;
+    var height = MochiKit.Base.isUndefinedOrNull(sh) ? image.height : sh;
     var viewBox = null;
-    if (typeof(dh)!='undefined' && dh != null) {
+    if (!MochiKit.Base.isUndefinedOrNull(dh)) {
         viewBox = sx + " " + sy + " " + sw + " " + sh;
         x = dx;
         y = dy;
@@ -1382,7 +1381,7 @@ SVGCanvas.prototype._startDefineGroup = function () {
     this.save();
     this.currentTransformationMatrix = null;
     this.transformations = '';
-    this.drawGroup = this.svg.G();
+    this.currentGroup = this.svg.G();
 }
 
 SVGCanvas.Pattern = function(svg, contents, repetition) {
@@ -1434,7 +1433,7 @@ SVGCanvas.prototype.endPattern = function (repetition) {
         SVG Only
         returns the pattern object to set strokeStyle or fillStyle to.
     ***/
-    var pattern = new this.createPattern(this.drawGroup, repetition);
+    var pattern = new this.createPattern(this.currentGroup, repetition);
     this.restore();
     this.beginPath();
     return pattern;
@@ -1447,6 +1446,7 @@ SVGCanvas.prototype.startMarker = function() {
     this.markerMid = null;
     this.markerEnd = null;
 }
+
 SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */, markerUnits /* ='strokeWidth' */, 
                                             overflow /* ='visible' */, 
                                             markerWidth /* =3 */, markerHeight /* =3 */, 
@@ -1457,14 +1457,14 @@ SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */, markerUnits /* =
     ***/
     // Note that stroke style and fill properties (including with patterns or gradients) do not affect markers
     var attrs = {};
-    if (typeof(orient) == 'undefined' || orient==null)
+    if (MochiKit.Base.isUndefinedOrNull(orient))
         attrs['orient'] = 'auto';
     else
         attrs['orient'] = orient;  
-    if (typeof(orient) == 'undefined' || orient==null)
+    if (MochiKit.Base.isUndefinedOrNull(overflow))
         attrs['style'] = 'overflow:visible;';
     else
-        attrs['orient'] = 'overflow:'+overflow+';';
+        attrs['style'] = 'overflow:'+overflow+';';
     if (!MochiKit.Base.isUndefinedOrNull(markerUnits))
         attrs['markerUnits'] = markerUnits;  //  'strokeWidth' | 'userSpaceOnUse'
     if (!MochiKit.Base.isUndefinedOrNull(markerWidth))
@@ -1485,7 +1485,7 @@ SVGCanvas.prototype.endMarker = function(orient /* = 'auto' */, markerUnits /* =
     // http://www.w3.org/TR/SVG/painting.html
     var marker = this.svg.MARKER(attrs);
     //log("  marker: ", marker);
-    marker.appendChild(this.drawGroup);
+    marker.appendChild(this.currentGroup);
     defs.appendChild(marker);
 
     this.restore();
@@ -1505,18 +1505,14 @@ SVGCanvas.prototype.pollygon = function(n, size /* =10 */, rotation /* =0 */, me
         The area method is good for plots where people perceive area as magnitude, not direction.
         TODO: Inkscape's rounded corners, randomization, and non-regular stars.
     ***/
-    if (typeof(rotation)=='undefined' || rotation==null)
-        rotation = 0;
-    if (typeof(method)=='undefined' || method==null)
-        method = 'area';
-    if (typeof(size)=='undefined' || size==null) {
-        size = 10;
-    }
+    rotation = SVGKit.firstNonNull(rotation, 0);
+    method = SVGKit.firstNonNull(method, 'area');
+    size = SVGKit.firstNonNull(size, 10);
     
     var outer_radius = size;
     if (method == 'area')
         outer_radius = Math.sqrt(2*size*size/n/Math.sin(2*Math.PI/n));
-    if (method == 'inner')
+    else if (method == 'inner')
         outer_radius = Math.sqrt(size*Math.Sin(Math.PI/n));
         
     this.beginPath();
@@ -1533,12 +1529,10 @@ SVGCanvas.prototype.star = function(n, outer_radius /* =10 */, inner_radius /* =
     /***
         Issue commands (but don't stroke or fill) for a star based on its inner and outer radius
     ***/
-    if (typeof(outer_radius)=='undefined' || outer_radius==null)
-        outer_radius = 10;
-    if (typeof(inner_radius)=='undefined' || inner_radius==null)
-        inner_radius = outer_radius/3;
-    if (typeof(rotation)=='undefined' || rotation==null)
-        rotation = 0;
+    outer_radius = SVGKit.firstNonNull(outer_radius, 10);
+    inner_radius = SVGKit.firstNonNull(inner_radius, outer_radius/3);
+    rotation = SVGKit.firstNonNull(rotation, 0);
+    
     this.beginPath();
     var th = rotation - Math.PI/2;
     this.moveTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
@@ -1555,12 +1549,10 @@ SVGCanvas.prototype.asterisk = function(n, outer_radius /* =10 */, inner_radius 
     /***
         Issue commands (but don't stroke or fill) for an open star or asterisk based on its inner and outer radius
     ***/
-    if (typeof(outer_radius)=='undefined' || outer_radius==null)
-        outer_radius = 10;
-    if (typeof(inner_radius)=='undefined' || inner_radius==null)
-        inner_radius = 0;
-    if (typeof(rotation)=='undefined' || rotation==null)
-        rotation = 0;
+    outer_radius = SVGKit.firstNonNull(outer_radius, 10);
+    inner_radius = SVGKit.firstNonNull(inner_radius, 0);
+    rotation = SVGKit.firstNonNull(rotation, 0);
+    
     this.beginPath();
     var th = rotation - Math.PI/2;
     for (var i=0; i<n; i++) {
