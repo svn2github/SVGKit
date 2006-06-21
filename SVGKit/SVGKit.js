@@ -45,6 +45,10 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     Can't draw anything until it's loaded.  Really annoying in the interpreter.
     inline doesn't have this problem.  Maybe everything is going in that direction anyway.
     
+    Integration with MochiKit:
+     * See if it's any slower using iterators
+     * See if MochiKit.Style and MochiKit.Visual effects work
+    
     Using SVG in the Browser:
      * Should always provide fallback content -- png, pdf, (shudder) swf
      * Interactivity requires SVG, but initial static content should have static fallback (for fast load)
@@ -87,13 +91,13 @@ try {
 
 if (typeof(SVGKit) == 'undefined' || SVGCanvas == null) {
     // Constructor
-    SVGKit = function(widthOrIdOrNode, height, id, type) {
-        if (typeof(this.__init__)=='undefined' || this.__init__ == null){
-            //log("You called SVG() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
-            return new SVGKit(widthOrIdOrNode, height, id, type);
+    SVGKit = function(p1, p2, p3, p4, p5) {
+        if (MochiKit.Base.isUndefinedOrNull(this.__init__)){
+            log("You called SVG() as a fnuction without new.  Shame on you, but I'll give you a new object anyway");
+            return new SVGKit(p1, p2, p3, p4, p5);
         }
-        this.__init__(widthOrIdOrNode, height, id, type);
-        return null
+        this.__init__(p1, p2, p3, p4, p5);
+        return null;
     };
 }
 
@@ -125,10 +129,10 @@ SVGKit.EXPORT_OK = [
 //SVGKit._defaultType = 'object';
 SVGKit._defaultType = 'inline';
 SVGKit._svgNS = 'http://www.w3.org/2000/svg';
-SVGKit.prototype._svgMIME = 'image/svg+xml';
-SVGKit.prototype._svgEmptyName = 'empty.svg';
-SVGKit.prototype._SVGiKitBaseURI = '';
-SVGKit.prototype._errorText = "You can't display SVG. Download Firefox 1.5." ;
+SVGKit._svgMIME = 'image/svg+xml';
+SVGKit._svgEmptyName = 'empty.svg';
+SVGKit._SVGiKitBaseURI = '';
+SVGKit._errorText = "You can't display SVG. Download Firefox 1.5." ;
 
 
 ////////////////////////////
@@ -138,7 +142,7 @@ SVGKit.prototype._errorText = "You can't display SVG. Download Firefox 1.5." ;
 SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     // TODO:  Make thse work right.
     // __init__()                          For JavaScript included in an SVG.
-    // __init__(node)                      Already have an HTML element
+    // __init__(node)                      Already have an HTML element -- autodetect the type
     // __init__(id)                        Have the id for an HTML element (if your id ends in .svg, pass in the node instead because strings ending in .svg will be treated as filenames.)
     // __init__(filename, id, type, width, height)        Create a new HTML element that references filename (must end in .svg)
     // __init__(width, height, id, type)   Create a new SVG from scratch with width, height, and id
@@ -148,11 +152,11 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
     this._redrawId = null;   // The reference that SVG's suspendRedraw returns.  Needed to cancel suspension.
-    this.newSVGType = SVGKit._defaultType; // Determine a good default dynamically ('inline' , 'object', or 'embed')
+    //SVGKit._defaultType = // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
     log("SVG.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
-    if (typeof(p1)=='undefined' || p1==null) {
+    if (MochiKit.Base.isUndefinedOrNull(p1)) {
         // This JS was included inside of an SVG file.
         
     }
@@ -181,7 +185,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
 
 SVGKit.firstNonNull = function() {
     for (var i=0; i<arguments.length; i++)
-        if ( typeof(arguments[i])!='undefined' && arguments[i]!=null )
+        if ( !MochiKit.Base.isUndefinedOrNull(arguments[i]) )
             return arguments[i]
     return null;
 }
@@ -204,7 +208,7 @@ SVGKit.prototype.setBaseURI = function() {
             continue;
         }
         if (src.match(/SVGKit\.js$/)) {
-            this._SVGiKitBaseURI = src.substring(0, src.lastIndexOf('SVGKit.js'));
+            SVGKit._SVGiKitBaseURI = src.substring(0, src.lastIndexOf('SVGKit.js'));
         }
     }
 }
@@ -230,18 +234,19 @@ SVGKit.prototype.whenReady = function (func) {
         event callstack.
     ***/
     if (this.svgElement != null && this.svgDocument != null && 
-        func != null && typeof(func)!='undefined') {
+            !MochiKit.Base.isUndefinedOrNull(func) ) {
         //log("func=",func);
         func.call(this);
         //func.apply(this);
         //func();
     }
     else if (this.htmlElement != null) {
-        //log("adding to onload event for htmlElement=", this.htmlElement, " the function", func);
+        //log("adding to onload event for htmlElement=", this.htmlElement, " the func=", func);
         addToCallStack(this.htmlElement, 'onload', func);
     }
     else {
         // Try again half a second later.  This is only for loaing an SVG from an XML file to an inline element.
+        //log("doing callLater for func=", func);
         callLater(0.5, func);
     }
 }
@@ -260,9 +265,11 @@ SVGKit.prototype.resizeSVGElement = function(width, height) {
         If no size is given, it's assumed you wnat to set the size
         based on the size of the htmlElement to get rid of scroll bars or something.
     ***/
-    if (typeof(width)=='undefined' || width==null)
+    // I don't use first non-null because it would have to do two slow DOM lookups
+    // to pass them as arguments.
+    if (MochiKit.Base.isUndefinedOrNull(width))
         width = getNodeAttribute(this.htmlElement, 'width')
-    if (typeof(height)=='undefined' || height==null)
+    if (MochiKit.Base.isUndefinedOrNull(height))
         height = getNodeAttribute(this.htmlElement, 'height')
     this.setSize(this.svgElement, width, height);
 }
@@ -273,9 +280,9 @@ SVGKit.prototype.resizeHTMLElement = function(width, height) {
         If no size is given, it's assumed you
         want to set it based on the size of the SVG it contains
     ***/
-    if (typeof(width)=='undefined' || width==null)
+    if (MochiKit.Base.isUndefinedOrNull(width))
         width = getNodeAttribute(this.svgElement, 'width')
-    if (typeof(height)=='undefined' || height==null)
+    if (MochiKit.Base.isUndefinedOrNull(height))
         height = getNodeAttribute(this.svgElement, 'height')
     this.setSize(this.htmlElement, width, height);
 }
@@ -297,15 +304,14 @@ SVGKit.prototype.createSVG = function (width, height, id /* optional */, type /*
     ***/
     log("createSVG(", width, height, id , type,")");
     
-    if (typeof(type) == "undefined" || type == null) {
-        type = this.newSVGType;
-    }
+    type = SVGKit.firstNonNull(type, SVGKit._defaultType);
+    log("type=", type);
     
     if (type=='inline') {
         this.createInlineSVG(width, height, id);
     }
     else {
-        this.loadSVG(this._svgEmptyName, id, type, width, height)
+        this.loadSVG(SVGKit._svgEmptyName, id, type, width, height)
     }
 }
 
@@ -323,10 +329,7 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         'height': height 
     };
     
-    if (typeof(id) == "undefined" || id == null) {
-        id = null;
-    }
-    else {
+    if (!MochiKit.Base.isUndefinedOrNull(id)) {
         attrs['id'] = id;
     }
 
@@ -390,23 +393,15 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
         @rtype: DOMElement
 
     ***/
-    var dom = MochiKit.DOM;
-    
     // TODO If it is new, default width and height are 100.  If it's from a file, defaults come from the file.
     //      You can still set the width and height if you want the thing to scroll.
 
     var attrs = {};
     
-    if (typeof(id) == "undefined" || id == null) {
-        id = null;
-    }
-    else {
+    if (!MochiKit.Base.isUndefinedOrNull(id)) {
         attrs['id'] = id;
     }
-    
-    if (typeof(type) == "undefined" || type == null) {
-        type = this.newSVGType;
-    }
+    type = SVGKit.firstNonNull(type, SVGKit._defaultType);
     
     log("loadSVG(", filename, id, type, width, height,")");
     
@@ -416,63 +411,61 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
             log("after create: this.svgElement=",this.svgElement);
         }
         //this.htmlElement = null;  // This is required to tell whenReady that we won't be ready until the assynch request returns.
-        var callback = function(svg, event) {
-            if (!svg.isIE()) {
+        var copyXMLtoSVG = function(event) {
+            if (!this.isIE()) {
                 var xmlDoc = event.currentTarget;
-                svg.htmlElement = xmlDoc.documentElement.cloneNode(true);
-                svg.svgDocument = document;
-                svg.svgElement = svg.htmlElement;
+                this.htmlElement = xmlDoc.documentElement.cloneNode(true);
+                this.svgDocument = document;
+                this.svgElement = this.htmlElement;
             }
             else {
                 var newElement = event.documentElement.cloneNode(true);
-                document.newElement = newElement;
-                svg.svgDocument.replaceChild(newElement, svg.svgDocument.rootElement);
-                svg.svgElement = newElement;
+                this.svgDocument.replaceChild(newElement, this.svgDocument.rootElement);
+                this.svgElement = newElement;
                 /*
                 for (var i=0; i<newElement.childNodes.length; i++) {
                     var clone = newElement.childNodes[i].cloneNode(true);
-                    log("in for loop svg.svgElement=",svg.svgElement);
-                    svg.svgElement.appendChild(clone);  // This doesn't work: svg.svgElement is [disposed object]
+                    log("in for loop this.svgElement=",this.svgElement);
+                    this.svgElement.appendChild(clone);  // This doesn't work: this.svgElement is [disposed object]
                 }
                 */
             }
         }
-        SVGKit.importXML(filename, partial(callback, this));
+        SVGKit.importXML(filename, bind(copyXMLtoSVG, this));
     }
     else if (type=='object') {  // IE:  Cannot support
-        attrs['data'] = this._SVGiKitBaseURI + filename;
-        attrs['type'] = this._svgMIME;
-        this.htmlElement = createDOM('object', attrs, this._errorText);
-        var svg = this;  // Define svg in context of function below.
-        function finishObject(svg, width, height, event) {
+        attrs['data'] = SVGKit._SVGiKitBaseURI + filename;
+        attrs['type'] = SVGKit._svgMIME;
+        this.htmlElement = createDOM('object', attrs, SVGKit._errorText);
+        //var svg = this;  // Define svg in context of function below.
+        function finishObject(width, height, event) {
             // IE doesn't have contentDocument
             // IE would have to use some sort of SVG pool of objects
             // that add themselves to a list uppon load.
-            svg.svgDocument = svg.htmlElement.contentDocument;
-            svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
-            svg.resizeHTMLElement(width, height);
+            this.svgDocument = this.htmlElement.contentDocument;
+            this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
+            this.resizeHTMLElement(width, height);
         }
-        this.whenReady( partial(finishObject, svg, width, height) );
+        this.whenReady( bind(finishObject, this, width, height) );
     }
     else if (type=='embed') { // IE:  Cannot support
-        attrs['src'] = this._SVGiKitBaseURI + filename;
-        attrs['type'] = this._svgMIME;
+        attrs['src'] = SVGKit._SVGiKitBaseURI + filename;
+        attrs['type'] = SVGKit._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
         log("Going to createDOM('embed')");
         this.htmlElement = createDOM('embed', attrs );
-        var svg = this;
-        function finishEmbed(svg, width, height, event) {
+        function finishEmbed(width, height, event) {
             // IE doesn't load the embed when you include it in the DOM tree.
             // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
             // and move them around. This seems to work in IE.
             // width=0, height=0 works in Firefox, but not IE.
-            log("new embed: svg.htmlElement = " + svg.htmlElement) ;
-            log("new embed: Going to svg.htmlElement.getSVGDocumen() )") ;
-            svg.svgDocument = svg.htmlElement.getSVGDocument();
-            svg.svgElement = svg.svgDocument.rootElement;  // svgDocument.documentElement works too.
-            svg.resizeHTMLElement(width, height);
+            log("new embed: this.htmlElement = " + this.htmlElement) ;
+            log("new embed: Going to this.htmlElement.getSVGDocumen() )") ;
+            this.svgDocument = this.htmlElement.getSVGDocument();
+            this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
+            this.resizeHTMLElement(width, height);
         }
-        this.whenReady( partial(finishEmbed, svg, width, height) );
+        this.whenReady( bind(finishEmbed, this, width, height) );
     }
 }
 
@@ -541,14 +534,14 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
         this.svgDocument = document;
         this.svgElement = this.htmlElement;
     }
-    else if (tagName == 'object' && this.htmlElement.contentDocument) {
-        // IE Bug: <object> SVGs display, but have no property to access their contents.
-        this.svgDocument = this.htmlElement.contentDocument;
-        this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
-    }
     else if (tagName == 'embed' || isInline && this.isIE()) {
         // IE Bug:  htmlElement.getSVGDocument is undefined, but htmlElement.getSVGDocument() works, so you can't test for it.
         this.svgDocument = this.htmlElement.getSVGDocument();
+        this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
+    }
+    else if (tagName == 'object' && this.htmlElement.contentDocument) {
+        // IE Bug: <object> SVGs display, but have no property to access their contents.
+        this.svgDocument = this.htmlElement.contentDocument;
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
     }
     log("type=",tagName, "  this.svgDocument = ", this.svgDocument, "  this.svgElement = ", this.svgElement);
@@ -674,7 +667,7 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
         log("getDefs... found defs: defs.length=",defs.length, " defs[0]=",defs[0])
         return defs[0];
     }
-    if (typeof(createIfNeeded) != 'undefined' && createIfNeeded!=null && !createIfNeeded) {
+    if (!MochiKit.Base.isUndefinedOrNull(createIfNeeded) && !createIfNeeded) {
         log("getDefs... returning null cuz createIfNeeded=",createIfNeeded)
         return null;
     }
@@ -682,16 +675,17 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
     log("Created defs", defs, "... going to append")
     this.append(defs);
     log("append defs worked")
+    
+    // Check to see if it actually got appended:
     //var defs2 = this.svgDocument.getElementsByTagName("defs");
     var defs2 = this.svgElement.getElementsByTagName("defs");
     log("ending getDefs...defs2.length=",defs2.length, " defs2[0]=",defs2[0])
+    
     return defs;
 }
 
 SVGKit.prototype.suspendRedraw = function (miliseconds /* = 1000 */) {
-    if (typeof(miliseconds) == "undefined" || miliseconds == null) {
-        ms = 1000;
-    }
+    miliseconds = SVGKit.firstNonNull(miliseconds, 1000);
     this._redrawId = this.svgElement.suspendRedraw(miliseconds);
 }
 
@@ -706,28 +700,8 @@ SVGKit.prototype.deleteContent = function() {
     /***
         Deletes all graphics content, but leaves definitions
     ***/
-    var deleteFrom = 0;
-    while(this.svgElement.childNodes.length>0) {
-        if (this.svgElement.childNodes[deleteFrom].tagName=='defs')
-            deleteFrom++;
-        else
-            this.svgElement.removeChild(this.svgElement.childNodes[deleteFrom]);
-    }
-}
-
-SVGKit.prototype.deleteEverything = function() {
-    /***
-        Deletes everything including definitions
-    ***/
-    while(this.svgElement.childNodes.length>0) {
-        this.svgElement.removeChild(this.svgElement.childNodes[0]);
-    }
-}
-
-SVGKit.removeAllChildren = function(node) {
-    while(node.childNodes.length>0) {
-        node.removeChild(node.childNodes[0]);
-    }
+    var defs = this.getDefs()
+    MochiKit.DOM.replaceChildNodes(this.svgElement, defs)
 }
 
 ////////////////////////////
@@ -849,24 +823,12 @@ SVGKit.prototype.toXML = function (dom /* = this.svgElement */, decorate /* = fa
         
         returns a string of XML.
     ***/
-    if (typeof(decorate) == "undefined" || decorate == null) {
-        decorate = false;
-    }
-    if (typeof(dom) == "undefined" || dom == null) {
-        dom = this.svgElement;
-    }
+    dom = SVGKit.firstNonNull(dom, this.svgElement);
+    var decoration = MochiKit.Base.isUndefinedOrNull(decorate) || !decorate ? '' : 
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
     
-    //var source = MochiKit.DOM.emitHTML(dom).join("");
     var source = this.emitXML(dom).join("");
-    //var newsrc = source.replace(/\/(\w*)\>/g, "/$1>\n");
-    var newsrc = source.replace(/>/g, ">\n");  // Add newlines after all closing tags.
-    
-    if (decorate) {
-        return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + newsrc
-    }
-    else {
-        return newsrc;
-    }
+    return decoration + source.replace(/>/g, ">\n");  // Add newlines after all closing tags.
 }
 
 
