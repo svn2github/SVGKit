@@ -3,12 +3,16 @@
 <head>
 
 
+
+  
   
   
   <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type" />
 
 
 
+
+  
   
   
   
@@ -19,39 +23,47 @@
 <body>
 
 
+
 <h2>Overview</h2>
 
 
-Each of these only relies on the previos ones, so you can pick the level of functionality you want:<br />
+
+Each of these only relies on the previews ones, so you can pick the level of functionality you want:<br />
+
 
 
 <br />
+
 
 
 SVGKit.js -- A low-level JavaScript SVG library. &nbsp;Create a new SVG at runtime.
 &nbsp;Load SVG data from a URL. Conveniently handle quirks of three
 ways SVG can be included in browsers: object, embed, and inline. Handle
-differnet browsers and different SVG engines. &nbsp;Has convenience
+different browsers and different SVG engines. &nbsp;Has convenience
 functions for DOM manipulation ala MochiKit. It manages the objects:
-HTMLElement, SVGDocument, SVGElement. &nbsp;Basic intaractive event
+HTMLElement, SVGDocument, SVGElement. &nbsp;Basic interactive event
 handling like scroll, zoom, object select and manipulate (maybe this
 should go in SVGEvent.js)<br />
+
 
 
 <br />
 
 
-SVGCanvas.js -- Impliments some of the Canvas API along with some
+
+SVGCanvas.js -- Implements some of the Canvas API along with some
 SVG-specific additions. Allows you to create an SVG more prodecurally
 rather than building it up with DOM manipulation (one of the
-disadvangages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vuki&Auml;&Dagger;evi&Auml;&Dagger;</a>)
+disadvantages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vuki&Auml;&Dagger;evi&Auml;&Dagger;</a>)
 There are parts of the Canvas API that do things like "take what you've
 drawn so far, treat it like a bitmap, and run the following filter on
 it." &nbsp;Some of these are impossible in SVG, but will get better
 with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2</a><br />
 
 
+
 <br />
+
 
 
 SVGPlot.js -- Eventually a full plotting suite to rival Excel, Matlab,
@@ -60,71 +72,103 @@ to server for conversion to PDF, PS, PNG, etc. Fully interactive --
 zooming, selecting data, etc. Live updates via AJAX for real-time data
 like stocks or web stats. Allows multiple plots arranged on an SVG,
 multiple related or unrelated axes per plot, and control of styles.
-Origionaly I was going to write it in pure Canvas code so you could
+Originally I was going to write it in pure Canvas code so you could
 have either underneath (like PlotKit), but things like text made it
 impossible.<br />
 
 
+
 <br />
+
 
 
 (Next to each item above, show an editable code snippet and the result in SVG and PNG.)<br />
 
 
+
 <br />
+
 
 
 For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more more production quality release.<br />
 
 
+
 <h2>Getting Started</h2>
+
 <ul>
+
   <li>MochiKit interpreter SVG examples</li>
+
   <li>Using SVGKit in your own pages -- valid XHTML and served as XHTML, thing at the top for IE, explicitly include all of MochiKit.</li>
+
 </ul>
+
 
 
 <h2>History</h2>
 
 
+
 I wanted a way to do interactive web stuff for my <a href="http://brainflux.org">brainflux.org</a>
 page of physics and math education. I looked into SVG and played around
-with Batik a bit. Then one of my research groups implimented a full web
+with Batik a bit. Then one of my research groups implemented a full web
 app using Python, TurboGears, and MochiKit. We wanted to interactively
 pull data out of a web page and plot it. Also we wanted a Google Maps
 type interface for stars. I started really working on this in January
 2006.<br />
 
 
+
 <h2>Things I want to do with it</h2>
+
 
 <ul>
 
-  <li>Online SVG Editor for a wiki (it would have automatic JavaScript support.) &nbsp;Some kind of rudimentary Inkscape.</li>
+
+  <li>Online SVG Editor for a wiki (it would have automatic JavaScript support.) &nbsp;Some kind of rudimentary <a href="http://inkscape.org">Inkscape</a>.</li>
+
 
   <li>More interactivity --&nbsp; drag/zoom controls,&nbsp; selecting &amp; manipulation of objects...</li>
 
-  <li>Clean up the SVG that SVGCanvas and SVGPlot generate and make them faster. &nbsp;These are sometimes at odds.</li>
+
+  <li>Clean up the SVG that SVGCanvas and SVGPlot generate and make
+the code run faster. &nbsp;These are sometimes at odds. For example,
+should it spend time factoring out common styles to an enclosing group?</li>
+
 
   <li>Interactive math/physics educational stuff like <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/java/zirkel/doc_en/index.html">Compass &amp; Ruler</a></li>
 
-  <li>Online interface to create and edit plots -- position ledgend, click to edit title, select colors with GUI, etc.</li>
+
+  <li>Online interface to create and edit plots -- position legend, click to edit title, select colors with GUI, etc.</li>
+  <li>Teach programing (using client-side JavaScript) emphasizing
+numerical, graphical, and plotting applications. &nbsp;Have the
+infrastructure to set up a textarea with a JavaScript function that
+filters some array, for example, and be able to edit the code, hit the
+button, and in real time see the result.</li>
+  <li>Realtime addition of data -- stocks, web logs...</li>
+
 
 </ul>
 
 
+
 <h2>About Me</h2>
+
 
 
 <h2> Requirements</h2>
 
 
 
+
 <ul>
+
 
 
   <li>
       <a href="http://www.mochikit.com/">MochiKit 1.3 or higher</a></li>
+
 
 
   <li>
@@ -132,7 +176,9 @@ type interface for stars. I started really working on this in January
  </li>
 
 
+
 </ul>
+
 
 
 
@@ -142,17 +188,22 @@ type interface for stars. I started really working on this in January
 
 
 
+
 <ul>
+
 
 
   <li>
      SVGKit is copyright (c) 2006 Jason Gallicchio. Licensed under the BSD License.</li>
 
 
+
 </ul>
 
 
+
 <h2>SVG Complaints/Outlook:</h2>
+
 
 
 Fonts are a huge problem. The SVG spec is written so that you can embed
@@ -162,58 +213,77 @@ exact dimensions of the resulting text for optimal placement.
 &nbsp;None of this works (very well) in Firefox yet.<br />
 
 
+
 <br />
+
 
 
 News<br />
 
 
+
 Download<br />
+
 
 
 &nbsp;- latest (2006-06-12)<br />
 
 
+
 Documentation<br />
+
 
 
 Tutorial<br />
 
 
+
 &nbsp;- Playing with the API inline<br />
+
 
 
 &nbsp;- Including it in your own site.<br />
 
 
+
 Development<br />
+
 
 
 &nbsp;- Mailing List<br />
 
 
+
 &nbsp;- Source Code in SVN<br />
+
 
 
 &nbsp;- Wiki<br />
 
 
+
 Screen Shots<br />
+
 
 
 Examples<br />
 
 
+
 &nbsp;- PNG<br />
+
 
 
 &nbsp;- Static SVG<br />
 
 
+
 &nbsp;- Full JavaScript<br />
 
 
+
 <br />
+
 
 
 </body>

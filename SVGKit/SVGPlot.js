@@ -92,7 +92,17 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     -- Change color based on category
     -- Error bars dx, dy, dx&dy
     -- Error elipse dx, dy, theta
+  Drawing functions can either by Canvas-like, ending in a stroke() and/or fill() or
+    SVG-like returning a node which the drawing function can add events like mouseover to.
+  Use this feature to re-impliment the star viewer with displayed coordinates and 
+    mouseover star names.
     
+  Input data:
+   -- Table (2D array) with column headings (most efficient). First row may be heading.
+      [[['x', 'y', 'a'], [7, 3, 6], [4, 2, 9], ...]
+   -- List of objects with uniform attributes. Uniform, and what SQLObject returns
+      [{x:7, y:3, a:6}, {x:4, y:2, a:9}, ...]
+   
   TODO
     -- Make all list parameters both comma or space seperated like in SVG.
     -- Scatter plot is line plot with transparent stroke, but with markers? Can't have data-dependent markers.
