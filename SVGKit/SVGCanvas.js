@@ -1545,6 +1545,23 @@ SVGCanvas.prototype.star = function(n, outer_radius /* =10 */, inner_radius /* =
     this.closePath();
 }
 
+SVGCanvas.prototype.gear = function(n, /*... r1, f1, r2, f2 */) {
+    /***
+        Issue commands (but don't stroke or fill) for a regular gear-like shape.
+    ***/
+    this.beginPath();
+    //var th = rotation - Math.PI/2;
+    var th = 0;
+    this.moveTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+    for (var i=0; i<n; i++) {
+        for (var j=0; j<(parameters.length-1)/2; j++) {
+            th = th + Math.PI*parameters[2*j+2]/(n);
+            this.lineTo(parameters[2*j+1]*Math.cos(th), parameters[2*j+1]*Math.sin(th));
+        }
+    }
+    this.closePath();
+}
+
 SVGCanvas.prototype.asterisk = function(n, outer_radius /* =10 */, inner_radius /* =0 */, rotation /* = 0 */) {
     /***
         Issue commands (but don't stroke or fill) for an open star or asterisk based on its inner and outer radius
