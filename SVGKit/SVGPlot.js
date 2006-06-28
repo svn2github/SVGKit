@@ -147,6 +147,12 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
         * Have to plot twice to get a drawingFunction for each point.
         * 'connected' is an option of scatter plot, which uses a drawingFunction.  This is easy to do.
         * 'markers' is an style parameter of line plot (automaticly included by SVGCanvas)
+    -- Must have a way to generate data for line plots at a level so that it's straightforward to shade between two:
+            var s = plotFunction(Sin)
+            var c = plotFunction(Cos)
+            shadeBetween(s, c, 0, pi)  // optional start and stop
+    -- In above example, should plotFunction return the whole plot, a reference to just
+         the function ploted, the SVGElement that corresponds to what was plotted, what?
 ***/
 
 
@@ -1504,6 +1510,82 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
     p.setStyle(backupStyle);
 }
 
+
+
+
+////////////////////////////
+// Plot Data
+////////////////////////////
+
+
+/***
+    The following work for array style data of the form:
+    { x:[7, 4, ...], 
+      y:[3, 2, ...],
+      a:[6, 9, ...] }
+***/
+
+SVGPlot.prototype.maxmin = function(data, max, min) {
+    for (key in data) {
+        min[key] = reduce(Math.min, data[key]);
+        max[key] = reduce(Math.max, data[key]);
+    }
+}
+
+/***
+    The following work for SQL/JSON style data of the form:
+    [{x:7, y:3, a:6}, {x:4, y:2, a:9}, ...]
+***/
+
+SVGPlot.prototype.maxmin = function(data, max, min) {
+    /***
+    
+        Call this with:
+            var max = {}
+            var min = {}
+            maxmin(data, max, min);
+        It will fill in max and min.
+        If data is empty, max and min are unchanged.
+    ***/
+    //reduce(max_fn, data)
+    forEach(data, function(raw_row) {
+        row = this.evaluate_row(MochiKit.Base.clone(raw_row));
+        foreach(key in keys, {
+            if (MochiKit.Base.isUndefinedOrNull(max[key]) || row[key]>max[key])
+                max[key] = row[key];
+            if (MochiKit.Base.isUndefinedOrNull(min[key]) || row[key]<mix[key])
+                min[key] = row[key];
+        })
+    })
+}
+
+SVGPlot.prototype.evaluate_table = function(raw_table) {
+    return applymap(this.evaluate_row, raw_table);
+}
+
+SVGPlot.prototype.evaluate_row = function(raw_row) {
+    var row = MochiKit.Base.clone(raw_row)
+    for(key in row) {
+        if (typeof(row[key])=='function') {
+            this.evaluate_item(row, key)
+        }
+    }
+    return row;
+}
+
+SVGPlot.prototype.evaluate_item = function(row, key) {
+    if(MochiKit.Base.isUndefinedOrNull(row['__circular_check__']) {
+        row['__circular_check__']= {}
+    }
+    if (!MochiKit.Base.isUndefinedOrNull(row['__circular_check__'][key])) {
+        throw "Circular reference in "+row+" for item "+key;
+    }
+    else {
+        row['__circular_check__'][key] = 1;
+        row[key] = row[key].call(this, row);  // Each function needs to call evaluate_item()
+        row['__circular_check__'][key] = null;
+    }
+}
 
 
 ////////////////////////////

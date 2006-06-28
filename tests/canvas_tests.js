@@ -1090,7 +1090,7 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 32, number = 10;
+    var i = 0, start = 0, number = 50;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test number ", i, "name ", test);
