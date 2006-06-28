@@ -263,6 +263,20 @@ SVGCanvas.prototype.setGroup = function(group) {
     this.currentTransformationMatrix = null;
 }
 
+SVGCanvas.prototype.newGroup = function() {
+    /***
+        SVG ONLY
+        should probably come between a save() and restore().
+        Sets the currentGroup so that future 
+        fill() and stroke() add their shapes to the given group.
+    ***/
+    var group = this.svg.G(null);
+    this._setShapeTransform(group);
+    this.append(group);
+    this.setGroup(group)
+    return group;
+}
+
 SVGCanvas.prototype._copyState = function(dest, src, just_style /*=false*/) {
     /***
         All of the drawing state (like strokeStyle) are members of
@@ -1545,22 +1559,37 @@ SVGCanvas.prototype.star = function(n, outer_radius /* =10 */, inner_radius /* =
     this.closePath();
 }
 
-SVGCanvas.prototype.gear = function(n, /*... r1, f1, r2, f2 */) {
+SVGCanvas.prototype.gear = function(n /*... f1, r1, f2, r2 */) {
     /***
         Issue commands (but don't stroke or fill) for a regular gear-like shape.
+        f_n is the fraction of the way to the next radius (0-1)
+        r_n is the nth radius. 
     ***/
     this.beginPath();
     //var th = rotation - Math.PI/2;
     var th = 0;
-    this.moveTo(outer_radius*Math.cos(th), outer_radius*Math.sin(th));
+    th = - Math.PI/2;
+    this.moveTo(arguments[2]*Math.cos(th), arguments[2]*Math.sin(th));
     for (var i=0; i<n; i++) {
-        for (var j=0; j<(parameters.length-1)/2; j++) {
-            th = th + Math.PI*parameters[2*j+2]/(n);
-            this.lineTo(parameters[2*j+1]*Math.cos(th), parameters[2*j+1]*Math.sin(th));
+        for (var j=0; j<(arguments.length-1)/2; j++) {
+            var angle = th + 2*Math.PI*arguments[2*j+1]/(n);
+            var r = arguments[2*j+2];
+            this.lineTo(r*Math.cos(angle), r*Math.sin(angle));
         }
+        th = th + 2*Math.PI/(n);
     }
     this.closePath();
 }
+
+/*
+function (ctx) {
+ ctx.translate(100,100);
+ ctx.strokeCircle(0,0,38);
+ ctx.gear(30, .2,40, .3,55, .4,60, .6,60,  .7,55, .8,40);
+ var elem = ctx.stroke();
+ ctx.svg.rotate(elem,-360/5)
+} 
+*/
 
 SVGCanvas.prototype.asterisk = function(n, outer_radius /* =10 */, inner_radius /* =0 */, rotation /* = 0 */) {
     /***

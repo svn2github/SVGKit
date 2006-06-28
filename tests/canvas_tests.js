@@ -800,179 +800,179 @@ var testFunctions = {
         //setInterval( partial(doClock, context) ,2000);
     },
     
-    'arcTo' :  function(ctx) {
-        ctx.beginPath();
-        ctx.strokeStyle='rgba(0,0,255,.25)'
+    'arcTo' :  function(c) {
+        c.beginPath();
+        c.strokeStyle='rgba(0,0,255,.25)'
         var x0=0, y0=100, x1=200, y1=0, x2=200, y2=200;
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+        c.moveTo(x0, y0);
+        c.lineTo(x1, y1);
+        c.lineTo(x2, y2);
+        c.stroke();
         
-        ctx.strokeStyle='rgba(255,0,0,.5)'
-        ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.arcTo(x1, y1, x2, y2,60);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+        c.strokeStyle='rgba(255,0,0,.5)'
+        c.beginPath();
+        c.moveTo(x0, y0);
+        c.arcTo(x1, y1, x2, y2,60);
+        c.lineTo(x2, y2);
+        c.stroke();
         
         x0=200, y0=200, x1=50, y1=100, x2=0, y2=200;
-        ctx.strokeStyle='rgba(255,0,0,.2)'
-        ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+        c.strokeStyle='rgba(255,0,0,.2)'
+        c.beginPath();
+        c.moveTo(x0, y0);
+        c.lineTo(x1, y1);
+        c.lineTo(x2, y2);
+        c.stroke();
         
-        ctx.strokeStyle='rgba(0,0,255,.2)'
+        c.strokeStyle='rgba(0,0,255,.2)'
         for (var r=30; r<300; r+=30) {
-            ctx.moveTo(x0, y0);
-            ctx.arcTo(x1, y1, x2, y2, r);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
+            c.moveTo(x0, y0);
+            c.arcTo(x1, y1, x2, y2, r);
+            c.lineTo(x2, y2);
+            c.stroke();
         }
     },
     
-    'pollygon' : function(ctx) {
-        ctx.translate(200/12,200/12);
+    'pollygon' : function(c) {
+        c.translate(200/12,200/12);
         for (i=0;i<6;i++){
           for (j=0;j<6;j++){
-            ctx.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
+            c.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
                              Math.floor(255-42.5*j) + ')';
-            ctx.save();
-            ctx.translate(i*200/6,j*200/6);
-            ctx.pollygon(i+3, 10+10/(j+1), Math.PI/6/(i+3)*j);
-            ctx.stroke();
-            ctx.restore();
+            c.save();
+            c.translate(i*200/6,j*200/6);
+            c.pollygon(i+3, 10+10/(j+1), Math.PI/6/(i+3)*j);
+            c.stroke();
+            c.restore();
           }
         }
     },
     
-    'star' : function(ctx) {
-        ctx.translate(200/12,200/12);
+    'star' : function(c) {
+        c.translate(200/12,200/12);
         for (i=0;i<6;i++){
           for (j=0;j<6;j++){
-            ctx.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
+            c.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
                              Math.floor(255-42.5*j) + ')';
-            ctx.save();
-            ctx.translate(i*200/6,j*200/6);
-            ctx.star(i+3, 10+10/(j+1), (10+10/j)/(i+1), Math.PI/6/(i+3)*j);
-            ctx.stroke();
-            ctx.restore();
+            c.save();
+            c.translate(i*200/6,j*200/6);
+            c.star(i+3, 10+10/(j+1), (10+10/j)/(i+1), Math.PI/6/(i+3)*j);
+            c.stroke();
+            c.restore();
           }
         }
     },
     
-    'asterisk' : function(ctx) {
-        ctx.translate(200/12,200/12);
+    'asterisk' : function(c) {
+        c.translate(200/12,200/12);
         for (i=0;i<6;i++){
           for (j=0;j<6;j++){
-            ctx.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
+            c.strokeStyle = 'rgb(0,' + Math.floor(255-42.5*i) + ',' + 
                              Math.floor(255-42.5*j) + ')';
-            ctx.save();
-            ctx.translate(i*200/6,j*200/6);
-            ctx.asterisk(i+3, 10+10/(j+1), (5+5/j)/(i+1), Math.PI/6/(i+3)*j);
-            ctx.stroke();
-            ctx.restore();
+            c.save();
+            c.translate(i*200/6,j*200/6);
+            c.asterisk(i+3, 10+10/(j+1), (5+5/j)/(i+1), Math.PI/6/(i+3)*j);
+            c.stroke();
+            c.restore();
           }
         }
     },
     
-    'svg_shapes' : function(ctx) {
-        ctx.scale(.5,.5);
+    'svg_shapes' : function(c) {
+        c.scale(.5,.5);
         
-        ctx.beginPath();
-        ctx.moveTo(125,75)
-        ctx.ellipticalArc(100,50, 0, 0,0, 100,50);
-        ctx.stroke();
-        ctx.strokeStyle='blue'
-        ctx.beginPath();
-        ctx.moveTo(125,75)
-        ctx.ellipticalArc(100,50, 0, 1,0, 100,50);
-        ctx.stroke();
-        ctx.strokeStyle='green'
-        ctx.beginPath();
-        ctx.moveTo(125,75)
-        ctx.ellipticalArc(100,50, 0, 0,1, 100,50);
-        ctx.stroke();
-        ctx.strokeStyle='red'
-        ctx.beginPath();
-        ctx.moveTo(125,75)
-        ctx.ellipticalArc(100,50, 0, 1,1, 100,50);
-        ctx.stroke();
+        c.beginPath();
+        c.moveTo(125,75)
+        c.ellipticalArc(100,50, 0, 0,0, 100,50);
+        c.stroke();
+        c.strokeStyle='blue'
+        c.beginPath();
+        c.moveTo(125,75)
+        c.ellipticalArc(100,50, 0, 1,0, 100,50);
+        c.stroke();
+        c.strokeStyle='green'
+        c.beginPath();
+        c.moveTo(125,75)
+        c.ellipticalArc(100,50, 0, 0,1, 100,50);
+        c.stroke();
+        c.strokeStyle='red'
+        c.beginPath();
+        c.moveTo(125,75)
+        c.ellipticalArc(100,50, 0, 1,1, 100,50);
+        c.stroke();
         
-        ctx.translate(-25,50);
-        ctx.strokeStyle='black'
-        ctx.fillStyle='rgba(100,100,100,.3)'
-        ctx.beginPath();
-        ctx.moveTo(50,50)
-        ctx.smoothCurveTo(150,50)
-        ctx.smoothCurveTo(150,150)
-        ctx.smoothCurveTo(50,150)
-        ctx.smoothCurveTo(50,50)
-        ctx.draw();
+        c.translate(-25,50);
+        c.strokeStyle='black'
+        c.fillStyle='rgba(100,100,100,.3)'
+        c.beginPath();
+        c.moveTo(50,50)
+        c.smoothCurveTo(150,50)
+        c.smoothCurveTo(150,150)
+        c.smoothCurveTo(50,150)
+        c.smoothCurveTo(50,50)
+        c.draw();
         
-        ctx.translate(100,20);
-        ctx.strokeStyle='black'
-        ctx.fillStyle='rgba(255,0,0,.3)'
-        ctx.strokePath("M50,50 T150,50 T150,150 T50,150 T50,50");
-        ctx.fillPath("M50,50 T150,50 T150,150 T50,150 T50,50");
-        ctx.translate(20,0);
-        ctx.drawPath("M50,50 T150,50 T150,150 T50,150 T50,50");
+        c.translate(100,20);
+        c.strokeStyle='black'
+        c.fillStyle='rgba(255,0,0,.3)'
+        c.strokePath("M50,50 T150,50 T150,150 T50,150 T50,50");
+        c.fillPath("M50,50 T150,50 T150,150 T50,150 T50,50");
+        c.translate(20,0);
+        c.drawPath("M50,50 T150,50 T150,150 T50,150 T50,50");
         
-        ctx.translate(100,-20);
-        ctx.fillStyle='rgba(0,255,0,.3)'
-        ctx.strokeRoundedRect(10,10,100,100,10,10);
-        ctx.fillRoundedRect(10,10,100,100,10,10);
-        ctx.translate(20,20);
-        ctx.drawRoundedRect(10,10,100,100,10,10);
+        c.translate(100,-20);
+        c.fillStyle='rgba(0,255,0,.3)'
+        c.strokeRoundedRect(10,10,100,100,10,10);
+        c.fillRoundedRect(10,10,100,100,10,10);
+        c.translate(20,20);
+        c.drawRoundedRect(10,10,100,100,10,10);
         
-        ctx.translate(70,25);
-        ctx.fillStyle='rgba(0,0,255,.3)'
-        ctx.strokeCircle(50, 50, 40);
-        ctx.fillCircle(50, 50, 40);
-        ctx.translate(20,0);
-        ctx.drawCircle(50, 50, 40);
+        c.translate(70,25);
+        c.fillStyle='rgba(0,0,255,.3)'
+        c.strokeCircle(50, 50, 40);
+        c.fillCircle(50, 50, 40);
+        c.translate(20,0);
+        c.drawCircle(50, 50, 40);
         
-        ctx.translate(-240,100);
-        ctx.fillStyle='rgba(150,0,150,.3)'
-        ctx.strokeEllipse(50, 50, 100, 40);
-        ctx.fillEllipse(50, 50, 100, 40);
-        ctx.translate(20,20);
-        ctx.drawEllipse(50, 50, 100, 40);
+        c.translate(-240,100);
+        c.fillStyle='rgba(150,0,150,.3)'
+        c.strokeEllipse(50, 50, 100, 40);
+        c.fillEllipse(50, 50, 100, 40);
+        c.translate(20,20);
+        c.drawEllipse(50, 50, 100, 40);
         
-        ctx.translate(130,-20);
-        ctx.fillStyle='rgba(150,150,0,.3)'
-        ctx.strokePolyline("50,50 150,50 150,150 50,150");
-        ctx.fillPolyline("50,50 150,50 150,150 50,150");
-        ctx.translate(20,20);
-        ctx.drawPolyline("50,50 150,50 150,150 50,150");
+        c.translate(130,-20);
+        c.fillStyle='rgba(150,150,0,.3)'
+        c.strokePolyline("50,50 150,50 150,150 50,150");
+        c.fillPolyline("50,50 150,50 150,150 50,150");
+        c.translate(20,20);
+        c.drawPolyline("50,50 150,50 150,150 50,150");
         
-        ctx.translate(-130,20);
-        ctx.fillStyle='rgba(0,150,150,.3)'
-        ctx.strokePolygon("50,50 150,50 150,150 50,150");
-        ctx.fillPolygon("50,50 150,50 150,150 50,150");
-        ctx.translate(20,20);
-        ctx.drawPolygon("50,50 150,50 150,150 50,150");
+        c.translate(-130,20);
+        c.fillStyle='rgba(0,150,150,.3)'
+        c.strokePolygon("50,50 150,50 150,150 50,150");
+        c.fillPolygon("50,50 150,50 150,150 50,150");
+        c.translate(20,20);
+        c.drawPolygon("50,50 150,50 150,150 50,150");
         
     },
     
-    'markers' : function(ctx) {
-        var markers = [ ctx.pollygon(5, 10) ];
+    'markers' : function(c) {
+        var markers = [ c.pollygon(5, 10) ];
         var n = markers.length;
         for (var i=0; i<n; i++) {
-            ctx.startMarker();
-            ctx.pollygon(5, 10);
-            ctx.stroke();
-            var marker = ctx.endMarker();
+            c.startMarker();
+            c.pollygon(5, 10);
+            c.stroke();
+            var marker = c.endMarker();
             
-            ctx.markerStart = marker;
-            ctx.markerMid = marker;
-            ctx.markerEnd = marker;
-            ctx.moveTo(10,10);
-            ctx.lineTo(100,100);
-            ctx.lineTo(200-10,200-10);
-            ctx.stroke();
+            c.markerStart = marker;
+            c.markerMid = marker;
+            c.markerEnd = marker;
+            c.moveTo(10,10);
+            c.lineTo(100,100);
+            c.lineTo(200-10,200-10);
+            c.stroke();
         }
     },
     
@@ -1002,11 +1002,61 @@ var testFunctions = {
         }
     },
     
+    'gears': function (c) {
+         var n = 11;
+         var bottom = 85;
+         var diagonal = 70;
+         var center = 100;
+
+         var height = Math.sqrt(diagonal*diagonal-bottom*bottom/4)
+         var r = diagonal/2
+         var a = Math.acos(bottom/(2*diagonal))
+         
+         c.save()
+         c.beginPath()
+         c.moveTo(center,center)
+         c.lineTo(center-bottom/2,center+height)
+         c.stroke()
+         c.restore()
+
+         c.save()
+         c.translate(center,center)
+         var g1 = c.newGroup()
+         c.beginPath();
+         c.moveTo(0,0)
+         c.lineTo(bottom/2,-height)
+         c.lineTo(-bottom/2,-height)
+         c.stroke()
+         c.beginPath();
+         c.rotate(-a+Math.PI/n)
+         c.gear(n, .2,r-5, .3,r+2, .4,r+5, .6,r+5,  .7,r+2, .8,r-5);
+         c.stroke();
+         c.restore()
+
+         c.save()
+         c.translate(center-bottom/2,center+height);
+         var g2 = c.newGroup()
+         c.beginPath();
+         c.moveTo(0,0)
+         c.lineTo(bottom,0)
+         c.stroke()
+         c.beginPath();
+         c.rotate(-a)
+         c.gear(n, .2,r-5, .3,r+2, .4,r+5, .6,r+5,  .7,r+2, .8,r-5);
+         c.stroke();
+         c.restore()
+         
+         var rotate = 0.0 * 2*a
+         c.svg.rotate(g1 ,rotate/Math.PI*180)
+         c.svg.rotate(g2 ,-rotate/Math.PI*180)
+    }
+
+    
     /*
-    'a1' : function(ctx) {
+    'a1' : function(c) {
     },
     
-    'a2' : function(ctx) {
+    'a2' : function(c) {
     },
     */
     
@@ -1040,7 +1090,7 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
 function addTests() {
     log("getting table");
     var table = $('tests');
-    var i = 0, start = 36, number = 10;
+    var i = 0, start = 32, number = 10;
     for (var test in testFunctions) {
         if (i>=start && i-start<number) {
             log("doing test number ", i, "name ", test);
