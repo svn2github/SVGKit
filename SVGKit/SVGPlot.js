@@ -69,7 +69,8 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
           * always from origin?  For date plots this is dumb.
           * zoom uniformly to keep axis ratios fixed.
           
-   Ways to pass parameters:
+   
+   Ways to pass graph properties:
      -- Stack-based state method like Canvas
      -- Explicitly with each function like Mathematica
              plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )
@@ -96,6 +97,10 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     SVG-like returning a node which the drawing function can add events like mouseover to.
   Use this feature to re-impliment the star viewer with displayed coordinates and 
     mouseover star names.
+    
+  Ways to pass parameters:
+    -- List like Mathematica [min, max] or [name, min, max]
+    -- Object/dictionary {min:-5, max:5} 
     
   Input data:
    -- Table (2D array) with column headings (most efficient). First row may be heading.
@@ -860,6 +865,24 @@ SVGPlot.View.prototype.setAutoView = function(include_zero /* =false */) {
     this._xmax = (this.xmax!='auto') ? this.xmax : xExtents.max;
     this._ymin = (this.ymin!='auto') ? this.ymin : yExtents.min;
     this._ymax = (this.ymax!='auto') ? this.ymax : yExtents.max;
+}
+
+SVGPlot.View.prototype.bankTo45deg = function(/*[ { xextents:[xmin, xmax], 
+                                                      yextents:[ymin, ymax], 
+                                                      curve:[[x,y],[x,y]...] }, ...]*/) {
+    /***
+        For good perception of rates of change, you want the median line-segment to
+        be banked at 45 degrees (prhaps weighted by the length of the segments.)
+        
+        The curve is given by an ordered list of x,y coordinates.
+        
+        If you're plotting multiple curves on one graph, or plotting curves in many 
+        panels, the banking to 45deg should include the effects of all curves.
+        Because different curves can have different min/max, this information must
+        be passed in for each curve.
+        
+        @returns aspect ratio as a float.  This can be used to size the physical graph.
+    ***/
 }
 
 SVGPlot.View.prototype.layout = function (totalXSize, totalYSize) {
