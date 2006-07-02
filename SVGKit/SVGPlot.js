@@ -68,7 +68,13 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
      -- Drag on axes to zoom
           * always from origin?  For date plots this is dumb.
           * zoom uniformly to keep axis ratios fixed.
-          
+    
+   Procedural model (plot function) versus data model (XML/JSON rep).
+    -- Like Canvas vs SVG.
+    -- The procedural model makes it easier to crate variables based on the data
+        and use them in other parts without a lotof xrefs. (How to even do in JSON?)
+    -- The data model makes it easier to change parameters with a UI, 
+        add data, and re-render.
    
    Ways to pass graph properties:
      -- Stack-based state method like Canvas
