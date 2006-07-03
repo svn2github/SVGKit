@@ -54,7 +54,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     Using SVG in the Browser:
      * Should always provide fallback content -- png, pdf, (shudder) swf
      * Interactivity requires SVG, but initial static content should have static fallback (for fast load)
-     * Best effort to have it work on Firefox, Opera, Safari, IE+ASV, Batik
+     * Best effort to have it work on Firefox, Opera, Safari, IE+ASV, Batik, Rhino, GNOME, KDE
      * Text sucks -- different settings/browsers render it in vastly differens sizes.
      * Automatically generate links to an image translation server.
     
