@@ -177,6 +177,47 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
 ***/
 
 
+Scale = {
+    segments : {},  // List of scale segments for a broken scale
+    reversed : false,
+    valueToPosition = function(value)
+}
+
+ScaleSegment = {
+    required = null, // list of values that must be included like {0, 100}
+    begin: 0.0,
+    end: 1.0
+}
+
+ScaleSegmentReal = {
+    interpolation : 'linear', // 'log', 'ln', 'lg', 'sqrt', 'atan'
+    min: 'automatic'
+    max: 'automatic'
+    _min: null,  // Calculated _min
+    _max: null
+}
+ScaleSegmentDiscrete = {
+    position: 'on';  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+    interval: 1; // spacing between discrete values.  Can be any real number.
+    min: 'automatic'
+    max: 'automatic'
+    _min: null,
+    _max: null
+}
+ScaleSegmentCategory = {
+    position: 'on'  // 'betweeen' Plot on or between grid lines.
+}
+ScaleSegmentDateTime = {
+    interval: 'minute'
+    min: 'automatic'
+    max: 'automatic'
+    _min: null,
+    _max: null
+}
+
+Markings = {}  // For ticks, grid, and labels.  Does auto calculation.
+
+
 ////////////////////////////
 //  Setup
 ////////////////////////////
