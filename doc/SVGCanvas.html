@@ -44,7 +44,9 @@ parameters with each call. &nbsp;SVG is a tree representation where
 you can group objects and apply fill color, for example, to the whole
 group that get applied for every member that doens't explicitly specify
 their own fill color. Some things are&nbsp; cleaner to do in one
-model or the other. See <a href="http://developer.mozilla.org/presentations/xtech2005/svg-canvas/">Canvas and SVG</a> slides by Robert O'Callahan at mozilla.org for a good overview about why the web needs both.<br />
+model or the other. See <a href="http://developer.mozilla.org/presentations/xtech2005/svg-canvas/">Canvas
+and SVG</a> slides by Robert O'Callahan at mozilla.org for a good
+overview about why the web needs both.<br />
 
 <br />
 
@@ -97,13 +99,112 @@ XML-like description.</li>
 </ul>
 
 <h2>Related Work</h2>
+
 <a href="http://xmlgraphics.apache.org/batik/">
-Batik</a> impliments the Java AWT API to draw directly to SVG. &nbsp;<a href="http://fuchsia-design.com/CanvaSVG/">CanvaSVG</a>
+Batik</a> impliments the Java AWT API to draw directly to SVG.
+&nbsp;<a href="http://fuchsia-design.com/CanvaSVG/">CanvaSVG</a>
 goes the other way, rendering SVGs onto a canvas. SVG has a richer
 (more complicated) set of things like arcs, and&nbsp;<span class="attribute">stroke-dasharray</span> that are not
 built into the Canvas API making it hard on them and easy on me.
 &nbsp;Other things like shadows and <code>globalCompositeOperation</code>&nbsp;are
-not straight forward to impliment without nateive SVG support.<br />
+not straight forward to impliment without nateive SVG support.
+&nbsp;<a href="http://cairographics.org/">Cairo</a>
+can render to bitmaps, PDF, PS, SVG, OpenGL, and others.&nbsp;You
+can write a PostScript program to print out arbitrarily many digits of
+pi, or have the printer calculate fractals. Canvas and SVG provide this level of programing using JavaScript.<br />
+
+<h2>Background/History<span style="text-decoration: underline;"></span></h2>
+
+PostScript was a vector drawing state-machine-based language, PDF is a
+subset without the programming language (conditionals and loops). Canvas is a drawing API inspired by PS and PDF.
+&nbsp;SVG is a scenegraph
+representation. &nbsp;It's like the difference between OpenGL and
+Open Inventor. &nbsp;All drawing of windows and widets
+in&nbsp;NeXT was done used PostScript, and in OS X using PDF.
+&nbsp;The advantage was that the same code that is drawing to the
+window can be used to draw to the printer without any translation.<br />
+
+<br />
+
+Canvas as SVG, though simple, is quite powerful, supporting
+transparency, gradients, clipping, blending, bezeir curves, and others
+that Win32/GDI and QuickDraw2D, and Java's AWT did not.
+&nbsp;Except for transparency, these have a PostScript history.<br />
+
+<br />
+
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+
+    <tr>
+
+      <td></td>
+
+      <td>State-Machine / Stack-Based /&nbsp;immediate-mode</td>
+
+      <td><a href="http://en.wikipedia.org/wiki/Scenegraph">Scenegraph</a>
+/&nbsp;retained mode</td>
+
+
+    </tr>
+
+    <tr>
+
+      <td>2D</td>
+
+      <td>PostScript<br />
+
+PDF<br />
+
+Canvas<br />
+
+Quartz 2D / QuickDraw 2D on OS X<br />
+Qt, GDK<br />
+Java AWT java.awt.Graphics2D<br />
+Windows Win32/GDI</td>
+
+      <td>SVG</td>
+
+
+    </tr>
+
+    <tr>
+
+      <td>3D</td>
+
+      <td>OpenGL<br />
+      <a href="http://en.wikipedia.org/wiki/RenderMan_Interface_Specification">RenderMan</a><br />
+
+      </td>
+
+      <td><a href="http://en.wikipedia.org/wiki/Open_Inventor" title="Open Inventor">Open Inventor</a>&nbsp;/ <a href="http://en.wikipedia.org/wiki/OpenGL_Performer">Performer</a>
+/ <a href="http://www.coin3d.org/">Coin3D</a><br />
+
+      <a href="http://en.wikipedia.org/wiki/OpenGL%2B%2B">OpenGL++</a>
+/ <a href="http://en.wikipedia.org/w/index.php?title=Cosmo_3D&amp;action=edit" class="new" title="Cosmo 3D">Cosmo 3D</a> /
+&nbsp;<a href="http://en.wikipedia.org/wiki/Fahrenheit_graphics_API" title="Fahrenheit graphics API">Fahrenheit</a><br />
+
+Java3D<br />
+
+VRML / X3D<br />
+
+VTK</td>
+
+
+    </tr>
+
+  </tbody>
+</table>
+
+<p>Sometimes you want direct access to the pixels. In photo
+manipulation, 3D per-pixel lighting and shading, non-linear
+transformations, displaying image or video, a smoke or fire effect,
+filters, or interval graphing techniques. Dealing with an array of
+colors is more efficient than drawing a rectangle for each pixel using
+vector-graphics techniques. Some of these are addressed in the SVG
+filters -- you can have your drop shadow and the advantage of SVG. The
+other advantage is being able to both read and write the color array.</p>
 
 <h2>Overview of Canvas API</h2>
 
@@ -114,11 +215,13 @@ APIs specification</a>. </li>
 
   <li> Apple <a href="http://developer.apple.com/documentation/AppleApplications/Reference/SafariJSRef/Classes/Canvas.html">
     <code>&lt;canvas&gt;</code> documentation</a>&nbsp;</li>
-  <li>Mozilla <a href="http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas"><code>&lt;canvas&gt;</code> tutorial</a></li>
+
+  <li>Mozilla <a href="http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas"><code>&lt;canvas&gt;</code>
+tutorial</a></li>
 
 </ul>
 
-<h2>Overview of Canvas Implementation</h2>
+<h2>Overview of my Canvas Implementation using SVG</h2>
 
 There is a single object SVGCanvas which acts like Canvas's 2D context
 that you get from getContext("2d"). Maybe I should have called it
@@ -131,55 +234,90 @@ There were some decisions to be made regarding trading off speed to
 create the SVG, speed to render the SVG, generating clean factorized
 SVG. &nbsp;What happens when you draw, transform, draw, transform,
 draw, etc.<br />
+
 <ul>
+
   <li>Should SVGCanvas keep an explicit current
 transformation matrix and multiply each incomming coordinate by it and
 write out the transformed coordinates? This is what the Canvas and SVG
 renderers do internally. This produces ugly SVG with lots of decimal
 digits that have no relation to the often simple coordinates provided.</li>
+
   <li>Another option would be to construct a huge string of
-transformations and include them in the SVG element:
-    <code>transform="translate(75, 75) scale(0.4, 0.4) rotate(6)"</code>
+transformations and include them in the SVG element: <code>transform="translate(75,
+75) scale(0.4, 0.4) rotate(6)"</code>
 This is how you would write SVG "by hand." The problem with this is
 that the transformations can get longer and longer. Another problem is
-that you lineTo() rotate() lineTo() before you emit a path with&nbsp;
+that you lineTo() rotate() lineTo() before you emit a path
+with&nbsp;
 fill() and there is no way specify a single transformation for the
 whole path.</li>
+
 </ul>
+
 SVGCanvas keeps the current state and a stack of saved states. The
 state includes things like the fill style and transformation, but not
-the path. An SVG element is only written to the SVG when you do a <code>fill()</code>, <code>stroke()</code> or <code>clip()</code> or things like <code>fillRect()</code> that call one of these.<br />
+the path. An SVG element is only written to the SVG when you do a <code>fill()</code>,
+<code>stroke()</code> or <code>clip()</code>
+or things like <code>fillRect()</code> that call one of
+these.<br />
+
 <br />
+
 Gradients, clipping paths, markers, patterns, and other objects that
 you define and use many times are created by standard Canvas methods or
 a Canvas inspired SVG-only one.<br />
+
 <h2>Overview of SVG Extensions</h2>
+
 Since I want to be able to use this as an easy way to draw into an SVG
 rather than just a pure Canvas implimentation, there are several SVG
 specific features.<br />
+
 <ul>
+
   <li>You can pick the SVG group you're drawing into by setting <code>drawGroup</code>.
 It lives in the state. &nbsp;All elements go into this group. (They
 have transformations applied to them from higher-level goups.)</li>
-  <li>Actions like <code>stroke()</code> and <code>fill()</code> return the DOM element of the path or group that was created. &nbsp;Usually you ignore it.</li>
-  <li>You can manipulate the state dictionary yourself with <code>getState</code> and <code>setState</code>.</li>
-  <li><code>applyStyles</code> is part of the state. &nbsp;If you have
+
+  <li>Actions like <code>stroke()</code> and <code>fill()</code>
+return the DOM element of the path or group that was created.
+&nbsp;Usually you ignore it.</li>
+
+  <li>You can manipulate the state dictionary yourself with <code>getState</code>
+and <code>setState</code>.</li>
+
+  <li><code>applyStyles</code> is part of the state.
+&nbsp;If you have
 an SVG group that already has styling properties you need, you can set
 this to just output the shape elements and let the styles be inherited.</li>
+
   <li>Every SVG element can be created directly with the current
 transformation and style applied by passing appropriate arguments to,
-for example, <code>strokeCircle()</code>,&nbsp;<code>fillCircle()</code>, or <code>drawCircle()</code>.</li>
-  <li> <code>text()</code> funtion that  takes a string and a position. A big shortcoming of canvas is its lack of integrated text. &nbsp;I've also added font and textAnchor properties to the state.</li>
-  <li><code>draw()</code> action: To draw a shape that has both a <code>fill()</code> and <code>stroke()</code>, in Canvas you set up the path, then call <code>fill()</code> then <code>stroke()</code>
+for example, <code>strokeCircle()</code>,&nbsp;<code>fillCircle()</code>,
+or <code>drawCircle()</code>.</li>
+
+  <li> <code>text()</code> funtion that takes a
+string and a position. A big shortcoming of canvas is its lack of
+integrated text. &nbsp;I've also added font and textAnchor
+properties to the state.</li>
+
+  <li><code>draw()</code> action: To draw a shape
+that has both a <code>fill()</code> and <code>stroke()</code>,
+in Canvas you set up the path, then call <code>fill()</code>
+then <code>stroke()</code>
 to stroke on top of the fill. You can do that here too, but it would
 generate two seperate SVG elemtns rather than a single one with both
 fill and stroke properties. If you edit the SVG and drag around the
-fill, the stroke won't come with it. Within <code>stroke()</code> I can look to see if I've just done a <code>fill()</code>,
+fill, the stroke won't come with it. Within <code>stroke()</code>
+I can look to see if I've just done a <code>fill()</code>,
 but this check is inneficient. Every time you do a stroke you have to
 compare the current state and the element you're trying to fill (path,
 rect, etc) with the previous thing. Maybe this is worth doing rather
 than defining a whole new non-canvas-API function, but it's far easier
-to add a draw function to the canvas context that calls <code>fill()</code> then <code>stroke()</code>.</li>
+to add a draw function to the canvas context that calls <code>fill()</code>
+then <code>stroke()</code>.</li>
+
 </ul>
 
 <br />
