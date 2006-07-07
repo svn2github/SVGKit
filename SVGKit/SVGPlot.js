@@ -19,6 +19,15 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
    * Clean programatic canvas-like interface and also clean SVG-like XML representation.
    * Reasonable defaults, but ability to tweak everything.
    * Client-side features of zooming, panning, and exploring the data.
+   * Allows raw data to be published on the web along with suggested ways of viewing it,
+      but allows viewer to painlessly view raw data in other ways (e.g. change scale to log)
+   
+   Additional Packages:
+   * Statistics -- mean, stddev, median, quartile, etc, which can then be plotted (box plot)
+   * Histogram -- fixed bins, 10% bins, etc.
+   * Fits -- parameterized functions
+   * Curves -- LOSES method for smooth curve
+   * Spreadsheet-like data manipulator
 
    Everything is object-oriented, but objects get created for you rather than 
    having to call constructors and link them in.  Complimentary like SVG DOM vs Canvas.
@@ -164,6 +173,7 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
             shadeBetween(s, c, 0, pi)  // optional start and stop
     -- In above example, should plotFunction return the whole plot, a reference to just
          the function ploted, the SVGElement that corresponds to what was plotted, what?
+    -- Plot boxes to show relative scales between plots like in Global Warming example.
 ***/
 
 
