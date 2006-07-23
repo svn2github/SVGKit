@@ -2,7 +2,7 @@
 
 SVGPlot 0.1
 
-See <http://svgkit.com/> for documentation, downloads, license, etc.
+See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
