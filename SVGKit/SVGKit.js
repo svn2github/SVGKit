@@ -2,7 +2,7 @@
 
 SVGKit 0.1
 
-See <http://svgkit.com/> for documentation, downloads, license, etc.
+See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
@@ -45,6 +45,11 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
     Can't draw anything until it's loaded.  Really annoying in the interpreter.
     inline doesn't have this problem.  Maybe everything is going in that direction anyway.
     
+    Bugs:
+     * translate(1) and then call translate doesn't detect that this means x=1. 
+        Code seems to be there, but regexp doesnt' match.
+     * Dragging is sketchy when the mouse leavs the object.
+    
     Integration with MochiKit:
      * See if it's any slower using iterators
      * See if MochiKit.Style and MochiKit.Visual effects work.
@@ -58,11 +63,14 @@ See <http://svgkit.com/> for documentation, downloads, license, etc.
      * Text sucks -- different settings/browsers render it in vastly differens sizes.
      * Automatically generate links to an image translation server.
     
-    Add getURL and setURL to non-ASP based renders like
-    http://jibbering.com/2002/5/dynamic-update-svg.html
-    
-    Look at SMIL animation:
-    http://www.vectoreal.com/smilscript/
+    Fatures:
+     * Mouse tracking -- ala KevLinDev?  Do you need the clear 100% rectangle?
+     * enablePan(element), enableZoom(element), enableFollow(), enableDrag() enablePanZoomImmunity()
+     * Create PNGs: http://www.kevlindev.com/gui/utilities/js_png/index.htm
+     
+    Emulate Support For:
+     * getURL and setURL to non-ASP: http://jibbering.com/2002/5/dynamic-update-svg.html
+     * SMIL animation: http://www.vectoreal.com/smilscript/
     
     SVG (and most client-side web stuff) is depressing.  Things looked so bright back in
     1999 and here we are SEVEN years later and even I just learned about the standard.
@@ -162,8 +170,13 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     log("SVG.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
     if (MochiKit.Base.isUndefinedOrNull(p1)) {
-        // This JS was included inside of an SVG file.
-        
+        // This JS was included inside of an SVG file, and this was included in the
+        // root element's onload event, which you need to to do get a target.
+        var evt = p1;
+        if ( window.svgDocument == null )
+            this.svgDocument = evt.target.ownerDocument;
+            this.svgElement = this.svgDocument.rootElement;  // or svgDocument.documentElement; 
+            this.htmlElement = this.svgElement;
     }
     else if (typeof(p1) == 'string') {
         if (p1.length>5 && p1.substr(p1.length-4,4).toLowerCase()=='.svg')  // IE doesn't do substr(-4)
@@ -730,46 +743,61 @@ SVGKit.prototype.deleteContent = function() {
     the transform string is the same as the type of transformation that 
     you're trying to do (e.g. rotate), replace it for efficiency.
     If it's not the same, append to the end.
-    Note that translate(2,0) gets turned into translate(2) by the browser.
+    Note that translate(2,0) gets turned into translate(2) by the browser, and
+    this should be handled.
+    If the elem passed is not an id for an element, it is treated as a
+      string transformation which gets updated and returned.
     Regular Expressions are hard coded so they can be compiled once on load.
 */
 
 
 SVGKit.rotateRE = /(.*)rotate\(\s*(.*)\s*\)\s*$/
 SVGKit.prototype.rotate = function(elem, degrees) {
-    if (typeof(elem) == 'string') {
+    // Test: SVGKit.prototype.rotate('translate( 1 ,2 ) rotate( 70)', -10)
+    var element = MochiKit.DOM.getElement(elem);
+    if (MochiKit.Base.isUndefinedOrNull(element)) {
         return this._oneParameter(elem, degrees, 
                                    SVGKit.rotateRE, 'rotate')
     }
-    var old_transform = elem.getAttribute('transform')
+    var old_transform = element.getAttribute('transform')
     var new_transform = this._oneParameter(old_transform, degrees, 
                                             SVGKit.rotateRE, 'rotate')
-    elem.setAttribute('transform', new_transform);
+    element.setAttribute('transform', new_transform);
+    return new_transform;
 }
 
 
 SVGKit.translateRE = /(.*)translate\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
 SVGKit.prototype.translate = function(elem, tx, ty) {
-    if (typeof(elem) == 'string') {
+    /***
+        translate(' translate( 1 ,2 ) ', -10,-20)
+        translate(' translate(1) ', -10,-20)
+        translate(' translate(10,20) ', 0, -20)
+    ***/
+    var element = MochiKit.DOM.getElement(elem);
+    if (MochiKit.Base.isUndefinedOrNull(element)) {
         return this._twoParameter(elem, tx, ty, 
                                    SVGKit.translateRE, 'translate')
     }
-    var old_transform = elem.getAttribute('transform')
-    var new_transform = this._twoParameter(old_transform, sx, sy, 
+    var old_transform = element.getAttribute('transform')
+    var new_transform = this._twoParameter(old_transform, tx, ty, 
                                             SVGKit.translateRE,'translate');
-    elem.setAttribute('transform', new_transform);
+    element.setAttribute('transform', new_transform);
+    return new_transform;
 }
 
 SVGKit.scaleRE = /(.*)scale\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
 SVGKit.prototype.scale = function(elem, sx, sy) {
-    if (typeof(elem) == 'string') {
+    var element = MochiKit.DOM.getElement(elem);
+    if (MochiKit.Base.isUndefinedOrNull(element)) {
         return this._twoParameter(elem, sx, sy, 
                                    SVGKit.scaleRE, 'scale');
     }
-    var old_transform = elem.getAttribute('transform')
+    var old_transform = element.getAttribute('transform')
     var new_transform = this._twoParameter(old_transform, sx, sy, 
                                             SVGKit.scaleRE, 'scale');
-    elem.setAttribute('transform', new_transform);
+    element.setAttribute('transform', new_transform);
+    return new_transform;
 }
 
 SVGKit.prototype._oneParameter = function(old_transform, degrees, 
@@ -800,7 +828,9 @@ SVGKit.prototype._oneParameter = function(old_transform, degrees,
 
 SVGKit.prototype._twoParameter = function(old_transform, x, y, 
                                                  regexp, name) {
-    // Test: SVGKit.prototype._twoParameter('transform( 1 ,2 ) scale( 3 , 4  )', 1, 1, SVGKit.scaleRE, 'scale')
+    // Test: SVGKit.prototype._twoParameter('translate( 1 ,2 ) scale( 3 , 4  )', 1, 1, SVGKit.scaleRE, 'scale')
+    // Test: SVGKit.prototype._twoParameter('translate(3)', 1, 1, SVGKit.translateRE, 'translate')
+    // Test: SVGKit.prototype._twoParameter('translate(10,20)', 0, -20, SVGKit.translateRE, 'translate')
     regexp.lastIndex = 0;
     //var transform = elem
     var new_transform, array;
@@ -817,13 +847,124 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
             old_y = 0;
         var new_y = old_y+y;
         new_transform = array[1];
-        if (new_x!=0 && new_y!=0)
+        if (new_x!=0 || new_y!=0)
             new_transform += name+'('+new_x+','+new_y+')';
     }
     else
         new_transform = old_transform + name+'('+x+','+y+')';
     return new_transform
 }
+
+
+////////////////////////////
+// Mouse Interaction
+////////////////////////////
+
+/*
+    Events give the mouse coordinates as ineger number of pixels from the top left.
+    SVG coordinates are different becuase elements can be transformed.
+    This should be taken in to account.
+    Currently Firefox seems to be broken here.
+    http://www.kevlindev.com/tutorials/basics/transformations/toUserSpace/index.htm
+*/
+
+SVGKit.prototype.enableDrag = function(element, callback) {
+    /***
+        Enable element to be dragged when mouse moves.
+        * element could have arbitrary transformation, and this
+          appends translate transformation to it.
+        * I think that the mousemove and mouseup need to be events
+          of the entire screen because of this moving the mouse quickly bug.
+    ***/
+    
+    var drag = {
+        'element': element,
+        'moving': false,
+        'svg': this,
+        'mousedown': function(e) {
+            this.old_transform = getNodeAttribute(element, 'transform');
+            this.coords = e.mouse().client;
+            this.moving = true;
+            e.stop();
+        },
+        'mousemove': function(e) {
+            if (this.moving) {
+                var dx = e.mouse().client.x - this.coords.x;
+                var dy = e.mouse().client.y - this.coords.y;
+                var new_transform = this.svg.translate(this.old_transform, dx, dy);
+                this.element.setAttribute('transform', new_transform);
+                //this.svg.translate(this.element, dx, dy);
+                //this.coords = e.mouse().client;
+            }
+            e.stop();
+            log('transform = ' + getNodeAttribute(this.element, 'transform'));
+        },
+        'mouseup': function(e) {
+            //this.coords = e.mouse().client;
+            this.moving = false;
+            e.stop();
+        }
+    };
+   
+    drag.mousedown_signal =  MochiKit.Signal.connect(element, 'onmousedown', drag, 'mousedown');
+    drag.mousemove_signal =  MochiKit.Signal.connect(element, 'onmousemove', drag, 'mousemove');
+    drag.mouseup_signal   =  MochiKit.Signal.connect(element, 'onmouseup',   drag, 'mouseup');
+    //drag.mouseout_signal  =  MochiKit.Signal.connect(element, 'onmouseout',   drag, 'mouseup');
+}
+
+SVGKit.prototype.enableFollow = function(element) {
+    /***
+        Enable element to follow mouse.
+    ***/
+}
+
+SVGKit.prototype.enablePan = function(element) {
+    /***
+        Enable content wthin element to be panned.  element should be a <g> element.
+    ***/
+}
+
+SVGKit.prototype.enableZoom = function(element) {
+    /***
+        Enable content wthin element to be zoomed.  element should be a <g> element.
+    ***/
+}
+
+
+
+SVGKit.down = function(self, evt) {
+    log("mouse down", evt.clientX, evt.clientY);
+    self.clientX = evt.clientX;
+    self.clientY = evt.clientY;
+    self.moving = true;
+}
+
+SVGKit.move = function(self, evt) {
+    if (self.moving) {
+        self.translate(evt.clientX-self.clientX, evt.clientY-self.clientY);
+        self.clientX = evt.clientX;
+        self.clientY = evt.clientY;
+    }
+}
+
+SVGKit.up = function(self, evt) {
+    log("mouse up", evt.clientX, evt.clientY);
+    self.clientX = evt.clientX;
+    self.clientY = evt.clientY;
+    self.moving = false;
+    self.loadStars()
+    StarChart.svg.svgElement.forceRedraw()
+}
+
+
+SVGKit.prototype.enablePanZoomImmunity = function(element) {
+    /***
+        SVG Viewers should allow panning and zooming.  Simetimes
+        you want most of your content to be panned and zoomed, but something
+        like status information should stay constant.
+    ***/
+}
+
 
 ////////////////////////////
 // Output
