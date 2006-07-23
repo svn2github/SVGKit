@@ -7,6 +7,10 @@
 
 
 
+
+
+  
+  
   
   
   
@@ -21,6 +25,10 @@
 
 
 
+
+
+  
+  
   
   
   
@@ -39,12 +47,23 @@
 
 
 
+
+
 <h2>Overview</h2>
 
 
 
 
 
+
+
+
+A collection of JavaScript libraries for painless client-side SVG
+manipulation: SVGKit provides browser-independent access and
+interaction, SVGCanvas implements Canvas API with SVG-specific
+additions, and SVGPlot plots/graphs data and functions.<br />
+
+<br />
 
 Each of these only relies on the previews ones, so you can pick the level of functionality you want:<br />
 
@@ -53,7 +72,11 @@ Each of these only relies on the previews ones, so you can pick the level of fun
 
 
 
+
+
 <br />
+
+
 
 
 
@@ -74,6 +97,8 @@ should go in SVGEvent.js)<br />
 
 
 
+
+
 <br />
 
 
@@ -81,7 +106,9 @@ should go in SVGEvent.js)<br />
 
 
 
-SVGCanvas.js -- Implements some of the Canvas API along with some
+
+
+SVGCanvas.js -- Implements most of the Canvas API along with some
 SVG-specific additions. Allows you to create an SVG more prodecurally
 rather than building it up with DOM manipulation (one of the
 disadvantages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vuki&Auml;&Dagger;evi&Auml;&Dagger;</a>)
@@ -95,7 +122,11 @@ with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2
 
 
 
+
+
 <br />
+
+
 
 
 
@@ -110,28 +141,8 @@ like stocks or web stats. Allows multiple plots arranged on an SVG,
 multiple related or unrelated axes per plot, and control of styles.
 Originally I was going to write it in pure Canvas code so you could
 have either underneath (like PlotKit), but things like text made it
-impossible.<br />
+impossible. 
 
-
-
-
-
-
-<br />
-
-
-
-
-
-
-(Next to each item above, show an editable code snippet and the result in SVG and PNG.)<br />
-
-
-
-
-
-
-<br />
 
 
 
@@ -145,7 +156,42 @@ For a related but independent project, see <a href="http://www.liquidx.net/plotk
 
 
 
+
+
+<br />
+
+
+
+
+
+
+
+
+(Next to each item above, show an editable code snippet and the result in SVG and PNG.)<br />
+
+
+
+
+
+
+
+
+<br />
+It's annoying to have external javascript files, especially a big
+library like MochiKit and SVGKit, but for anything more than a simple
+demo, it's worth it. &nbsp;You can also pick which functions you want
+to include and paste them into your SVG.<br />
+
+
+
+
+
+
+
+
 <h2>Getting Started</h2>
+
+
 
 
 
@@ -155,12 +201,18 @@ For a related but independent project, see <a href="http://www.liquidx.net/plotk
 
 
 
+
+
   <li>MochiKit interpreter SVG examples</li>
 
 
 
 
+
+
   <li>Using SVGKit in your own pages -- valid XHTML and served as XHTML, thing at the top for IE, explicitly include all of MochiKit.</li>
+
+
 
 
 
@@ -172,7 +224,11 @@ For a related but independent project, see <a href="http://www.liquidx.net/plotk
 
 
 
+
+
 <h2>History</h2>
+
+
 
 
 
@@ -192,7 +248,11 @@ type interface for stars. I started really working on this in January
 
 
 
+
+
 <h2>Things I want to do with it</h2>
+
+
 
 
 
@@ -204,13 +264,19 @@ type interface for stars. I started really working on this in January
 
 
 
+
+
   <li>Online SVG Editor for a wiki (it would have automatic JavaScript support.) &nbsp;Some kind of rudimentary <a href="http://inkscape.org">Inkscape</a>.</li>
 
 
 
 
 
+
+
   <li>More interactivity --&nbsp; drag/zoom controls,&nbsp; selecting &amp; manipulation of objects...</li>
+
+
 
 
 
@@ -224,13 +290,19 @@ should it spend time factoring out common styles to an enclosing group?</li>
 
 
 
+
+
   <li>Interactive math/physics educational stuff like <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/java/zirkel/doc_en/index.html">Compass &amp; Ruler</a></li>
 
 
 
 
 
+
+
   <li>Online interface to create and edit plots -- position legend, click to edit title, select colors with GUI, etc.</li>
+
+
 
 
 
@@ -244,7 +316,11 @@ button, and in real time see the result.</li>
 
 
 
+
+
   <li>Realtime plots -- stocks, web logs, ... -- add additional data points without undoing changes.</li>
+
+
 
 
 
@@ -257,7 +333,11 @@ button, and in real time see the result.</li>
 
 
 
+
+
 <h2>About Me</h2>
+
+
 
 
 
@@ -272,7 +352,11 @@ button, and in real time see the result.</li>
 
 
 
+
+
 <ul>
+
+
 
 
 
@@ -281,6 +365,8 @@ button, and in real time see the result.</li>
 
   <li>
       <a href="http://www.mochikit.com/">MochiKit 1.3 or higher</a></li>
+
+
 
 
 
@@ -296,7 +382,11 @@ button, and in real time see the result.</li>
 
 
 
+
+
 </ul>
+
+
 
 
 
@@ -314,6 +404,8 @@ button, and in real time see the result.</li>
 
 
 
+
+
 <ul>
 
 
@@ -321,8 +413,13 @@ button, and in real time see the result.</li>
 
 
 
-  <li>
-     SVGKit is copyright (c) 2006 Jason Gallicchio. Licensed under the BSD License.</li>
+
+
+  <li> SVGKit is copyright (c) 2006 Jason Gallicchio.
+Licensed under the&nbsp;MIT license (least restrictive of the BSD-style
+licenses). It is <a href="http://www.fsf.org/licensing/licenses/">GPL-compatible</a>.</li>
+
+
 
 
 
@@ -336,18 +433,30 @@ button, and in real time see the result.</li>
 
 
 
+
+
+<h2>Projects that Use SVGKit</h2>
+SVGPlot<br />
+StarMap<br />
 <h2>SVG Complaints/Outlook:</h2>
-
-
-
-
-
-
+Adobe's Plugin is way ahead of Firefox in terms of a completeness,
+speed, and interface features (like zooming, viewing the SVG in its own
+window, and viewing the SVG source.)<br />
+<br />
 Fonts are a huge problem. The SVG spec is written so that you can embed
 a font and use it so you get precise alignment and pixel-perfect
 anti-aliased rendering. When you're rendering axis labels, I query the
 exact dimensions of the resulting text for optimal placement.
 &nbsp;None of this works (very well) in Firefox yet.<br />
+<br />
+Sounds. &nbsp;This is more of a JavaScript problem, but I'd like to
+give it .wav and .mp3 files to play, and be able to generate that raw
+wav or mp3 data programatically and send it to be played (for a Fourier
+synthesis program, for example.)<br />
+<br />
+Menu:<br />
+
+
 
 
 
@@ -361,10 +470,20 @@ exact dimensions of the resulting text for optimal placement.
 
 
 
+
+
 News / Blog<br />
+
+
 About<br />
+
+
 &nbsp;- LGPL/BSD License<br />
+
+
 &nbsp;- Sites that use it<br />
+
+
 
 
 
@@ -378,8 +497,14 @@ Download<br />
 
 
 
+
+
 &nbsp;- latest (2006-06-12)<br />
+
+
 &nbsp;- newest beta<br />
+
+
 &nbsp;- bleading edge from SVN<br />
 
 
@@ -387,8 +512,14 @@ Download<br />
 
 
 
+
+
 Documentation<br />
+
+
 &nbsp;- FAQ<br />
+
+
 &nbsp;- Reference<br />
 
 
@@ -396,8 +527,14 @@ Documentation<br />
 
 
 
+
+
 Tutorial<br />
+
+
 &nbsp;- Screencast<br />
+
+
 
 
 
@@ -411,7 +548,11 @@ Tutorial<br />
 
 
 
+
+
 &nbsp;- Including it in your own site.<br />
+
+
 
 
 
@@ -425,7 +566,11 @@ Development<br />
 
 
 
+
+
 &nbsp;- Mailing List<br />
+
+
 
 
 
@@ -439,8 +584,14 @@ Development<br />
 
 
 
+
+
 &nbsp;- Wiki<br />
+
+
 &nbsp;- Bug/Feature Tracker "Tickets"<br />
+
+
 
 
 
@@ -454,7 +605,11 @@ Screen Shots<br />
 
 
 
+
+
 Examples<br />
+
+
 
 
 
@@ -468,7 +623,11 @@ Examples<br />
 
 
 
+
+
 &nbsp;- Static SVG<br />
+
+
 
 
 
@@ -482,7 +641,11 @@ Examples<br />
 
 
 
+
+
 <br />
+
+
 
 
 
