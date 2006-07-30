@@ -174,48 +174,16 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- In above example, should plotFunction return the whole plot, a reference to just
          the function ploted, the SVGElement that corresponds to what was plotted, what?
     -- Plot boxes to show relative scales between plots like in Global Warming example.
+    
+    Example:
+    with p {
+        p.createBoxes(1,2,2) // One plot on the first line, two on the second, etc.
+        p.plot([1,2,3], [1,4,9], {color: "red"})
+        p.nextBox()
+        p.plotFunction("sin(x)", {"x", -6, 6}, {color: "blue"})
+    }
 ***/
 
-
-Scale = {
-    segments : {},  // List of scale segments for a broken scale
-    reversed : false,
-    valueToPosition = function(value)
-}
-
-ScaleSegment = {
-    required = null, // list of values that must be included like {0, 100}
-    begin: 0.0,
-    end: 1.0
-}
-
-ScaleSegmentReal = {
-    interpolation : 'linear', // 'log', 'ln', 'lg', 'sqrt', 'atan'
-    min: 'automatic'
-    max: 'automatic'
-    _min: null,  // Calculated _min
-    _max: null
-}
-ScaleSegmentDiscrete = {
-    position: 'on';  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
-    interval: 1; // spacing between discrete values.  Can be any real number.
-    min: 'automatic'
-    max: 'automatic'
-    _min: null,
-    _max: null
-}
-ScaleSegmentCategory = {
-    position: 'on'  // 'betweeen' Plot on or between grid lines.
-}
-ScaleSegmentDateTime = {
-    interval: 'minute'
-    min: 'automatic'
-    max: 'automatic'
-    _min: null,
-    _max: null
-}
-
-Markings = {}  // For ticks, grid, and labels.  Does auto calculation.
 
 
 ////////////////////////////
@@ -389,7 +357,205 @@ Adders create a new object and call the Setter.
 Removers remove the object.
 */
 
-// Plotting Commands
+
+////////////////////////////
+//  Helper Objects
+////////////////////////////
+
+SVGPlot.Scale = function(segmentsOrType /* = 'real' */, 
+                          minOrReversed /* = 'auto' */, 
+                          max /* = 'auto' */, 
+                          interpolation /* = 'linear' */, 
+                          reversed /* = false */) {
+    /***
+        Maps a value (real, discrete, catetory, datetime) to position between 0.0 and 1.0
+        This mapping can have gaps, so this object holds a list of ScaleSegments.
+        Since 99% of the time there is just a single ScaleSegment, the fact that there
+          can be multiple scale segments is kept from annoying the user
+        Call it two ways with logical defaults.
+            Scale(segments, reversed)
+            Scale(type, min, max, interpolation, reversed)
+            
+        Tests:
+          s = new Scale('real', -1, 1)
+          s.value(0) == 0.5
+          
+        TODO: When the range is 'auto', where and when do the actual _min and _max get set?
+    ***/
+    // Check to see if we're given a list of segments
+    if (typeof(segmentsOrType.length) == 'number') {
+        this.segments = segmentsOrType;
+        this.reversed = SVGKit.firstNonNull(minOrReversed, false);
+    }
+    else {
+        segment_types = {
+            real: ScaleSegmentReal,
+            discrete: ScaleSegmentDiscrete,
+            catetgory: ScaleSegmentCategory,
+            datetime: ScaleSegmentDateTime
+        }
+        var newSeg = new segment_types[segmentsOrType](minOrReversed, max, interpolation, reversed);
+        this.segments = [ newSeg ];
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+    }
+}
+SVGPlot.Scale.prototype = {
+    segments : [],  // List of scale segments for a broken scale
+    reversed : false,
+    position = function(value) {
+        for (var i=0; i<segments.length; i++) {
+            var position = segments[i].position(value) ;
+            if (position != null) {
+                if (reversed == false)
+                    return position;
+                else
+                    return 1.0 - position;
+            }
+        }
+        return null;
+    }
+}
+
+SVGPlot.ScaleSegment = function (begin, end, required) {
+    /***
+        Abstract base class for all of the scale segment types.
+    ***/
+    this.begin = SVGKit.firstNonNull(begin, 0.0);
+    this.end = SVGKit.firstNonNull(end, 1.0);
+    this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+}
+SVGPlot.ScaleSegment.ratioToPosition = function(ratio) {
+    return begin + ratio *(end-begin);
+}
+
+SVGPlot.ScaleSegmentReal = function(min, max, interpolation, begin, end, required) {
+    /***
+        Mapping real values to positions.
+    ***/
+    SVGPlot.ScaleSegment(begin, end, required);
+    this.min = SVGKit.firstNonNull(min, 'auto');
+    this.max = SVGKit.firstNonNull(max, 'auto');
+    this.interpolation = SVGKit.firstNonNull(interpolation, 'linear');  // 'log', 'ln', 'lg', 'sqrt', 'atan'
+}
+
+SVGPlot.ScaleSegmentReal.prototype = {
+    _min: null,  // Calculated _min if min is 'auto'
+    _max: null,
+    position: function(value) {
+        if (_min==null || _max==null || value<_min || value>_max)
+            return null;
+        var interpolation_function = this.interpolation_functions[this.interpolation]
+        var ratio = interpolation_function(value);
+        return this.ratioToPosition(ratio);
+    },
+    interpolation_functions = {
+        linear: function(value) {
+            return (value-_min)/(_max*_min)
+        }
+        log: function(value) {
+            return (Math.log(value)-Math.log(_min))/(Math.log(_max)-Math.log(_min));
+        }
+        sqrt: function(value) {
+            return (Math.sqrt(value)-Math.sqrt(_min))/(Math.sqrt(_max)-Math.sqrt(_min));
+        }
+        atan: function(value) {
+            var middle = (_max-_min)/2.0
+            return Math.atan(value-middle)/Math.PI+0.5
+            // TODO -- max and min should provide some scaling for the width of the atan.
+        }
+    }
+}
+
+SVGPlot.ScaleSegmentDiscrete = function(min, max, interval, placement, begin, end, required) {
+    /***
+        Mapping discrete values to positions.
+    ***/
+    SVGPlot.ScaleSegment(begin, end, required);
+    this.min = SVGKit.firstNonNull(min, 'auto');
+    this.max = SVGKit.firstNonNull(max, 'auto');
+    this.interval = SVGKit.firstNonNull(interval, 1);  // spacing between discrete values.  Can be any real number.
+    this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+}
+SVGPlot.ScaleSegmentDiscrete.prototype = {
+    _min: null,
+    _max: null,
+    position: function(value) {
+        if (_min==null || _max==null || value<_min || value>_max)
+            return null;
+        var number = (this._max-this._min)/this.interval;
+        return this.discreteToPosition(value, number);
+    }
+    discreteToPosition: function(value, number) {
+        var ratio;
+        if (this.placement == 'on')
+            ratio = i/(length-1);
+        else
+            ratio = (i+0.5)/length;
+        return this.ratioToPosition(ratio);
+    }
+}
+
+SVGPlot.ScaleSegmentCategory = function(categories, placement, begin, end, required) {
+    /***
+        Mapping category values to positions.
+    ***/
+    SVGPlot.ScaleSegment(begin, end, required);
+    this.categories = SVGKit.firstNonNull(categories, 'auto');
+    this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+}
+SVGPlot.ScaleSegmentCategory.prototype = {
+    position: 'on',  // 'betweeen' Plot on or between grid lines.
+    categories: 'auto',  // A mapping between categories and positions.  (Should thie be a list?)
+    _categories: [],  // of the form ['bob', 'jim']
+    position: function(value) {
+        var length = this._categories.length;
+        for (var i=0; i<length; i++) {
+            if (this._categories[i] == value)
+                return this.discreteToPosition(value, length);
+        }
+        return null;
+    }
+    discreteToPosition: ScaleSegmentDiscrete.prototype.discreteToPosition;
+}
+
+SVGPlot.ScaleSegmentDateTime = function(min, max, interval, begin, end, required) {
+    /***
+        Mapping date/time values to positions.
+    ***/
+    SVGPlot.ScaleSegment(begin, end, required);
+    this.min = SVGKit.firstNonNull(min, 'auto');
+    this.max = SVGKit.firstNonNull(max, 'auto');
+    this.interval = SVGKit.firstNonNull(interval, 'minute');
+}
+SVGPlot.ScaleSegmentDateTime.prototype = {
+    _min: null,
+    _max: null,
+    position: function(value) {
+        if (_min==null || _max==null || value<_min || value>_max)
+            return null;
+        var ratio = (value-_min)/(_max*_min)
+        return this.ratioToPosition(ratio);
+    }
+}
+
+SVGPlot.Markings = function(locations /* = 'auto' */, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
+    /***
+        For ticks, grid, and labels.  If their positions are 'auto', this object calculates them
+        For now, the action happens in SVGPlot.defaultlocations.
+    ***/
+    this.locations = SVGKit.firstNonNull(locations, 'auto');
+    this.number = SVGKit.firstNonNull(number, 'auto');
+    this.spacing = SVGKit.firstNonNull(spacing, 'auto');
+}
+SVGPlot.Markings.prototype = {
+    autoLocations: function(scale) {
+        this._locations = SVGPlot.defaultlocations(min, max, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/);
+    }
+}
+
+////////////////////////////
+//  Graphical Plot Objects
+////////////////////////////
 
 SVGPlot.genericConstructor = function(self, svgPlot, parent) {
     self.svgPlot = svgPlot;
