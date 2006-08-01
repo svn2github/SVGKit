@@ -167,7 +167,7 @@ SVGCanvas.EXPORT_OK = [
 ////////////////////////////
 
 SVGCanvas.startingState = 
-    { 'fillStyle': "#000000",  // Can be: "#RRGGBB", "rgba(r, g, b, alpha)" where rgb in (0-255), or from a gradient
+    { 'fillStyle': "#000000",  // Can be: "#RRGGBB", "rgba(r, g, b, alpha)" where rgb in (0-255) and alpha (0-1), or from a gradient
       'strokeStyle': "#000000", // Same as above.  Affects SVG's 'stroke', 'stroke-opacity', gradient and marker
       'globalAlpha': 1.0, // Float between 0.0 and 1.0
       'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
@@ -1245,9 +1245,9 @@ SVGCanvas.prototype.text = function(text, x /* =0 */ , y /* =0 */) {
     //log("text(): this.currentGroup=", this.currentGroup);
     var text = this.svg.TEXT(null, text);
     if (!MochiKit.Base.isUndefinedOrNull(x))
-        setNodeAttribute(node, 'x', x);
+        setNodeAttribute(text, 'x', x);
     if (!MochiKit.Base.isUndefinedOrNull(y))
-        setNodeAttribute(node, 'y', y);
+        setNodeAttribute(text, 'y', y);
     this._setShapeTransform(text);
     this._setGraphicsAttributes(text, 'fill');
     this._setFontAttributes(text);
