@@ -868,7 +868,7 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     http://www.kevlindev.com/tutorials/basics/transformations/toUserSpace/index.htm
 */
 
-SVGKit.prototype.enableDrag = function(element, callback) {
+SVGKit.prototype.enableDrag = function(element, callback, move_on_drag /* = true */) {
     /***
         Enable element to be dragged when mouse moves.
         * element could have arbitrary transformation, and this
@@ -876,19 +876,23 @@ SVGKit.prototype.enableDrag = function(element, callback) {
         * I think that the mousemove and mouseup need to be events
           of the entire screen because of this moving the mouse quickly bug.
     ***/
+    move_on_drag = SVGKit.firstNonNull(move_on_drag, true);
     
     var drag = {
         'element': element,
+        'move_on_drag': move_on_drag,
+        'callback': callback,
         'moving': false,
         'svg': this,
         'mousedown': function(e) {
             this.old_transform = getNodeAttribute(element, 'transform');
             this.coords = e.mouse().client;
+            this.page = e.mouse().page;
             this.moving = true;
             e.stop();
         },
         'mousemove': function(e) {
-            if (this.moving) {
+            if (this.moving && this.move_on_drag) {
                 var dx = e.mouse().client.x - this.coords.x;
                 var dy = e.mouse().client.y - this.coords.y;
                 var new_transform = this.svg.translate(this.old_transform, dx, dy);
@@ -896,8 +900,11 @@ SVGKit.prototype.enableDrag = function(element, callback) {
                 //this.svg.translate(this.element, dx, dy);
                 //this.coords = e.mouse().client;
             }
+            if (this.moving && typeof(this.callback)=='function') {
+                callback(e, this)
+            }
             e.stop();
-            log('transform = ' + getNodeAttribute(this.element, 'transform'));
+            //log('transform = ' + getNodeAttribute(this.element, 'transform'));
         },
         'mouseup': function(e) {
             //this.coords = e.mouse().client;
