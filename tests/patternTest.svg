@@ -1,9 +1,0 @@
-<svg height="200" version="1.0" width="200" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
- <defs>
-<pattern id="pattern0" height="117" patternUnits="userSpaceOnUse" width="86">
-<image x="0" y="0" height="117" width="86" xlink:href="createpattern.png"/>
- </pattern>
- </defs>
- <rect style="fill:url(#pattern0);fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.58641974"
-        height="150"  width="150" x="0" y="0"/>
- </svg>
