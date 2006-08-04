@@ -1,0 +1,46 @@
+<svg height="200" version="1.1" width="200" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<circle cx="100" cy="100" fill="#ff0000" r="6.66667" stroke="none"/>
+<path d="M100,100 L57.5,155.621" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="20"/>
+<g transform="matrix(1, 0, 0, 1, 100, 100)">
+<path d="M0,0 L42.5,-55.6215 L-42.5,-55.6215" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="20"/>
+<circle cx="42.5" cy="-55.6215" fill="#0000ff" fill-opacity="0.3" r="8" stroke="none"/>
+<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="#000000" fill-opacity="0.03" stroke="none" transform="rotate(-36.2532)"/>
+<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6" stroke-width="1" transform="rotate(-36.2532)"/>
+</g>
+<g transform="matrix(1, 0, 0, 1, 57.5, 155.621)">
+<path d="M0,0 L85,0" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="20"/>
+<circle cx="56" cy="0" fill="#0000ff" fill-opacity="0.3" r="8" stroke="none"/>
+<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="#000000" fill-opacity="0.03" stroke="none" transform="rotate(-52.6168)"/>
+<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6" stroke-width="1" transform="rotate(-52.6168)"/>
+</g>
+<path d="M142.5,155.621 A70,70 0 0,0 142.5,44.3785" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.6" stroke-width="1"/>
+<path d="M113.5,155.621 A56,56 0 0,0 42.7857,101.589" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.6" stroke-width="1"/>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="142.5" y="49.3785">
+12</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="157.286" y="64.7718">
+1</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="166.746" y="83.9052">
+2</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="170" y="105">
+3</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="166.746" y="126.095">
+4</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="157.286" y="145.228">
+5</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="142.5" y="160.621">
+6</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="42.7857" y="106.589">
+6</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="59.7526" y="104.667">
+7</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="76.51" y="107.947">
+8</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="91.5" y="116.124">
+9</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="103.329" y="128.439">
+10</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="110.897" y="143.746">
+11</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="113.5" y="160.621">
+12</text>
+</svg>
