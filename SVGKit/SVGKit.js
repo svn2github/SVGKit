@@ -528,8 +528,8 @@ SVGKit.importXML = function (file, onloadCallback) {
         //while(xmlDoc.readyState != 4) {};
         if (onloadCallback) {
             xmlDoc.onreadystatechange = function () {
-    			if (xmlDoc.readyState == 4) onloadCallback(xmlDoc)
-    		};
+                if (xmlDoc.readyState == 4) onloadCallback(xmlDoc)
+            };
         }
     }
     xmlDoc.load(file);  // Same for both, surprisingly.
@@ -748,12 +748,18 @@ SVGKit.prototype.deleteContent = function() {
     If the elem passed is not an id for an element, it is treated as a
       string transformation which gets updated and returned.
     Regular Expressions are hard coded so they can be compiled once on load.
+    
+    TODO:  Make sure the arguments are valid numbers to avoid illegal transforms
 */
 
 
-SVGKit.rotateRE = /(.*)rotate\(\s*(.*)\s*\)\s*$/
+SVGKit.rotateRE = /(.*)rotate\(\s*([0-9eE\+\-\.]*)\s*\)\s*$/
 SVGKit.prototype.rotate = function(elem, degrees) {
-    // Test: SVGKit.prototype.rotate('translate( 1 ,2 ) rotate( 70)', -10)
+    /***
+        Test: 
+        SVGKit.prototype.rotate('translate( 1 ,2 ) rotate( 70)', -10)
+        SVGKit.prototype.rotate('rotate(1) translate(2,2) ', -10)
+    ***/
     var element = MochiKit.DOM.getElement(elem);
     if (MochiKit.Base.isUndefinedOrNull(element)) {
         return this._oneParameter(elem, degrees, 
@@ -767,12 +773,16 @@ SVGKit.prototype.rotate = function(elem, degrees) {
 }
 
 
-SVGKit.translateRE = /(.*)translate\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
+SVGKit.translateRE = /(.*)translate\(\s*([0-9eE\+\-\.]*)\s*,?\s*([0-9eE\+\-\.]*)?\s*\)\s*$/
 SVGKit.prototype.translate = function(elem, tx, ty) {
     /***
+        SVGKit.prototype.:
         translate(' translate( 1 ,2 ) ', -10,-20)
         translate(' translate(1) ', -10,-20)
         translate(' translate(10,20) ', 0, -20)
+        translate('translate(10,10) rotate(20)', 10, 10)  == 'translate(10,10) rotate(20)translate(10,10)'
+        translate('translate(10,10)', -10, -10) ==  ''
+        translate('translate(10)', -10)  == ''
     ***/
     var element = MochiKit.DOM.getElement(elem);
     if (MochiKit.Base.isUndefinedOrNull(element)) {
@@ -786,7 +796,7 @@ SVGKit.prototype.translate = function(elem, tx, ty) {
     return new_transform;
 }
 
-SVGKit.scaleRE = /(.*)scale\(\s*(.*)\s*,+\s*(.*)?\s*\)\s*$/
+SVGKit.scaleRE = /(.*)scale\(\s*([0-9eE\+\-\.]*)\s*,?\s*([0-9eE\+\-\.]*)?\s*\)\s*$/
 SVGKit.prototype.scale = function(elem, sx, sy) {
     var element = MochiKit.DOM.getElement(elem);
     if (MochiKit.Base.isUndefinedOrNull(element)) {
@@ -807,6 +817,8 @@ SVGKit.prototype._oneParameter = function(old_transform, degrees,
         rotate('translate(1,2)rotate(12)', -11)  -> 'translate(1,2)rotate(1)'
         rotate('rotate( 4 ) rotate( 12 )', -12)  -> 'rotate( 4 ) '
     ***/
+    if (MochiKit.Base.isUndefinedOrNull(degrees) || degrees == 0)
+        return old_transform;
     regexp.lastIndex = 0;
     //var transform = elem.getAttribute('transform')
     //var transform = elem;
@@ -831,6 +843,11 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     // Test: SVGKit.prototype._twoParameter('translate( 1 ,2 ) scale( 3 , 4  )', 1, 1, SVGKit.scaleRE, 'scale')
     // Test: SVGKit.prototype._twoParameter('translate(3)', 1, 1, SVGKit.translateRE, 'translate')
     // Test: SVGKit.prototype._twoParameter('translate(10,20)', 0, -20, SVGKit.translateRE, 'translate')
+    if (MochiKit.Base.isUndefinedOrNull(x))
+        return old_transform;
+    y = SVGKit.firstNonNull(y, 0);
+    if (x==0 && y==0)
+        return old_transform;
     regexp.lastIndex = 0;
     //var transform = elem
     var new_transform, array;
@@ -868,55 +885,171 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     http://www.kevlindev.com/tutorials/basics/transformations/toUserSpace/index.htm
 */
 
-SVGKit.prototype.enableDrag = function(element, callback, move_on_drag /* = true */) {
+SVGKit.prototype.enableDrag = function(element, 
+                                       downCallback /* optional */, 
+                                       dragCallback /* optional */, 
+                                       upCallback /* optional */, 
+                                       elementsToMove /* = [ element ] */) {
     /***
         Enable element to be dragged when mouse moves.
         * element could have arbitrary transformation, and this
           appends translate transformation to it.
-        * I think that the mousemove and mouseup need to be events
-          of the entire screen because of this moving the mouse quickly bug.
+        * Eventually we should compensate for an SVG transformation
     ***/
-    move_on_drag = SVGKit.firstNonNull(move_on_drag, true);
+    elementsToMove = SVGKit.firstNonNull(elementsToMove, [ element ]);
     
     var drag = {
         'element': element,
-        'move_on_drag': move_on_drag,
-        'callback': callback,
+        'elementsToMove': elementsToMove,
+        'downCallback': downCallback,
+        'dragCallback': dragCallback,
+        'upCallback': upCallback,
         'moving': false,
         'svg': this,
+        'svgPosition': null,
+        'original_transforms': [],  // The transformations elements had before the drag
+        'setOriginalTransforms': function(elements) {
+            for (var i=0; i<elements.length; i++) {
+                this.original_transforms[i] = getNodeAttribute(elements[i], 'transform');
+            }
+        },
         'mousedown': function(e) {
-            this.old_transform = getNodeAttribute(element, 'transform');
-            this.coords = e.mouse().client;
-            this.page = e.mouse().page;
+            // Calculate the position (in windows coordinates) of the svg element
+            // TODO:  MochiKit.Style.getElementPosition(this.htmlElement) doesn't work, 
+            //        but the parentNode might not always give the same.
+            // You have to do this in mouedown because the svg has to already be displayed.
+            //this.svgPosition = MochiKit.Style.getElementPosition(this.svg.htmlElement.parentNode)
+            var ctm = this.svg.htmlElement.getScreenCTM();
+            this.svgPosition = new MochiKit.Style.Coordinates(ctm.e, ctm.f);
+            this.setOriginalTransforms(this.elementsToMove);
+            //this.svgPosition = MochiKit.Style.getElementPosition(this.svg.htmlElement)
+            this.coords = e.mouse().client;  // Initial coordinates for later comparison.
+            this.page = e.mouse().page;  // Initial page coordinates (we don't use)
+            this.mousemove_signal =  MochiKit.Signal.connect(window, 'onmousemove', this, 'mousemove');
+            this.mouseup_signal   =  MochiKit.Signal.connect(window, 'onmouseup',   this, 'mouseup');
+            if (typeof(this.downCallback)=='function') {
+                this.downCallback(e, this)
+            }
             this.moving = true;
             e.stop();
         },
         'mousemove': function(e) {
-            if (this.moving && this.move_on_drag) {
-                var dx = e.mouse().client.x - this.coords.x;
-                var dy = e.mouse().client.y - this.coords.y;
-                var new_transform = this.svg.translate(this.old_transform, dx, dy);
-                this.element.setAttribute('transform', new_transform);
-                //this.svg.translate(this.element, dx, dy);
-                //this.coords = e.mouse().client;
+            var dx = e.mouse().client.x - this.coords.x;
+            var dy = e.mouse().client.y - this.coords.y;
+            for (var i=0; i<elementsToMove.length; i++) {
+                log('original_transforms:', this.original_transforms[i])
+                var new_transform = this.svg.translate(this.original_transforms[i], dx, dy);
+                //log('new_transform:', new_transform)
+                this.elementsToMove[i].setAttribute('transform', new_transform);
             }
-            if (this.moving && typeof(this.callback)=='function') {
-                callback(e, this)
+            if (typeof(this.dragCallback)=='function') {
+                this.dragCallback(e, this)
             }
             e.stop();
             //log('transform = ' + getNodeAttribute(this.element, 'transform'));
         },
         'mouseup': function(e) {
-            //this.coords = e.mouse().client;
+            MochiKit.Signal.disconnect(this.mousemove_signal);
+            MochiKit.Signal.disconnect(this.mouseup_signal);
+            if (typeof(this.upCallback)=='function') {
+                this.upCallback(e, this)
+            }
             this.moving = false;
             e.stop();
         }
     };
-   
     drag.mousedown_signal =  MochiKit.Signal.connect(element, 'onmousedown', drag, 'mousedown');
-    drag.mousemove_signal =  MochiKit.Signal.connect(element, 'onmousemove', drag, 'mousemove');
-    drag.mouseup_signal   =  MochiKit.Signal.connect(element, 'onmouseup',   drag, 'mouseup');
-    //drag.mouseout_signal  =  MochiKit.Signal.connect(element, 'onmouseout',   drag, 'mouseup');
+    return drag
+}
+
+SVGKit.prototype.enableRotate = function(element, 
+                                         pivot /* {x:0, y:0} */,
+                                         downCallback /* optional */, 
+                                         dragCallback /* optional */, 
+                                         upCallback /* optional */, 
+                                         elementsToMove /* = [ element ] */) {
+    /***
+        Enable element to be dragged when mouse moves.
+        * element could have arbitrary transformation, and this
+          appends translate transformation to it.
+        * Eventually we should compensate for an SVG transformation
+    ***/
+    pivot = SVGKit.firstNonNull(pivot, new MochiKit.Style.Coordinates(0,0));
+    elementsToMove = SVGKit.firstNonNull(elementsToMove, [ element ]);
+    
+    var rotate = {
+        'pivot': pivot,
+        'elementsToMove': elementsToMove,
+        'downCallback': downCallback,
+        'dragCallback': dragCallback,
+        'upCallback': upCallback,
+        'th0': 0, // Initial angle of the mouse with respect to pivot (radians)
+        'th': 0, // Current angle of the mouse with respect to pivot (radians)
+        'radians': 0, // Radians of rotation of the mouse around the pivot since mouseDown 
+        'degrees': 0, // Degrees of rotation of the mouse around the pivot since mouseDown 
+        'myDownCallback' : function(e, drag) {
+            drag.setOriginalTransforms(this.elementsToMove);
+            drag.rotate = this;
+            
+            // Initial mouse coordinates
+            var mx = e.mouse().client.x
+            var my = e.mouse().client.y
+            // Find initial mouse angle with respect to the pivot.
+            drag2 = drag;
+            var x0 = mx - drag.svgPosition.x - this.pivot.x
+            var y0 = my - drag.svgPosition.y - this.pivot.y
+            this.th0 = Math.atan2(y0, x0)
+            
+            this.last_rotate = 0
+            
+            if (typeof(this.downCallback)=='function') {
+                this.downCallback(e, drag)
+            }
+        },
+        
+        'myDragCallback' : function(e, drag) {
+            var rotate = drag.rotate
+        
+            // Current mouse coordinates
+            var mx = e.mouse().client.x
+            var my = e.mouse().client.y
+            // Find current mouse angle with respect to the pivot.
+            var dx = mx - drag.svgPosition.x - this.pivot.x
+            var dy = my - drag.svgPosition.y - this.pivot.y
+            this.th = Math.atan2(dy, dx)
+
+            this.radians = this.th - this.th0
+            this.degrees = this.radians * 180 / Math.PI
+            //var total_rotate = -this.last_rotate + angle
+            /*
+            log("svg:", drag.svgPosition,"pivot",this.pivot,
+               "initial coords:", drag.coords, "coords:", e.mouse().client, 
+               //"initial page:", drag.page, "page:", e.mouse().page, 
+               "d:", new MochiKit.Style.Coordinates(dx, dy),
+               "th0:",(this.th0/Math.PI*180).toPrecision(4), "th:",(this.th/Math.PI*180).toPrecision(4),
+               "degrees:", this.degrees.toPrecision(4))
+               */
+
+            for (var i=0; i<elementsToMove.length; i++) {
+                // TODO:  Rotate element around pivot given it's own transform.
+                var original = SVGKit.firstNonNull(drag.original_transforms[i], '');
+                var new_transform =  original
+                new_transform = drag.svg.translate(new_transform, this.pivot.x, this.pivot.y);
+                new_transform = drag.svg.rotate(new_transform, this.degrees);
+                new_transform = drag.svg.translate(new_transform, -this.pivot.x, -this.pivot.y);
+                //log('new_transform:',new_transform);
+                this.elementsToMove[i].setAttribute('transform', new_transform);
+            }
+            
+            if (typeof(this.dragCallback)=='function') {
+                this.dragCallback(e, drag)
+            }
+        }
+    }
+    this.enableDrag(element, bind(rotate.myDownCallback, rotate),
+                             bind(rotate.myDragCallback, rotate), 
+                             upCallback,
+                             [])
 }
 
 SVGKit.prototype.enableFollow = function(element) {

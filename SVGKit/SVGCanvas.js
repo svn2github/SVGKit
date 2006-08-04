@@ -245,8 +245,7 @@ SVGCanvas.prototype.reset = function(startingGroup /*=_startingGroup or svg.svgE
     this.filledNode =  null;
     
     // If we don't already have a state stack for save() and restore(), create one.
-    if (MochiKit.Base.isUndefinedOrNull(this._stateStack))
-        this._stateStack = [];
+    this._stateStack = SVGKit.firstNonNull(this._stateStack, [])
     // Canvas spec says that on initialization, begin path is called.
     this.beginPath();  // clears _subpaths, and calls and calls moveTo(0,0)
 }
