@@ -1,88 +1,18 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-
-
-
-
-
-
-
-
-  
-  
-  
-  
-  
-  
-  
-  
-  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type" />
-
-
-
-
-
-
-
-
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type" />
   <title>SVGKit Overview</title>
 </head>
-
-
 <body>
-
-
-
-
-
-
-
-
 <h2>Overview</h2>
-
-
-
-
-
-
-
-
 A collection of JavaScript libraries for painless client-side SVG
 manipulation: SVGKit provides browser-independent access and
 interaction, SVGCanvas implements Canvas API with SVG-specific
 additions, and SVGPlot plots/graphs data and functions.<br />
-
 <br />
-
 Each of these only relies on the previews ones, so you can pick the level of functionality you want:<br />
-
-
-
-
-
-
-
-
 <br />
-
-
-
-
-
-
-
-
 SVGKit.js -- A low-level JavaScript SVG library. &nbsp;Create a new SVG at runtime.
 &nbsp;Load SVG data from a URL. Conveniently handle quirks of three
 ways SVG can be included in browsers: object, embed, and inline. Handle
@@ -91,23 +21,7 @@ functions for DOM manipulation ala MochiKit. It manages the objects:
 HTMLElement, SVGDocument, SVGElement. &nbsp;Basic interactive event
 handling like scroll, zoom, object select and manipulate (maybe this
 should go in SVGEvent.js)<br />
-
-
-
-
-
-
-
-
 <br />
-
-
-
-
-
-
-
-
 SVGCanvas.js -- Implements most of the Canvas API along with some
 SVG-specific additions. Allows you to create an SVG more prodecurally
 rather than building it up with DOM manipulation (one of the
@@ -116,23 +30,7 @@ There are parts of the Canvas API that do things like "take what you've
 drawn so far, treat it like a bitmap, and run the following filter on
 it." &nbsp;Some of these are impossible in SVG, but will get better
 with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2</a><br />
-
-
-
-
-
-
-
-
 <br />
-
-
-
-
-
-
-
-
 SVGPlot.js -- Eventually a full plotting suite to rival Excel, Matlab,
 etc. It generates clean SVG in the browser that can be saved, sent back
 to server for conversion to PDF, PS, PNG, etc. Fully interactive --
@@ -142,99 +40,20 @@ multiple related or unrelated axes per plot, and control of styles.
 Originally I was going to write it in pure Canvas code so you could
 have either underneath (like PlotKit), but things like text made it
 impossible. 
-
-
-
-
-
-
-
 For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more more production quality release.<br />
-
-
-
-
-
-
-
-
 <br />
-
-
-
-
-
-
-
-
 (Next to each item above, show an editable code snippet and the result in SVG and PNG.)<br />
-
-
-
-
-
-
-
-
 <br />
 It's annoying to have external javascript files, especially a big
 library like MochiKit and SVGKit, but for anything more than a simple
 demo, it's worth it. &nbsp;You can also pick which functions you want
 to include and paste them into your SVG.<br />
-
-
-
-
-
-
-
-
 <h2>Getting Started</h2>
-
-
-
-
-
-
 <ul>
-
-
-
-
-
-
   <li>MochiKit interpreter SVG examples</li>
-
-
-
-
-
-
   <li>Using SVGKit in your own pages -- valid XHTML and served as XHTML, thing at the top for IE, explicitly include all of MochiKit.</li>
-
-
-
-
-
-
 </ul>
-
-
-
-
-
-
-
-
 <h2>History</h2>
-
-
-
-
-
-
-
-
 I wanted a way to do interactive web stuff for my <a href="http://brainflux.org">brainflux.org</a>
 page of physics and math education. I looked into SVG and played around
 with Batik a bit. Then one of my research groups implemented a full web
@@ -242,70 +61,15 @@ app using Python, TurboGears, and MochiKit. We wanted to interactively
 pull data out of a web page and plot it. Also we wanted a Google Maps
 type interface for stars. I started really working on this in January
 2006.<br />
-
-
-
-
-
-
-
-
 <h2>Things I want to do with it</h2>
-
-
-
-
-
-
-
 <ul>
-
-
-
-
-
-
-
   <li>Online SVG Editor for a wiki (it would have automatic JavaScript support.) &nbsp;Some kind of rudimentary <a href="http://inkscape.org">Inkscape</a>.</li>
-
-
-
-
-
-
-
   <li>More interactivity --&nbsp; drag/zoom controls,&nbsp; selecting &amp; manipulation of objects...</li>
-
-
-
-
-
-
-
   <li>Clean up the SVG that SVGCanvas and SVGPlot generate and make
 the code run faster. &nbsp;These are sometimes at odds. For example,
 should it spend time factoring out common styles to an enclosing group?</li>
-
-
-
-
-
-
-
   <li>Interactive math/physics educational stuff like <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/java/zirkel/doc_en/index.html">Compass &amp; Ruler</a></li>
-
-
-
-
-
-
-
   <li>Online interface to create and edit plots -- position legend, click to edit title, select colors with GUI, etc.</li>
-
-
-
-
-
   <li>Graphics are an excellent way to programing. With Canvas
 (using client-side JavaScript) you can
 emphasize&nbsp;graphical,&nbsp;numerical, plotting, and gaming
@@ -313,128 +77,23 @@ applications. &nbsp;Have the
 infrastructure to set up a textarea with a JavaScript function that
 filters some array, for example, and be able to edit the code, hit the
 button, and in real time see the result.</li>
-
-
-
-
-
   <li>Realtime plots -- stocks, web logs, ... -- add additional data points without undoing changes.</li>
-
-
-
-
-
-
-
 </ul>
-
-
-
-
-
-
-
-
 <h2>About Me</h2>
-
-
-
-
-
-
-
-
 <h2> Requirements</h2>
-
-
-
-
-
-
-
-
-
 <ul>
-
-
-
-
-
-
-
-
   <li>
       <a href="http://www.mochikit.com/">MochiKit 1.3 or higher</a></li>
-
-
-
-
-
-
-
-
   <li>
      SVG: Opera 9+, Firefox 1.5+, IE6 with Adobe SVG.
  </li>
-
-
-
-
-
-
-
-
 </ul>
-
-
-
-
-
-
-
-
-
-
-
 <h2> License</h2>
-
-
-
-
-
-
-
-
-
 <ul>
-
-
-
-
-
-
-
-
   <li> SVGKit is copyright (c) 2006 Jason Gallicchio.
 Licensed under the&nbsp;MIT license (least restrictive of the BSD-style
 licenses). It is <a href="http://www.fsf.org/licensing/licenses/">GPL-compatible</a>.</li>
-
-
-
-
-
-
-
-
 </ul>
-
-
-
-
-
-
-
-
 <h2>Projects that Use SVGKit</h2>
 SVGPlot<br />
 StarMap<br />
@@ -455,202 +114,32 @@ wav or mp3 data programatically and send it to be played (for a Fourier
 synthesis program, for example.)<br />
 <br />
 Menu:<br />
-
-
-
-
-
-
-
-
 <br />
-
-
-
-
-
-
-
-
 News / Blog<br />
-
-
 About<br />
-
-
 &nbsp;- LGPL/BSD License<br />
-
-
 &nbsp;- Sites that use it<br />
-
-
-
-
-
-
-
-
 Download<br />
-
-
-
-
-
-
-
-
 &nbsp;- latest (2006-06-12)<br />
-
-
 &nbsp;- newest beta<br />
-
-
 &nbsp;- bleading edge from SVN<br />
-
-
-
-
-
-
-
-
 Documentation<br />
-
-
 &nbsp;- FAQ<br />
-
-
 &nbsp;- Reference<br />
-
-
-
-
-
-
-
-
 Tutorial<br />
-
-
 &nbsp;- Screencast<br />
-
-
-
-
-
-
-
-
 &nbsp;- Playing with the API inline<br />
-
-
-
-
-
-
-
-
 &nbsp;- Including it in your own site.<br />
-
-
-
-
-
-
-
-
 Development<br />
-
-
-
-
-
-
-
-
 &nbsp;- Mailing List<br />
-
-
-
-
-
-
-
-
 &nbsp;- Source Code in SVN<br />
-
-
-
-
-
-
-
-
 &nbsp;- Wiki<br />
-
-
 &nbsp;- Bug/Feature Tracker "Tickets"<br />
-
-
-
-
-
-
-
-
 Screen Shots<br />
-
-
-
-
-
-
-
-
 Examples<br />
-
-
-
-
-
-
-
-
 &nbsp;- PNG<br />
-
-
-
-
-
-
-
-
 &nbsp;- Static SVG<br />
-
-
-
-
-
-
-
-
 &nbsp;- Full JavaScript<br />
-
-
-
-
-
-
-
-
 <br />
-
-
-
-
-
-
-
-
 </body>
 </html>
