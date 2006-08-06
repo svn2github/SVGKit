@@ -1,0 +1,32 @@
+body, form, textarea, td {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: small;
+}
+h1 {
+   text-align: center
+}
+h6 {
+	font-size: small;
+	font-weight: bold;
+}
+em {
+	font-weight: bold;
+	font-style: normal;
+}
+th {
+	border: 1px solid #EEE;
+	background: #FAFAFA;
+}
+td {
+	border: 1px solid #EEE;
+	padding: 0 0.5em;
+	vertical-align: top;
+}
+table {
+	border-collapse: collapse;
+	/*width: 90%;*/
+	margin: 0px auto;
+}
+img {
+    border: 1px solid
+}
