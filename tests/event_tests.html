@@ -4,7 +4,7 @@
       
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>SVGKit Tests</title>
+    <title>SVG Canvas Tests</title>
 
     <!-- START Required for IE to support  inlined SVG -->
     <object id="AdobeSVG" width="1" height="1" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"></object>
@@ -27,21 +27,25 @@
     <script type="text/javascript" src="../MochiKit/Visual.js"></script>
 
     <script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
+    <script type="text/javascript" src="../SVGKit/SVGEvent.js" ></script>
+    <script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
+    <script type="text/javascript" src="../SVGKit/SVGCanvasPaths.js"></script>
 
-    <script type="text/javascript" src="svg_tests.js"></script>
+    <script type="text/javascript" src="event_tests.js"></script>
 
   </head>
 
   <body>
 
-    <h2>SVGKit Test Suite</h2>
+    <h2>SVGKit's Events using SVGCanvas
+    </h2>
 
     <div>
 
     <table id="tests" border="1">
     <tr>
     <td align="center"><strong>Image</strong></td>
-    <td align="center"><strong>Source</strong></td>
+    <td align="center"><strong>Canvas Source</strong></td>
     <td align="center"><strong>SVG</strong></td>
     <td align="center"><strong>SVG Source</strong></td></tr>
     </table>

@@ -44,9 +44,46 @@ var testFunctions = {
         c.svg.enableRotate(r1, new MochiKit.Style.Coordinates(100,100), null, null, null, [r1, r2])
         c.svg.enableRotate(r2)
     },
+    /*
+    'drag' : function(svg) {
+        var rect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+        svg.append(rect);
+        svg.enableDrag(rect);
+    },
     
+    'zoom' : function(svg) {
+        var rect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+        svg.append(rect);
+        svg.enableZoom(rect);
+    },
+    
+    'pan' : function(svg) {
+        var rect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+        svg.append(rect);
+        svg.enablePan(rect);
+    },
+    
+    'panzoom' : function(svg) {
+        var rect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+        svg.append(rect);
+        svg.enablePan(rect);
+        svg.enableZoom(rect);
+    },
+    
+    'follow' : function(svg) {
+        var rect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+        svg.append(rect);
+        svg.enableFollow(rect);
+    },
+    
+    'PanZoomImmunity' : function(svg) {
+        var rect = svg.RECT({'x':10, 'y':10, 'width':80, 'height':80, 'fill':'blue', 'fill-opacity':.5});
+        svg.append(rect);
+        svg.enablePanZoomImmunity(rect);
+    },
+    */
     'interactive_gears': function (c) {
-        var n = 30  // Spokes on gear
+        var n = 15  // Spokes on gear
         var bottom = 85  // Length of bottom line
         var diagonal = 70  // Distance between centers of gears.
         var center = 100  // (center, center) is the middle of the canvas.

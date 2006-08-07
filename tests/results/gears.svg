@@ -1,46 +1,51 @@
 <svg height="200" version="1.1" width="200" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<circle cx="100" cy="100" fill="#ff0000" r="6.66667" stroke="none"/>
-<path d="M100,100 L57.5,155.621" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="20"/>
+<rect fill="none" height="178.743" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1" width="185" x="10" y="19.3785"/>
+<circle cx="100" cy="100" fill="#ff0000" r="8.33333" stroke="none"/>
+<path d="M131.218,148.287 A57.5,57.5 0 0,0 131.218,51.7127" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M144.792,30.7182 A82.5,82.5 0 0,1 144.792,169.282" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M130.305,156.086 L136.247,167.084" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M130.305,43.9135 L136.247,32.9162" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M92.3083,159.28 A35,35 0 0,0 44.824,122.998" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M35.7697,99.6948 A60,60 0 0,1 117.171,161.893" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M97.8486,164.198 L110.075,166.797" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<path d="M38.6232,118.944 L32.903,107.83" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.3" stroke-width="1"/>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="142.5" y="49.3785">
+12</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="157.286" y="64.7718">
+1</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="166.746" y="83.9052">
+2</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="170" y="105">
+3</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="166.746" y="126.095">
+4</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="157.286" y="145.228">
+5</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="142.5" y="160.621">
+6</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="45.0191" y="114.791">
+6</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="59.4107" y="113.16">
+7</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="73.6246" y="115.942">
+8</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="86.3393" y="122.878">
+9</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="96.3727" y="133.324">
+10</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="102.792" y="146.307">
+11</text>
+<text fill="#640064" font-family="Verdana" font-size="14" font-weight="bold" stroke="none" text-anchor="middle" x="105" y="160.621">
+12</text>
+<path d="M100,100 L57.5,155.621" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="25"/>
 <g transform="matrix(1, 0, 0, 1, 100, 100)">
-<path d="M0,0 L42.5,-55.6215 L-42.5,-55.6215" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="20"/>
-<circle cx="42.5" cy="-55.6215" fill="#0000ff" fill-opacity="0.3" r="8" stroke="none"/>
-<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="#000000" fill-opacity="0.03" stroke="none" transform="rotate(-36.2532)"/>
-<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6" stroke-width="1" transform="rotate(-36.2532)"/>
+<path d="M0,0 L42.5,-55.6215 L-42.5,-55.6215" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="25"/>
+<circle cx="42.5" cy="-55.6215" fill="#0000ff" fill-opacity="0.3" r="10" stroke="none"/>
+<path d="M2.08183e-15,-34 L2.84505,-33.8808 L4.512,-35.7161 L6.17044,-36.4819 L9.20153,-35.8376 L10.4051,-34.4635 L11.1815,-32.1088 L16.3796,-29.7944 L18.649,-30.7931 L20.4755,-30.8181 L22.9825,-28.9967 L23.5231,-27.2518 L23.2746,-24.7849 L27.082,-20.5564 L29.5614,-20.5457 L31.2401,-19.8256 L32.7895,-17.142 L32.5738,-15.3281 L31.3433,-13.1755 L33.1017,-7.76393 L35.3623,-6.74573 L36.6031,-5.40507 L36.927,-2.32325 L35.9921,-0.753927 L33.9925,0.712042 L33.3978,6.37096 L35.0488,8.22063 L35.637,9.95003 L34.6794,12.8972 L33.1871,13.9506 L30.7641,14.4765 L27.9191,19.4043 L28.6751,21.7656 L28.509,23.5847 L26.4355,25.8875 L24.6437,26.2429 L22.2163,25.7378 L17.6129,29.0824 L17.3431,31.547 L16.4515,33.1413 L13.6206,34.4017 L11.8392,33.9976 L9.82708,32.5489 L4.26133,33.7319 L3.0124,35.8737 L1.5494,36.9675 L-1.5494,36.9675 L-3.0124,35.8737 L-4.26133,33.7319 L-9.82708,32.5489 L-11.8392,33.9976 L-13.6206,34.4017 L-16.4515,33.1413 L-17.3431,31.547 L-17.6129,29.0824 L-22.2163,25.7378 L-24.6437,26.2429 L-26.4355,25.8875 L-28.509,23.5847 L-28.6751,21.7656 L-27.9191,19.4043 L-30.7641,14.4765 L-33.1871,13.9506 L-34.6794,12.8972 L-35.637,9.95003 L-35.0488,8.22063 L-33.3978,6.37096 L-33.9925,0.712042 L-35.9921,-0.753927 L-36.927,-2.32325 L-36.6031,-5.40507 L-35.3623,-6.74573 L-33.1017,-7.76393 L-31.3433,-13.1755 L-32.5738,-15.3281 L-32.7895,-17.142 L-31.2401,-19.8256 L-29.5614,-20.5457 L-27.082,-20.5564 L-23.2746,-24.7849 L-23.5231,-27.2518 L-22.9825,-28.9967 L-20.4755,-30.8181 L-18.649,-30.7931 L-16.3796,-29.7944 L-11.1815,-32.1088 L-10.4051,-34.4635 L-9.20153,-35.8376 L-6.17044,-36.4819 L-4.512,-35.7161 L-2.84505,-33.8808 z" fill="#000000" fill-opacity="0.1" stroke="none" transform="rotate(-40.6168)"/>
 </g>
 <g transform="matrix(1, 0, 0, 1, 57.5, 155.621)">
-<path d="M0,0 L85,0" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="20"/>
-<circle cx="56" cy="0" fill="#0000ff" fill-opacity="0.3" r="8" stroke="none"/>
-<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="#000000" fill-opacity="0.03" stroke="none" transform="rotate(-52.6168)"/>
-<path d="M1.83691e-15,-30 L3.41974,-29.8045 L6.30932,-36.4581 L9.05987,-38.9605 L13.442,-37.6738 L14.403,-34.0816 L13.2366,-26.922 L18.9904,-23.2242 L25.0185,-27.2594 L28.6853,-27.8775 L31.6761,-24.4259 L30.5425,-20.8844 L25.6905,-15.4919 L28.5317,-9.27051 L35.7844,-9.40608 L39.2033,-7.94362 L39.8533,-3.423 L36.9849,-1.05657 L29.9878,0.856682 L29.0144,7.62655 L35.1891,11.4336 L37.2746,14.5123 L35.3773,18.6667 L31.6849,19.1067 L24.7642,16.9333 L20.2852,22.1022 L23.4215,28.6432 L23.5114,32.3607 L19.6693,34.8298 L16.3252,33.2037 L11.6781,27.6337 L5.11567,29.5606 L4.21768,36.7588 L2.28355,39.9348 L-2.28355,39.9348 L-4.21768,36.7588 L-5.11567,29.5606 L-11.6781,27.6337 L-16.3252,33.2037 L-19.6693,34.8298 L-23.5114,32.3607 L-23.4215,28.6432 L-20.2852,22.1022 L-24.7642,16.9333 L-31.6849,19.1067 L-35.3773,18.6667 L-37.2746,14.5123 L-35.1891,11.4336 L-29.0144,7.62655 L-29.9878,0.856682 L-36.9849,-1.05657 L-39.8533,-3.423 L-39.2033,-7.94362 L-35.7844,-9.40608 L-28.5317,-9.27051 L-25.6905,-15.4919 L-30.5425,-20.8844 L-31.6761,-24.4259 L-28.6853,-27.8775 L-25.0185,-27.2594 L-18.9904,-23.2242 L-13.2366,-26.922 L-14.403,-34.0816 L-13.442,-37.6738 L-9.05987,-38.9605 L-6.30932,-36.4581 L-3.41974,-29.8045 z" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6" stroke-width="1" transform="rotate(-52.6168)"/>
+<path d="M0,0 L85,0" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.1" stroke-width="25"/>
+<circle cx="47.5" cy="0" fill="#0000ff" fill-opacity="0.3" r="10" stroke="none"/>
+<path d="M2.08183e-15,-34 L2.84505,-33.8808 L4.512,-35.7161 L6.17044,-36.4819 L9.20153,-35.8376 L10.4051,-34.4635 L11.1815,-32.1088 L16.3796,-29.7944 L18.649,-30.7931 L20.4755,-30.8181 L22.9825,-28.9967 L23.5231,-27.2518 L23.2746,-24.7849 L27.082,-20.5564 L29.5614,-20.5457 L31.2401,-19.8256 L32.7895,-17.142 L32.5738,-15.3281 L31.3433,-13.1755 L33.1017,-7.76393 L35.3623,-6.74573 L36.6031,-5.40507 L36.927,-2.32325 L35.9921,-0.753927 L33.9925,0.712042 L33.3978,6.37096 L35.0488,8.22063 L35.637,9.95003 L34.6794,12.8972 L33.1871,13.9506 L30.7641,14.4765 L27.9191,19.4043 L28.6751,21.7656 L28.509,23.5847 L26.4355,25.8875 L24.6437,26.2429 L22.2163,25.7378 L17.6129,29.0824 L17.3431,31.547 L16.4515,33.1413 L13.6206,34.4017 L11.8392,33.9976 L9.82708,32.5489 L4.26133,33.7319 L3.0124,35.8737 L1.5494,36.9675 L-1.5494,36.9675 L-3.0124,35.8737 L-4.26133,33.7319 L-9.82708,32.5489 L-11.8392,33.9976 L-13.6206,34.4017 L-16.4515,33.1413 L-17.3431,31.547 L-17.6129,29.0824 L-22.2163,25.7378 L-24.6437,26.2429 L-26.4355,25.8875 L-28.509,23.5847 L-28.6751,21.7656 L-27.9191,19.4043 L-30.7641,14.4765 L-33.1871,13.9506 L-34.6794,12.8972 L-35.637,9.95003 L-35.0488,8.22063 L-33.3978,6.37096 L-33.9925,0.712042 L-35.9921,-0.753927 L-36.927,-2.32325 L-36.6031,-5.40507 L-35.3623,-6.74573 L-33.1017,-7.76393 L-31.3433,-13.1755 L-32.5738,-15.3281 L-32.7895,-17.142 L-31.2401,-19.8256 L-29.5614,-20.5457 L-27.082,-20.5564 L-23.2746,-24.7849 L-23.5231,-27.2518 L-22.9825,-28.9967 L-20.4755,-30.8181 L-18.649,-30.7931 L-16.3796,-29.7944 L-11.1815,-32.1088 L-10.4051,-34.4635 L-9.20153,-35.8376 L-6.17044,-36.4819 L-4.512,-35.7161 L-2.84505,-33.8808 z" fill="#000000" fill-opacity="0.1" stroke="none" transform="rotate(-52.6168)"/>
 </g>
-<path d="M142.5,155.621 A70,70 0 0,0 142.5,44.3785" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.6" stroke-width="1"/>
-<path d="M113.5,155.621 A56,56 0 0,0 42.7857,101.589" fill="none" stroke="#000000" stroke-linecap="butt" stroke-linejoin="miter" stroke-opacity="0.6" stroke-width="1"/>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="142.5" y="49.3785">
-12</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="157.286" y="64.7718">
-1</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="166.746" y="83.9052">
-2</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="170" y="105">
-3</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="166.746" y="126.095">
-4</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="157.286" y="145.228">
-5</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="142.5" y="160.621">
-6</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="42.7857" y="106.589">
-6</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="59.7526" y="104.667">
-7</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="76.51" y="107.947">
-8</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="91.5" y="116.124">
-9</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="103.329" y="128.439">
-10</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="110.897" y="143.746">
-11</text>
-<text fill="#640064" font-family="Verdana" font-size="14" font-stretch="ultra-condensed" font-weight="bold" stroke="none" text-anchor="middle" x="113.5" y="160.621">
-12</text>
 </svg>

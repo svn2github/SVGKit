@@ -3,67 +3,79 @@
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
       
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>SVG Canvas Tests</title>
+  <head>
+    <title>SVG Canvas Tests</title>
 
-<link href="simple.css" rel="stylesheet" type="text/css"></link>
-<!--
-<link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
-<script type="text/javascript" src="interpreter/interpreter.js"></script>
-<script type="text/javascript" src="interpreter/popup.js"></script>
--->
+    <!-- START Required for IE to support  inlined SVG -->
+    <object id="AdobeSVG" width="1" height="1" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"></object>
+    <?import namespace="svg" implementation="#AdobeSVG"?>
+    <!-- END   Required for IE to support inlined SVG -->
 
-<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
-<script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
-<script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
+    <link href="simple.css" rel="stylesheet" type="text/css"></link>
 
-<script type="text/javascript" src="canvas_tests.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script type="text/javascript" src="../MochiKit/DateTime.js"></script>
+    <script type="text/javascript" src="../MochiKit/Format.js"></script>
+    <script type="text/javascript" src="../MochiKit/Async.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/LoggingPane.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Signal.js"></script>
+    <script type="text/javascript" src="../MochiKit/Visual.js"></script>
 
-</head>
+    <script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
+    <script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
 
-<body>
+    <script type="text/javascript" src="canvas_tests.js"></script>
 
-<h2>Examples stolen from Mozila's Examples at 
-<a href="http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas">
-http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas</a>
-</h2>
+  </head>
 
-<div>
+  <body>
 
-<table id="tests" border="1">
-<tr>
-<td align="center"><strong>Image</strong></td>
-<td align="center"><strong>Canvas</strong></td>
-<td align="center"><strong>Canvas Source</strong></td>
-<td align="center"><strong>SVG</strong></td>
-<td align="center"><strong>SVG Source</strong></td></tr>
-</table>
+    <h2>Examples stolen from Mozila's Examples at 
+    <a href="http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas">
+    http://developer.mozilla.org/en/docs/Drawing_Graphics_with_Canvas</a>
+    </h2>
 
-<!--
-<table>
-<tr>
-  <td><canvas id="tut0" width="125" height="125"></canvas><br/><label id="lab0"></label></td>
-  <td><canvas id="tut1" width="125" height="125"></canvas><br/><label id="lab1"></label></td>
+    <div>
 
-  <td><canvas id="tut2" width="125" height="125"></canvas><br/><label id="lab2"></label></td>
-  <td><canvas id="tut3" width="125" height="125"></canvas><br/><label id="lab3"></label></td>
-</tr>
-<tr>
-  <td><canvas id="tut4" width="125" height="125"></canvas><br/><label id="lab4"></label></td>
-  <td><canvas id="tut5" width="125" height="125"></canvas><br/><label id="lab5"></label></td>
-  <td><canvas id="tut6" width="125" height="125"></canvas><br/><label id="lab6"></label></td>
-  <td><canvas id="tut7" width="125" height="125"></canvas><br/><label id="lab7"></label></td>
-</tr>
+    <table id="tests" border="1">
+    <tr>
+    <td align="center"><strong>Image</strong></td>
+    <td align="center"><strong>Canvas</strong></td>
+    <td align="center"><strong>Canvas Source</strong></td>
+    <td align="center"><strong>SVG</strong></td>
+    <td align="center"><strong>SVG Source</strong></td></tr>
+    </table>
 
-<tr>
-  <td><canvas id="tut8" width="125" height="125"></canvas><br/><label id="lab8"></label></td>
-  <td><canvas id="tut9" width="125" height="125"></canvas><br/><label id="lab9"></label></td>
-  <td><canvas id="tut10" width="125" height="125"></canvas><br/><label id="lab10"></label></td>
-  <td><canvas id="tut11" width="125" height="125"></canvas><br/><label id="lab11"></label></td>
-</tr>
-</table>
--->
-</div>
+    <!--
+    <table>
+    <tr>
+      <td><canvas id="tut0" width="125" height="125"></canvas><br/><label id="lab0"></label></td>
+      <td><canvas id="tut1" width="125" height="125"></canvas><br/><label id="lab1"></label></td>
 
-</body>
+      <td><canvas id="tut2" width="125" height="125"></canvas><br/><label id="lab2"></label></td>
+      <td><canvas id="tut3" width="125" height="125"></canvas><br/><label id="lab3"></label></td>
+    </tr>
+    <tr>
+      <td><canvas id="tut4" width="125" height="125"></canvas><br/><label id="lab4"></label></td>
+      <td><canvas id="tut5" width="125" height="125"></canvas><br/><label id="lab5"></label></td>
+      <td><canvas id="tut6" width="125" height="125"></canvas><br/><label id="lab6"></label></td>
+      <td><canvas id="tut7" width="125" height="125"></canvas><br/><label id="lab7"></label></td>
+    </tr>
+
+    <tr>
+      <td><canvas id="tut8" width="125" height="125"></canvas><br/><label id="lab8"></label></td>
+      <td><canvas id="tut9" width="125" height="125"></canvas><br/><label id="lab9"></label></td>
+      <td><canvas id="tut10" width="125" height="125"></canvas><br/><label id="lab10"></label></td>
+      <td><canvas id="tut11" width="125" height="125"></canvas><br/><label id="lab11"></label></td>
+    </tr>
+    </table>
+    -->
+    </div>
+
+  </body>
 </html>

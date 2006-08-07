@@ -3,44 +3,56 @@
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
       
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>SVG Plot Tests</title>
+  <head>
+    <title>SVG Plot Tests</title>
 
-<link href="simple.css" rel="stylesheet" type="text/css"></link>
-<!--
-<link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
-<script type="text/javascript" src="interpreter/interpreter.js"></script>
-<script type="text/javascript" src="interpreter/popup.js"></script>
--->
+    <!-- START Required for IE to support  inlined SVG -->
+    <object id="AdobeSVG" width="1" height="1" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"></object>
+    <?import namespace="svg" implementation="#AdobeSVG"?>
+    <!-- END   Required for IE to support inlined SVG -->
 
-<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
-<script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
-<script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
-<script type="text/javascript" src="../SVGKit/SVGPlot.js"></script>
+    <link href="simple.css" rel="stylesheet" type="text/css"></link>
 
-<script type="text/javascript" src="plot_tests.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script type="text/javascript" src="../MochiKit/DateTime.js"></script>
+    <script type="text/javascript" src="../MochiKit/Format.js"></script>
+    <script type="text/javascript" src="../MochiKit/Async.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/LoggingPane.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Signal.js"></script>
+    <script type="text/javascript" src="../MochiKit/Visual.js"></script>
 
-</head>
+    <script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
+    <script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
+    <script type="text/javascript" src="../SVGKit/SVGPlot.js"></script>
 
-<body>
+    <script type="text/javascript" src="plot_tests.js"></script>
+
+  </head>
+
+  <body>
 
 
-<div id="test">
+    <div id="test">
 
 
 
-<form  method="post" action="javascript:void()">
+    <form  method="post" action="javascript:void()">
 
-<table id="tests" border="1">
-<tr>
-<td align="center"><strong>Image</strong></td>
-<td align="center"><strong>Plot Source</strong></td>
-<td align="center"><strong>SVG</strong></td>
-<td align="center"><strong>SVG Source</strong></td>
-</tr>
-</table>
+    <table id="tests" border="1">
+    <tr>
+    <td align="center"><strong>Image</strong></td>
+    <td align="center"><strong>Plot Source</strong></td>
+    <td align="center"><strong>SVG</strong></td>
+    <td align="center"><strong>SVG Source</strong></td>
+    </tr>
+    </table>
 
-</form>
+    </form>
 
-</body>
+  </body>
 </html>
