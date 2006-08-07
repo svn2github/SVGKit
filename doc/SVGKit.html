@@ -12,106 +12,94 @@
 
 <div id="container">
 
-<div id="corner">
-  <a href="index.html"><img src="logo.png" alt="logo"></img></a>
-</div>
-
-<div id="top">
-  <h1>SVGKit</h1>
-</div>
-
 <!--#include virtual="menu.html" -->
-
 <div id="content">
-<h1>SVGKit<br />
-</h1>
+<h1>SVGKit</h1>
 <h2>Introduction</h2>
-Lowest level. &nbsp;Create a new SVG at runtime.
-&nbsp;Load SVG data from a URL. Conveniently handle quirks of three
-ways SVG can be included in browsers: object, embed, and inline. Handle
-differnet browsers and different SVG engines. &nbsp;Has convenience
-functions for DOM manipulation ala MochiKit. It manages the objects:
-HTMLElement, SVGDocument, SVGElement. &nbsp;Basic intaractive event
-handling like scroll, zoom, object select and manipulate (maybe this
-should go in SVGEvent.js)<br />
-<br />
-Once you have an SVGKit object, adding content is simple.
-&nbsp;Inspired by MochiKit DOM, there is an all-caps function for every
-tag defined in the SVG spec.<br />
-<br />
-svg.append(CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3) );<br />
+<p>Lowest level.Create a new SVG at runtime.
+ Load SVG data from a URL. Conveniently handle quirks of three
+  ways SVG can be included in browsers: object, embed, and inline. Handle
+  differnet browsers and different SVG engines.  Has convenience
+  functions for DOM manipulation ala MochiKit. It manages the objects:
+  HTMLElement, SVGDocument, SVGElement.  Basic intaractive event
+  handling like scroll, zoom, object select and manipulate (maybe this
+  should go in SVGEvent.js)<br />
+  <br />
+  Once you have an SVGKit object, adding content is simple.  Inspired by MochiKit DOM, there is an all-caps function for every
+  tag defined in the SVG spec.<br />
+  <br />
+  <code>svg.append(CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3) );</code></p>
+<p>It's annoying to have external javascript files in an SVG, especially a big library like MochiKit and SVGKit, but for anything more than a simple demo, it's worth it. You can also pick which functions you want to include and paste them into your SVG.<br />
+</p>
 <h2>Overview of Code</h2>
-There is a single object SVGKit. &nbsp;You instantiate one for each SVG
-you want access too. &nbsp;You can use its constructor to grab an
+There is a single object SVGKit.  You instantiate one for each SVG
+you want access too.  You can use its constructor to grab an
 existing SVG, load an SVG from a file, or create a blank SVG to draw
-into. &nbsp;The goal of the code is to grab the svg element and be able
+into.  The goal of the code is to grab the svg element and be able
 to manipulate it independent of the browser/plugin and the technique
-used to include the SVG on the page. &nbsp;In many browsers this is
+used to include the SVG on the page.  In many browsers this is
 just not possible for some or all methods.<br />
-<h2>Overview of JavaScript access to SVG</h2>
+<h2>JavaScript access to SVG (not SVGKit specific)</h2>
 There are several different ways for JavaScript to access SVG content.
-The there are three major DOM elements, each of which has a corresponding member in a SVGKit object.<br />
+The there are three major DOM elements you need to worry about, each of which has a corresponding member in a SVGKit object.<br />
 <ul>
-  <li><span class="objectBox objectBox-string"></span><span class="objectBox objectBox-string"></span>SVGDocument
-(this.svgDocument)&nbsp; has methods like createElement,
-getElementById, and getElementsByTagName. If the SVG is imbeded in a
-document or the JavaScript code lives in the SVG file, this will just
-be document, otherwise you have to get it from the HTML element that
+  <li><code>svgDocument</code> (type <code>SVGDocument</code>) referrs to the document the <code>&lt;svg&gt;</code> element is contained in. It has document-type methods like <code>createElement</code>,
+    <code>getElementById</code>, and <code>getElementsByTagName</code>. If the SVG
+is inline in the XHTML or the JavaScript code lives in the SVG file, this will just
+be <code>document</code>, otherwise you have to get it from the HTML element that
 the SVG is sitting in.</li>
-  <li>SVGSVGElement (this.svgElement)&nbsp; has the width and
-height, graphical content elements in childNodes, and the more graphical methods
-like suspendRedraw, and createSVGTransform.</li>
-  <li><span class="objectBox objectBox-string">HTMLElement
-    </span>(this.<span class="objectBox objectBox-string">htmlElement)
-which is the container that contains the SVG (object, embed, iframe,
-svg)&nbsp; in an HTML document. &nbsp;</span>If the SVG
-is imbeded in a document directly, this will just be the same as
-svgElement. <span class="objectBox objectBox-string">An
-object and embed element also has a width and height which may be
-different that the SVGElement's, in which case you'll probably get a
+  <li><code>svgElement</code> (type <code>SVGSVGElement</code>)  referrs to the <code>&lt;svg&gt;</code> element. It has the width and
+height of the entire SVG and contains all graphical  elements in <code>childNodes</code>. It has element-type methods along with more graphical methods
+like <code>suspendRedraw</code>, and <code>createSVGTransform</code>.</li>
+  <li><code>htmlElement</code> (type <code>HTMLElement</code>)     is the container that contains the SVG   in an HTML document. This refers to an HTML element like <code>&lt;object&gt;</code>, <code>&lt;embed&gt;</code>, <code>&lt;iframe&gt;</code>, or <code>&lt;svg&gt;</code>. If the SVG
+is inline in the XHTML, this will just be the same as
+<code>svgElement</code>. <span class="objectBox objectBox-string">An
+<code>&lt;object&gt;</code> and <code>&lt;embed&gt;</code> element also has a width and height which may be
+different that the <code>SVGElement</code>'s, in which case you'll probably get a
 scroll bar.</span></li>
 </ul>
-Here's a summary of the most common ways to get access to the all
-important SVGSVGElement in JavaScript. &nbsp;Different browsers
-impliment different methods to varying degrees.<br />
+<p>Here's a summary of the most common ways to get access to the all
+important SVGSVGElement in JavaScript.  Different browsers
+impliment different methods to varying degrees:</p>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
   <tbody>
     <tr>
       <td></td>
-      <td><span class="objectBox objectBox-string">htmlElement</span></td>
-      <td>svgDocument</td>
-      <td>svgElement</td>
+      <td>
+      <code>htmlElement</code></td>
+      <td><code>svgDocument</code></td>
+      <td><code>svgElement</code></td>
     </tr>
     <tr>
-      <td>inline</td>
+      <td><code>&lt;svg&gt;</code> (inline)</td>
       <td>the svg tag<br />
       </td>
-      <td>document or svgElement.ownerDocument</td>
-      <td>same as htmlElement</td>
+      <td><code>document</code> or <code>svgElement.ownerDocument</code></td>
+      <td>same as <code>htmlElement</code></td>
     </tr>
     <tr>
-      <td>embed</td>
+      <td><code>&lt;embed&gt;</code></td>
       <td>the embed tag</td>
-      <td>htmlElement.getSVGDocument()</td>
-      <td>svgDocument.rootElement or svgDocument.documentElement</td>
+      <td><code>htmlElement.getSVGDocument()</code></td>
+      <td><code>svgDocument.rootElement</code> or <code>svgDocument.documentElement</code></td>
     </tr>
     <tr>
-      <td>object</td>
+      <td><code>&lt;object&gt;</code></td>
       <td>the object tag</td>
-      <td>htmlElement.contentDocument</td>
-      <td>svgDocument.rootElement or svgDocument.documentElement</td>
+      <td><code>htmlElement.contentDocument</code></td>
+      <td><code>svgDocument.rootElement</code> or <code>svgDocument.documentElement</code></td>
     </tr>
     <tr>
-      <td>iframe</td>
+      <td><span class="objectBox objectBox-string"><code>&lt;iframe&gt;</code></span></td>
       <td>the iframe tag</td>
       <td>can never access</td>
       <td>can never access</td>
     </tr>
     <tr>
       <td>inside svg</td>
-      <td>can you access?</td>
-      <td>document</td>
-      <td>svgDocument.rootElement</td>
+      <td>not applicable </td>
+      <td><code>document</code></td>
+      <td><code>svgDocument.rootElement</code></td>
     </tr>
   
   
@@ -119,43 +107,39 @@ impliment different methods to varying degrees.<br />
 </table>
 <h2>Constructors</h2>
 <ul>
+  <li><code>SVGKit()</code> -- For JavaScript included in an SVG</li>
+  <li><code>SVGKit(node)</code> -- Already have an HTML element that contains an SVG like <code>&lt;object&gt;</code>, <code>&lt;embed&gt;</code>, <code>&lt;iframe&gt;</code>, or <code>&lt;svg&gt;</code></li>
+  <li><code>SVGKit(id)</code> -- Have the id for an HTML element (if your id ends in
+&quot;.svg&quot;, pass in the node instead because strings ending in .svg will be
+treated as filenames.)</li>
+  <li><code>SVGKit(filename, id, type, width, height)</code> -- Create a new HTML element contains the SVG in <code>filename</code> (must end in &quot;.svg&quot;)</li>
+  <li><code>SVGKit(width, height, id, type)</code> -- Create a new SVG from scratch
+with <code>width</code>, <code>height</code>, and <code>id</code>.  type is <code>'inline'</code> <code>'embed'</code> or <code>'object'</code></li>
 </ul>
-<ul>
-  <li>SVGKit() -- For JavaScript included in an SVG</li>
-  <li>SVGKit(node) -- Already have an HTML element</li>
-  <li>SVGKit(id) -- Have the id for an HTML element (if your id ends in
-.svg, pass in the node instead because strings ending in .svg will be
-treated as&nbsp;filenames.)</li>
-  <li>SVGKit(filename, id, type, width, height) -- Create a new HTML element that references filename (must end in .svg)</li>
-  <li>SVGKit(width, height, id, type) -- Create a new SVG from scratch
-with width, height, and id. &nbsp;type is 'inline' 'embed' or 'object'</li>
-</ul>
-For embed or object: It won't necessarily be ready when the constructor
-returns so all real graphical manipulation has to be registerd as a
-callback to whenReady (these interface <span style="font-style: italic;">force</span>
-you to register an onload callback to allow it to load in the
-background.) &nbsp;If you are creating a new SVG, what really happens
-is an embed/object tag is created referencing an svg file with no
+<p>For <code>&lt;embed&gt;</code> or <code>&lt;object&gt;</code> --  The SVG won't necessarily be ready when the constructor
+returns because the document loads in the background. All real graphical manipulation has to  passed to <code>svg.whenReady(callback)</code>, which will register an  <code>onload</code> callback to allow it to load in the
+background.)  If you are creating a new SVG, what really happens
+is an <code>&lt;embed&gt;</code> or <code>&lt;object&gt;</code> tag is created referencing an svg file with no
 graphical content. This means you have to manage a URI
-to&nbsp;empty.svg. &nbsp;Another issue with embed/object is that if
+to empty.svg.  Another issue with<code>&lt;embed&gt;</code> or <code>&lt;object&gt;</code> is that if
 they get hidden (for example the div they're contained in becomes
-invisible) the browser will just dump the DOM and all of your hard
-work. I'm thinking about registering an onhide event which saves the
-xml and then restores it on load..<br />
-<br />
-For inline: &nbsp;Creating a new SVG is as simple as creating a DOM
-element. &nbsp;Loading an SVG from a file is difficult because an xml
+invisible) the browser will just forget about the SVG DOM and all of your hard
+work. I'm thinking about registering an <code>onhide</code> event which saves the
+xml and then restores it on load. The answer probably is that  <code>&lt;embed&gt;</code> or <code>&lt;object&gt;</code> just suck for all of this.</p>
+<p>
+For inline <code>&lt;svg&gt;</code> --  Creating a new SVG is as simple as creating a DOM
+element.  Loading an SVG from a file is difficult because an xml
 loader must be used and the SVG extracted and properly recognized as
 SVG content so you have access to the graphical DOM methods and your
 content shows up. If you load an inline SVG from a file, you're going
-to have to register your graphical manipulation with whenReady<br />
+to have to register your graphical manipulation with <code>svg.whenReady(callback)</code> as above.</p>
 <h2>Overview of Functionality</h2>
 <ul>
   <li>Content Manipulation: createSVGDOM, append, createUniqueID, getDefs, suspendRedraw, deleteContent, etc.</li>
-  <li>Transformations: rotate, translate, scale. &nbsp;These can be
+  <li>Transformations: rotate, translate, scale.  These can be
 applied to any element and do some rudimentary optimization. (If you
 translate the same element twice, combine them into a single
-translation.) &nbsp;I could suck all transformations into a single
+translation.)  I could suck all transformations into a single
 transformation matrix (like Inkscape), and while the would be efficient
 to render, it would be ugly to read.</li>
   <li>Output: toXML and emitXML.</li>
@@ -164,20 +148,7 @@ to render, it would be ugly to read.</li>
 <ul>
   <li>Server-side conversion to svg, pdf, ps, png, jpeg</li>
 </ul>
-<h2>Possible Applications</h2>
-<ul>
-  <li>GUI Widgets to make a web app more like a desktop app (or a whole desktop environment), perhaps using GNOME SVG widgets.</li>
-  <li>Web-based X-Windows client (some of this more appropriately done
-with Canvas, or perhaps embeded Canvases within SVG.) &nbsp;X commands
-would have to be tunneled through HTTP on the web server because of the
-JavaScript network security restrictions.</li>
-  <li>Drawing or CAD program</li>
-  <li>Plotting/Graphing/Charting</li>
-</ul>
-
-
-</div> <!-- content -->
-<!--#include virtual="footer.html" -->
+</div> <!--#include virtual="footer.html" -->
 </div>  <!-- container -->
 
 </body>

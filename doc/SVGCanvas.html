@@ -11,36 +11,25 @@
 <body>
 
 <div id="container">
-
-<div id="corner">
-  <a href="index.html"><img src="logo.png" alt="logo"></img></a>
-</div>
-
-<div id="top">
-  <h1>SVGKit</h1>
-</div>
-
 <!--#include virtual="menu.html" -->
 
 <div id="content">
-<h1>SVGCanvas<br />
-</h1>
+<h1>SVGCanvas</h1>
 <h2>Introduction</h2>
-SVGCanvas is a JavaScript implimentation of most of the Canvas drawing
+<p>SVGCanvas is a JavaScript implimentation of most of the Canvas drawing
 API which creates SVG grapics elements instead of drawing to a pixel
 buffer. I wanted a way of scripting the creation of SVG graphics
 without always explicitly managing the DOM tree. Since Canvas is
 becomming a de facto web standard and the two interfaces are similar
 (e.g. linear and radial gradients of the same form) I took advantage of
-the API.<br />
-<br />
-Canvas is a pixel-based representation like a paint program.
+the API.</p>
+<p>Canvas is a pixel-based representation like a paint program.
 &nbsp;You can
 draw shapes over each other and they will modify the pixels.
 &nbsp;SVG is
 more like a drawing program where shapes are always there even if they
-get covered up.<br />
-<br />
+get covered up.</p>
+<p>
 Canvas is a stack-based API where you set the color and line style,
 move to a spot, draw some lines, set another color, draw more lines,
 etc. &nbsp;Almost all graphical libraries impliment this becuase in
@@ -51,12 +40,11 @@ group that get applied for every member that doens't explicitly specify
 their own fill color. Some things are&nbsp; cleaner to do in one
 model or the other. See <a href="http://developer.mozilla.org/presentations/xtech2005/svg-canvas/">Canvas
 and SVG</a> slides by Robert O'Callahan at mozilla.org for a good
-overview about why the web needs both.<br />
-<br />
+overview about why the web needs both.</p>
+<p>
 It was easiest to get SVGPlot to efficiently generate clean SVG code
-using a combination of DOM tree manipulation and Canvas calls.<br />
-<br />
-Why would you want this?<br />
+using a combination of DOM tree manipulation and Canvas calls.
+Why would you want this?</p>
 <ul>
   <li>The Canvas API is a nice API to build up an SVG without
 explicit DOM manipulations.</li>
@@ -70,8 +58,8 @@ display, conversion to PDF or PNG, or printing at high-res.</li>
 than&nbsp;have to translate the (x,y) coordinates like you do in
 Canvas.</li>
 </ul>
-<br />
-When wouldn't you use this?<br />
+
+<p>When wouldn't you use this?</p>
 <ul>
   <li>When speed matters. With this, you just stack SVG shapes on
 top of each other forever.&nbsp; Even you clear it, those others
@@ -84,7 +72,7 @@ XML-like description.</li>
   <li>When your browser supports canvas but not SVG</li>
 </ul>
 <h2>Related Work</h2>
-<a href="http://xmlgraphics.apache.org/batik/">
+<p><a href="http://xmlgraphics.apache.org/batik/">
 Batik</a> impliments the Java AWT API to draw directly to SVG.
 &nbsp;<a href="http://fuchsia-design.com/CanvaSVG/">CanvaSVG</a>
 goes the other way, rendering SVGs onto a canvas. SVG has a richer
@@ -95,22 +83,23 @@ not straight forward to impliment without nateive SVG support.
 &nbsp;<a href="http://cairographics.org/">Cairo</a>
 can render to bitmaps, PDF, PS, SVG, OpenGL, and others.&nbsp;You
 can write a PostScript program to print out arbitrarily many digits of
-pi, or have the printer calculate fractals. Canvas and SVG provide this level of programing using JavaScript.<br />
-<h2>Background/History<span style="text-decoration: underline;"></span></h2>
-PostScript was a vector drawing state-machine-based language, PDF is a
+pi, or have the printer calculate fractals. Canvas and SVG provide this level of programing using JavaScript.</p>
+
+<h2>Background/History</h2>
+<p>PostScript was a vector drawing state-machine-based language, PDF is a
 subset without the programming language (conditionals and loops). Canvas is a drawing API inspired by PS and PDF.
 &nbsp;SVG is a scenegraph
 representation. &nbsp;It's like the difference between OpenGL and
 Open Inventor. &nbsp;All drawing of windows and widets
 in&nbsp;NeXT was done used PostScript, and in OS X using PDF.
 &nbsp;The advantage was that the same code that is drawing to the
-window can be used to draw to the printer without any translation.<br />
-<br />
+window can be used to draw to the printer without any translation.</p>
+<p>
 Canvas as SVG, though simple, is quite powerful, supporting
 transparency, gradients, clipping, blending, bezeir curves, and others
 that Win32/GDI and QuickDraw2D, and Java's AWT did not.
-&nbsp;Except for transparency, these have a PostScript history.<br />
-<br />
+&nbsp;Except for transparency, these have a PostScript history.</p>
+
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
   <tbody>
     <tr>
@@ -164,15 +153,15 @@ APIs specification</a>. </li>
 tutorial</a></li>
 </ul>
 <h2>Overview of my Canvas Implementation using SVG</h2>
-There is a single object SVGCanvas which acts like Canvas's 2D context
+<p>There is a single object SVGCanvas which acts like Canvas's 2D context
 that you get from getContext("2d"). Maybe I should have called it
 SVGCanvas2dContext to keep my options open for 3D, but X3DCanvas is
-probably a better route.<br />
-<br />
+probably a better route.</p>
+<p>
 There were some decisions to be made regarding trading off speed to
 create the SVG, speed to render the SVG, generating clean factorized
 SVG. &nbsp;What happens when you draw, transform, draw, transform,
-draw, etc.<br />
+draw, etc.</p>
 <ul>
   <li>Should SVGCanvas keep an explicit current
 transformation matrix and multiply each incomming coordinate by it and
@@ -200,9 +189,9 @@ Gradients, clipping paths, markers, patterns, and other objects that
 you define and use many times are created by standard Canvas methods or
 a Canvas inspired SVG-only one.<br />
 <h2>Overview of SVG Extensions</h2>
-Since I want to be able to use this as an easy way to draw into an SVG
+<p>Since I want to be able to use this as an easy way to draw into an SVG
 rather than just a pure Canvas implimentation, there are several SVG
-specific features.<br />
+specific features.</p>
 <ul>
   <li>You can pick the SVG group you're drawing into by setting <code>drawGroup</code>.
 It lives in the state. &nbsp;All elements go into this group. (They

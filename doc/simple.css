@@ -14,11 +14,11 @@ em {
 	font-style: normal;
 }
 th {
-	border: 1px solid #EEE;
+	border: 1px solid #DDD;
 	background: #FAFAFA;
 }
 td {
-	border: 1px solid #EEE;
+	border: 1px solid #DDD;
 	padding: 0 0.5em;
 	vertical-align: top;
 }
@@ -29,4 +29,9 @@ table {
 }
 img {
     border: 1px solid
+}
+code {
+	font-family: Courier, sans-serif;
+	font-size: small;
+	background: #EEE;
 }
