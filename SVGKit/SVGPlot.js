@@ -222,7 +222,7 @@ if (typeof(SVGPlot) == 'undefined' || SVGCanvas == null) {
 
 
 // Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
-SVGPlot.prototype = new SVGCanvas();
+//SVGPlot.prototype = new SVGCanvas();  // TODO: Fix Inheritance
 SVGPlot.prototype.constructor = SVGPlot;
 SVGPlot.superclass = SVGCanvas.prototype;
 
@@ -402,7 +402,7 @@ SVGPlot.Scale = function(segmentsOrType /* = 'real' */,
 SVGPlot.Scale.prototype = {
     segments : [],  // List of scale segments for a broken scale
     reversed : false,
-    position = function(value) {
+    position: function(value) {
         for (var i=0; i<segments.length; i++) {
             var position = segments[i].position(value) ;
             if (position != null) {
@@ -448,16 +448,16 @@ SVGPlot.ScaleSegmentReal.prototype = {
         var ratio = interpolation_function(value);
         return this.ratioToPosition(ratio);
     },
-    interpolation_functions = {
+    interpolation_functions: {
         linear: function(value) {
             return (value-_min)/(_max*_min)
-        }
+        },
         log: function(value) {
             return (Math.log(value)-Math.log(_min))/(Math.log(_max)-Math.log(_min));
-        }
+        },
         sqrt: function(value) {
             return (Math.sqrt(value)-Math.sqrt(_min))/(Math.sqrt(_max)-Math.sqrt(_min));
-        }
+        },
         atan: function(value) {
             var middle = (_max-_min)/2.0
             return Math.atan(value-middle)/Math.PI+0.5
@@ -484,7 +484,7 @@ SVGPlot.ScaleSegmentDiscrete.prototype = {
             return null;
         var number = (this._max-this._min)/this.interval;
         return this.discreteToPosition(value, number);
-    }
+    },
     discreteToPosition: function(value, number) {
         var ratio;
         if (this.placement == 'on')
@@ -514,8 +514,8 @@ SVGPlot.ScaleSegmentCategory.prototype = {
                 return this.discreteToPosition(value, length);
         }
         return null;
-    }
-    discreteToPosition: ScaleSegmentDiscrete.prototype.discreteToPosition;
+    },
+    discreteToPosition: SVGPlot.ScaleSegmentDiscrete.prototype.discreteToPosition
 }
 
 SVGPlot.ScaleSegmentDateTime = function(min, max, interval, begin, end, required) {
@@ -705,13 +705,13 @@ SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' */, range_
     this.labels = [];
 }
 
-SVGPlot.Axis.prototype.set(type, position /* 'bottom' */, range_type /* ='lnear' */) {
+SVGPlot.Axis.prototype.set = function(type, position /* 'bottom' */, range_type /* ='lnear' */) {
     this.type = 'x'
     this.position = SVGPlot.firstNonNull(position, this.position, 'bottom');
     this.range_type = SVGPlot.firstNonNull(range_type, this.range_type, 'linear');
 }
 
-SVGPlot.Axis.prototype.addDefaults() {
+SVGPlot.Axis.prototype.addDefaults = function() {
     this.save();
     this.setStyle(SVGPlot.defaultStyle);
     this.addTicks(this.type);
@@ -762,26 +762,26 @@ SVGPlot.AxisTitle.set = function(text, location /* ='50%' */, position /* 'left'
 
 SVGPlot.prototype.setXAxisTitle = function(text, location /* ='50%' */, position /* 'left' */) {
     if (this.xAxisTitle == null)
-        this.xAxisTitle = new SVGPlot.AxisTitle(this. this.xAxis, text, location, position);
+        this.xAxisTitle = new SVGPlot.AxisTitle(this, this.xAxis, text, location, position);
     else
         this.xAxisTitle.set(text, location, position);
 }
 
 SVGPlot.prototype.setYAxisTitle = function(text, loc /* ='50%' */, position /* 'bottom' */) {
     if (this.yAxisTitle == null)
-        this.yAxisTitle = new SVGPlot.AxisTitle(this. this.yAxis, text, location, position);
+        this.yAxisTitle = new SVGPlot.AxisTitle(this, this.yAxis, text, location, position);
     else
         this.yAxisTitle.set(text, location, position);
 }
 
 SVGPlot.prototype.addXAxisTitle = function(text, loc /* ='50%' */, position /* 'left' */) {
-    this.xAxisTitle = new SVGPlot.AxisTitle(this. this.xAxis, text, location, position);
+    this.xAxisTitle = new SVGPlot.AxisTitle(this, this.xAxis, text, location, position);
     this.xAxisTitle.set(text, location, position);
     return this.xAxisTitle;
 }
 
 SVGPlot.prototype.addYAxisTitle = function(text, loc /* ='50%' */, position /* 'bottom' */) {
-    this.yAxisTitle = new SVGPlot.AxisTitle(this. this.yAxis, text, location, position);
+    this.yAxisTitle = new SVGPlot.AxisTitle(this, this.yAxis, text, location, position);
     this.yAxisTitle.set(text, location, position);
     return this.yAxisTitle;
 }
@@ -795,7 +795,7 @@ SVGPlot.AxisItem = function(svgPlot, parent, locations /*='auto'*/, position /* 
     this.set(type, locations, position);
 }
 
-SVGPlot.AxisItem.set(locations /*='auto'*/, position /* ='bottom' */) {
+SVGPlot.AxisItem.set = function(locations /*='auto'*/, position /* ='bottom' */) {
     this.locations = SVGPlot.firstNonNull(locations, this.locations, 'auto');
     this.position = SVGPlot.firstNonNull(position, this.position, 'bottom');
 }
@@ -807,7 +807,7 @@ SVGPlot.Ticks = function(svgPlot, parent,
                           minorPerMajor /* = 4 */, minorLength /* =length/2 */) {
     this.set(locations, position, length, minorPerMajor, minorLength);
 }
-SVGPlot.Ticks.prototype = new SVGPlot.AxisItem();
+//SVGPlot.Ticks.prototype = new SVGPlot.AxisItem();  // TODO: Fix Inheritance
 SVGPlot.Ticks.prototype.constructor = SVGPlot.AxisItem;
 SVGPlot.Ticks.superclass = SVGPlot.AxisItem.prototype;
 
@@ -1796,7 +1796,7 @@ SVGPlot.prototype.maxmin = function(data, max, min) {
     //reduce(max_fn, data)
     forEach(data, function(raw_row) {
         row = this.evaluate_row(MochiKit.Base.clone(raw_row));
-        foreach(key in keys, {
+        foreach(key in keys, function(key) {
             if (MochiKit.Base.isUndefinedOrNull(max[key]) || row[key]>max[key])
                 max[key] = row[key];
             if (MochiKit.Base.isUndefinedOrNull(min[key]) || row[key]<mix[key])
@@ -1820,7 +1820,7 @@ SVGPlot.prototype.evaluate_row = function(raw_row) {
 }
 
 SVGPlot.prototype.evaluate_item = function(row, key) {
-    if(MochiKit.Base.isUndefinedOrNull(row['__circular_check__']) {
+    if(MochiKit.Base.isUndefinedOrNull(row['__circular_check__'])) {
         row['__circular_check__']= {}
     }
     if (!MochiKit.Base.isUndefinedOrNull(row['__circular_check__'][key])) {

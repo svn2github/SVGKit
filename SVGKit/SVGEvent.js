@@ -93,7 +93,7 @@ SVGKit.prototype.enableDrag = function(element,
             var dx = e.mouse().client.x - this.coords.x;
             var dy = e.mouse().client.y - this.coords.y;
             for (var i=0; i<elementsToMove.length; i++) {
-                log('original_transforms:', this.original_transforms[i])
+                //log('original_transforms:', this.original_transforms[i])
                 var new_transform = this.svg.translate(this.original_transforms[i], dx, dy);
                 //log('new_transform:', new_transform)
                 this.elementsToMove[i].setAttribute('transform', new_transform);

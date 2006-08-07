@@ -167,7 +167,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     this._redrawId = null;   // The reference that SVG's suspendRedraw returns.  Needed to cancel suspension.
     //SVGKit._defaultType = // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
-    log("SVG.__init__(", p1, p2, p3, p4, p5, ")");
+    log("SVGKit.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
     if (MochiKit.Base.isUndefinedOrNull(p1)) {
         // This JS was included inside of an SVG file, and this was included in the
