@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>SVGKit Tutorials</title>
+	<link href="./simple.css" rel="stylesheet" type="text/css"></link>
+	<link href="./twocol.css" rel="stylesheet" type="text/css"></link>
+	<!--<link rel="SHORTCUT ICON" href="favicon.ico"></link>-->
+	<meta name="author" content="Jason Gallicchio"></meta>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+
+<div id="container">
+<!--#include virtual="menu.html" -->
+<div id="content">
+<h1>Tutorials</h1>
+<h2>Interpreter</h2>
+<p>The best way to play is to use the MochiKit interpreter with SVGKit, SVGCanvas, and SVGEvent included: <a href="../tests/svg_interpreter.html">SVGKit Interpreter</a></p>
+<p><img src="interpreter.png" width="619" height="333" /> </p>
+
+
+<h2>Your Own HTML Pages</h2>
+<p> To include SVGKit in your own page, you must download <a href="http://www.mochikit.com/">MochiKit</a>. A <a href="../tests/minimal.html">minimal HTML</a> example whose source code is below. If you want to use SVGEvents or SVGCanvas, you have to include those too. </p>
+
+<pre style="border: thin dashed #555555;">
+&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot;
+        &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot;&gt;
+  &lt;head&gt;
+    &lt;title&gt;SVGKit Minimal&lt;/title&gt;
+
+    &lt;!-- START Required for IE to support  inlined SVG --&gt;
+    &lt;object id=&quot;AdobeSVG&quot; width=&quot;1&quot; height=&quot;1&quot; classid=&quot;clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2&quot;&gt;&lt;/object&gt;
+    &lt;?import namespace=&quot;svg&quot; implementation=&quot;#AdobeSVG&quot;?&gt;
+    &lt;!-- END   Required for IE to support inlined SVG --&gt;
+
+    &lt;script type=&quot;text/javascript&quot; src=&quot;../MochiKit/MochiKit.js&quot;&gt;&lt;/script&gt;
+
+    &lt;script type=&quot;text/javascript&quot; src=&quot;../SVGKit/SVGKit.js&quot; &gt;&lt;/script&gt;
+
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    var example = function() {
+      var svg = new SVGKit(100,100)
+      var rect = svg.RECT({x:10, y:10, width:50, height:50, fill:'red'})
+      svg.append(rect)
+      var circ = svg.CIRCLE({cx:60, cy:60, r:20, fill:'blue', 'fill-opacity':0.5})
+      svg.append(circ)
+      appendChildNodes('mydiv', svg.htmlElement)
+    }
+    addLoadEvent(example);
+    &lt;/script&gt;
+
+  &lt;/head&gt;
+
+  &lt;body&gt;
+
+    &lt;h2&gt;Minimal SVGKit HTML File&lt;/h2&gt;
+
+    &lt;div id=&quot;mydiv&quot;&gt;
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<!--#include virtual="footer.html" -->
+</div>  <!-- container -->
+
+</body>
+</html>
