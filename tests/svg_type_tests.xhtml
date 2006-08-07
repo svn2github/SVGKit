@@ -216,25 +216,52 @@ Creating New SVGs inline works if it's .html extension (with XHTML doctype) but 
 <div id="mydiv"></div>
 <div id="codediv"></div>
 
-
-<form id="interpreter_form" action="javascript:void(0);">
-    <div>
-        <div id="interpreter_area">
-            <div id="interpreter_output"></div>
+        <form id="interpreter_form" autocomplete="off" style="font-size: medium">
+            <div id="interpreter_area">
+                <div id="interpreter_output"></div>
+            </div>
+            <div id="oneline">
+                <input id="interpreter_text" name="input_text" type="text" class="textbox" size="100" />
+            </div>
+            <div id="multiline">
+                <textarea id="interpreter_textarea" name="input_textarea" type="text" class="textbox" cols="97" rows="10"></textarea>
+                <br />
+            </div>
+        </form>
+        <div>
+            Notes:
+            <ul>
+                <li>
+                    To write multi-line code snippets, use the lower text area
+                    and press ctrl-enter or cmd-enter to submit.
+                </li>
+                <li>
+                    <tt>function name() {}</tt> syntax might not end up in
+                    window scope, so use <tt>name = function () {}</tt>
+                    syntax instead
+                </li>
+                <li>
+                    If you want to stuff something into the output window
+                    other than the <tt>repr(...)</tt> of the expression
+                    result, use the <tt>writeln(...)</tt> function.
+                    It accepts anything that MochiKit.DOM does, so you can
+                    even put styled stuff in there!
+                </li>
+                <li>
+                    Use <tt>clear()</tt> to clear the interpreter window.
+                </li>
+                <li>
+                    Up and down arrow keys work as a rudimentary history
+                </li>
+                <li>
+                    <tt>_</tt> is the value of the last expression
+                    that was not <tt>undefined</tt>, <tt>last_exc</tt> is
+                    the value of the last unhandled exception.
+                </li>
+            </ul>
         </div>
-        <input id="interpreter_text" name="input_text" type="text" class="textbox" size="100" />
-    </div>
-</form>
-<p>MochiKit Logger: <a href="javascript:MochiKit.Logging.logger.debuggingBookmarklet()">
-javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a></p>
-
-<ul>
-<li>Grab an embed, object, iframe, inline and manipulate it</li>
-<li>Manipulate self-registered SVGs.</li>
-<li>Insert a new (embed, object, iframe, inline) from a file</li>
-<li>Insert a new (embed, object, iframe, inline) and manipulate it.</li>
-<li>Grab an (embed, object, iframe, inline) from a pool by ID and move it, resize it, manipuate it.</li>
-</ul>
+    <p>MochiKit Logger: <a href="javascript:MochiKit.Logging.logger.debuggingBookmarklet()">
+    javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a></p>
 
 </body>
 </html>
