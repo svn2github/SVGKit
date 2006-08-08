@@ -214,48 +214,4 @@ var testFunctions = {
     
 };
 
-function doTest(plotTD, functionArea, svgSrcArea) {
-    var plot
-    plot = new SVGPlot(220, 220);
-    var setSVGSrc = function (svg, textarea) {
-        replaceChildNodes(textarea, svg.toXML());
-    }
-    var testFunction = eval(functionArea.value);
-    plot.svg.whenReady( partial(testFunction, plot) );
-    plot.svg.whenReady( partial(setSVGSrc, plot.svg, svgSrcArea) );
-    replaceChildNodes(plotTD, plot.svg.htmlElement);
-}
-
-function addTests() {
-    log("getting table");
-    var table = $('tests');
-    var i = 0, start = 0, number = 20;
-    var onlyDraw = '';
-    for (var test in testFunctions) {
-        if (i>=start && i-start<number && onlyDraw==''|| onlyDraw!='' && onlyDraw==test) {
-            log("doing test", test);
-            var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
-            var functionArea, plotSrcArea, button, plotTD, button;
-            var tr = TR(null, TD(null, test, BR(null), IMG({'src':test+'.png'}) ), 
-                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, plotSrc),
-                                       BR(null),
-                                       button=INPUT({'type':"button", 'value':"Do It"}) ),
-                              plotTD=TD(null),
-                              TD(null, plotSrcArea=TEXTAREA({'rows':"16", 'cols':"60", 'wrap':"off"} ,"SVG Source") )
-                        );
-            appendChildNodes(table, tr);
-            addToCallStack(button, 'onclick', partial(doTest, plotTD, functionArea, plotSrcArea) );
-            doTest(plotTD, functionArea, plotSrcArea);
-        }
-        i++;
-    }
-}
-/*
-p = new SVGPlot(220, 220);
-d=$('test')
-replaceChildNodes(d, p.svg.htmlElement)
-p.svg.circle()
-p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
-*/
-
-addLoadEvent(addTests);
+addLoadEvent(partial(addTests, 0, 50, 'plot'));

@@ -30,44 +30,4 @@ var testFunctions = {
     }
 };
 
-function doTest(svgTD, functionArea, svgSrcArea, buttonXML) {
-    var svg;
-    var testFunction = eval(functionArea.value);
-    svg = new SVGKit(200, 200);
-    var setSVGSrc = function (svg, textarea) {
-        replaceChildNodes(textarea, svg.toXML());
-    }
-    svg.whenReady( partial(testFunction, svg) );
-    svg.whenReady( partial(setSVGSrc, svg, svgSrcArea) );
-    addToCallStack(buttonXML, 'onclick', partial(setSVGSrc, svg, svgSrcArea) );
-    replaceChildNodes(svgTD, svg.htmlElement);
-}
-
-function addTests() {
-    log("getting table");
-    var table = $('tests');
-    var i = 0, start = 0, number = 100;
-    var buttonDoIt, buttonXML;
-    for (var test in testFunctions) {
-        if (i>=start && i-start<number) {
-            log("doing test number ", i, "name ", test);
-            var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
-            var functionArea, svgSrcArea, button, svgTD, button;
-            var tr = TR(null, TD(null, ""+i+": "+test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ), 
-                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, plotSrc),
-                                       BR(null),
-                                       buttonDoIt=INPUT({'type':"button", 'value':"Do It"}),
-                                       " ",
-                                       buttonXML=INPUT({'type':"button", 'value':"Update XML"}) ),
-                              svgTD=TD({width:200}),
-                              TD(null, svgSrcArea=TEXTAREA({'rows':"16", 'cols':"60", 'wrap':"off"} ,"SVG Source") )
-                        );
-            appendChildNodes(table, tr);
-            addToCallStack(buttonDoIt, 'onclick', partial(doTest, svgTD, functionArea, svgSrcArea, buttonXML) );
-            doTest(svgTD, functionArea, svgSrcArea, buttonXML);
-        }
-        i++;
-    }
-}
-
-addLoadEvent(addTests);
+addLoadEvent(partial(addTests, 0, 50, 'svg'));

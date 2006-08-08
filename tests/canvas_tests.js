@@ -835,54 +835,7 @@ var testFunctions = {
     
 };
 
-function doTest(canvasTD, svgTD, functionArea, svgSrcArea) {
-    var testFunction = eval(functionArea.value);
-    var ctx;
-    var canvas = CANVAS({'width':200, 'height':200});
-    replaceChildNodes(canvasTD, canvas);
-    if (canvas.getContext) {
-        var ctx = canvas.getContext("2d");
-        ctx.clearRect(0,0,200,200);
-        try{
-            testFunction(ctx);
-        }
-        catch (e) {
-            log(""+e);
-        }
-    }
-    
-    ctx = new SVGCanvas(200, 200);
-    var setSVGSrc = function (svg, textarea) {
-        replaceChildNodes(textarea, svg.toXML());
-    }
-    ctx.svg.whenReady( partial(testFunction, ctx) );
-    ctx.svg.whenReady( partial(setSVGSrc, ctx.svg, svgSrcArea) );
-    replaceChildNodes(svgTD, ctx.svg.htmlElement);
-}
-
-function addTests() {
-    log("getting table");
-    var table = $('tests');
-    var i = 0, start = 0, number = 50;
-    for (var test in testFunctions) {
-        if (i>=start && i-start<number) {
-            log("doing test number ", i, "name ", test);
-            var plotSrc = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
-            var functionArea, svgSrcArea, button, canvasTD, svgTD, button;
-            var tr = TR(null, TD(null, ""+i+": "+test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ), 
-                              canvasTD=TD(null), 
-                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, plotSrc),
-                                       BR(null),
-                                       button=INPUT({'type':"button", 'value':"Do It"}) ),
-                              svgTD=TD(null),
-                              TD(null, svgSrcArea=TEXTAREA({'rows':"16", 'cols':"60", 'wrap':"off"} ,"SVG Source") )
-                        );
-            appendChildNodes(table, tr);
-            addToCallStack(button, 'onclick', partial(doTest, canvasTD, svgTD, functionArea, svgSrcArea) );
-            doTest(canvasTD, svgTD, functionArea, svgSrcArea);
-        }
-        i++;
-    }
+function compositeTests() {
     var compositeTypes = [
           'source-over','source-in','source-out','source-atop',
           'destination-over','destination-in','destination-out','destination-atop',
@@ -911,4 +864,4 @@ function addTests() {
     //draw()
 }
 
-addLoadEvent(addTests);
+addLoadEvent(partial(addTests, 0, 50, 'canvas'));
