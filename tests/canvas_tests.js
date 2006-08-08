@@ -864,4 +864,4 @@ function compositeTests() {
     //draw()
 }
 
-addLoadEvent(partial(addTests, 0, 50, 'canvas'));
+addLoadEvent(partial(addTests, 0, 50, 'canvas', true));
