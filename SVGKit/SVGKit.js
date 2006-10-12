@@ -192,7 +192,9 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     }
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
+    log("Done creating/grabing svg.");
     this._addDOMFunctions();
+    log("Done with _addDOMFunctions");
     document.svg = this;  // For debugging, especially in IE
 }
 
@@ -372,18 +374,24 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
     }
     else
     {
+        log('createInlineSVG with IE.  width:', width, 'height:', height)
         var width = attrs["width"] ? attrs["width"] : "100";
         var height = attrs["height"] ? attrs["height"] : "100";
         var eid = attrs["id"] ? attrs["id"] : "notunique";
 
-        var html = '<svg:svg width="' + width + '" height="' + height + '" ';
-        html += 'id="' + eid + '" version="1.1" baseProfile="full">';
+        var html = '<svg:svg width="' + width + '" height="' + height + '" ' +
+                    'id="' + eid + '" version="1.1" baseProfile="full">';
 
+        log('html:', html)
+        log('document:', document)
         this.htmlElement = document.createElement(html);
-
+        log('htmlElement:', this.htmlElement)
+        
         // create embedded SVG inside SVG.
         this.svgDocument = this.htmlElement.getSVGDocument();
+        log('svgDocument:', this.svgDocument)
         this.svgElement = this.svgDocument.createElementNS(SVGKit._svgNS, 'svg');
+        log('svgElement:', this.svgElement)
         this.svgElement.setAttribute("width", width);
         this.svgElement.setAttribute("height", height);
         this.svgElement.setAttribute('xmlns:xlink', attrs['xmlns:xlink']);
@@ -843,16 +851,16 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     // Test: SVGKit.prototype._twoParameter('translate( 1 ,2 ) scale( 3 , 4  )', 1, 1, SVGKit.scaleRE, 'scale')
     // Test: SVGKit.prototype._twoParameter('translate(3)', 1, 1, SVGKit.translateRE, 'translate')
     // Test: SVGKit.prototype._twoParameter('translate(10,20)', 0, -20, SVGKit.translateRE, 'translate')
-    if (MochiKit.Base.isUndefinedOrNull(x))
+    if (MochiKit.Base.isUndefinedOrNull(x) || MochiKit.Base.isUndefinedOrNull(name))
         return old_transform;
-    y = SVGKit.firstNonNull(y, 0);
+    // y = SVGKit.firstNonNull(y, 0);
     if (x==0 && y==0)
         return old_transform;
     regexp.lastIndex = 0;
     //var transform = elem
     var new_transform, array;
     
-    if (old_transform==null || old_transform=='')
+    if (MochiKit.Base.isUndefinedOrNull(old_transform) || old_transform=='')
         new_transform = name+'('+x+','+y+')';
     else if ( (array = regexp.exec(old_transform)) != null ) {
         var old_x = parseFloat(array[2]);
