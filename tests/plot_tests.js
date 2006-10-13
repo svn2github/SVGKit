@@ -75,8 +75,8 @@ var testFunctions = {
         p.plotLine(trigx, cos);
         p.strokeStyle = "#888";
         p.fillStyle = "#888";
-        p.setYRange(-1.5,1.5)
-        p.setXRange(-7,7)
+        p.setYScale(-1.5,1.5)
+        p.setXScale(-7,7)
         var locations = [-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI]
         p.setXTicks(locations)
         p.setXTickLabels(locations, ['-2pi', '-pi', '0', 'pi', '2pi'])
@@ -124,8 +124,8 @@ var testFunctions = {
     'dependentaxes' : function(p) {
         p.addBox()
         p.addView()
-        p.setXRange(-10, 10)
-        p.setYRange(-7, 7)
+        p.setXScale(-10, 10)
+        p.setYScale(-7, 7)
         var colors = ['#990000', '#009900', '#000099'];
         for (var i=0; i<3; i++) {
             p.strokeStyle = colors[i];
@@ -165,8 +165,8 @@ var testFunctions = {
             p.strokeStyle = colors[i];
             p.fillStyle = colors[i];
             p.addView()
-            p.setXRange(-i*3-1, i*3+1)
-            p.setYRange(-i*3-1, i*3+1)
+            p.setXScale(-i*3-1, i*3+1)
+            p.setYScale(-i*3-1, i*3+1)
             p.addXAxis('top')
             p.addXTicks('auto', 'top')
             p.addXTickLabels('auto', 'auto', 'top')
@@ -190,6 +190,15 @@ var testFunctions = {
             p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
         }
         p.render();
+    },
+    
+    'logLine' : function(p) {
+        var intsquares = Array(POINT_COUNT); // squares of their position
+        for (var i=0; i<POINT_COUNT; i++)
+            intsquares[i] = i*i;
+        p.plotLine(intsquares)
+        p.yScale.interpolation = 'log'
+        p.render()
     },
     
     'draw_on_plot' : function(p) {
@@ -218,4 +227,4 @@ var testFunctions = {
     
 };
 
-addLoadEvent(partial(addTests, 0, 50, 'plot'));
+addLoadEvent(partial(addTests, 0, 10, 'plot'));

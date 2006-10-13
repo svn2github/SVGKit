@@ -397,24 +397,24 @@ SVGPlot.Scale.prototype = {
         this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
     },
     position: function(value) {
-        if (_min==null || _max==null)
+        if (this._min==null || this._max==null)
             return null;
         var interpolation_function = this.interpolation_functions[this.interpolation]
-        var ratio = interpolation_function(value);
+        var ratio = interpolation_function.call(this, value);
         return ratio;
     },
     interpolation_functions: {
         linear: function(value) {
-            return (value-_min)/(_max-_min)
+            return (value-this._min)/(this._max-this._min)
         },
         log: function(value) {
-            return (Math.log(value)-Math.log(_min))/(Math.log(_max)-Math.log(_min));
+            return (Math.log(value)-Math.log(this._min))/(Math.log(this._max)-Math.log(this._min));
         },
         sqrt: function(value) {
-            return (Math.sqrt(value)-Math.sqrt(_min))/(Math.sqrt(_max)-Math.sqrt(_min));
+            return (Math.sqrt(value)-Math.sqrt(this._min))/(Math.sqrt(this._max)-Math.sqrt(this._min));
         },
         atan: function(value) {
-            var middle = (_max-_min)/2.0
+            var middle = (this._max-this._min)/2.0
             return Math.atan(value-middle)/Math.PI+0.5
             // TODO -- max and min should provide some scaling for the width of the atan.
         }
@@ -579,10 +579,12 @@ SVGPlot.Box = function(svgPlot, parent,
     SVGPlot.genericConstructor(this, svgPlot, parent);
     parent.boxes.push(this)
     svgPlot.box = this
+    /*
     this.boxBackgroundStroke = null;
     this.boxBackgroundFill = null;
     this.plotAreaBackgroundStroke = null;
     this.plotAreaBackgroundFill = null;
+    */
     this.set(layout, x, y, width, height);
     this.views = [];
 }
@@ -623,28 +625,38 @@ SVGPlot.View = function(svgPlot, parent) {
     parent.views.push(this);
     svgPlot.view = this
     this.xScale = new SVGPlot.Scale();
+    svgPlot.xScale = this.xScale;
     this.yScale = new SVGPlot.Scale();
+    svgPlot.yScale = this.yScale;
     this.plots = [];  // Plots to be drawn with this coordinate system
     this.xAxes = [];  // X-Axes to be drawn with this coordinate system
     this.yAxes = [];  // Y-Axes to be drawn with this coordinate system
 }
 
-SVGPlot.View.prototype.addDefaults = function() {
-    /***
-        Adds axes and axes defaults to current Scale.
-    ***/
-    // TODO don't rely on svgPlot for this.
-    this.svgPlot.save();
-    this.svgPlot.setStyle(SVGPlot.defaultStyle);
-    
-    var xAxis = new SVGPlot.Axis(this.svgPlot, this, 'x');
-    xAxis.addDefaults()
-    
-    var yAxis = new SVGPlot.Axis(this.svgPlot, this, 'y');
-    yAxis.addDefaults()
-    
-    this.svgPlot.restore();
+SVGPlot.View.prototype = {
+    addDefaults : function() {
+        /***
+            Adds axes and axes defaults to current Scale.
+        ***/
+        // TODO don't rely on svgPlot for this.
+        this.svgPlot.save();
+        this.svgPlot.setStyle(SVGPlot.defaultStyle);
+        
+        var xAxis = new SVGPlot.Axis(this.svgPlot, this, 'x');
+        xAxis.addDefaults()
+        
+        var yAxis = new SVGPlot.Axis(this.svgPlot, this, 'y');
+        yAxis.addDefaults()
+        
+        this.svgPlot.restore();
+    }
 }
+
+SVGPlot.prototype.addView = function() { 
+    view = new SVGPlot.View(this, this.box);
+    return view;
+}
+
 SVGPlot.prototype.setXScale = function(
                           min /* ='auto' */, 
                           max /* ='auto' */, 
@@ -667,11 +679,6 @@ SVGPlot.prototype.setYScale = function(
         this.view = new SVGPlot.View(this, this.box);
     this.view.yScale.set(min, max, interpolation, reversed, required);
     return this.view.yScale;
-}
-
-SVGPlot.prototype.addView = function() { 
-    view = new SVGPlot.View(this, this.box);
-    return view;
 }
 
 // Axis
@@ -998,11 +1005,9 @@ SVGPlot.Box.prototype.render = function () {
     var left = totalXSize.left;
     var right = this.width-totalXSize.right;
     
-    
     for (var i=0; i<this.views.length; i++) {
         this.views[i].render(left, right, top, bottom)
     }
-    
 }
 
 SVGPlot.View.prototype.createElement = function() {
@@ -1231,35 +1236,45 @@ SVGPlot.View.prototype.render = function(left, right, top, bottom) {
     this._top = top;
     this._bottom = bottom;
     
-    this._width = right-left;
-    this._height = bottom-top;
-    this._xscale = this._width/(this.xScale._max-this.xScale._min);
-    this._yscale = this._height/(this.yScale._max-this.yScale._min);
+    var width = right-left;
+    var height = bottom-top;
+    var xScale = this.xScale;
+    var yScale = this.yScale;
     
-    function xtoi(xmin, xscale, x) { return (x-xmin)*xscale }
-    this.xtoi = partial(xtoi, this.xScale._min, this._xscale);
-    function ytoj(ymin, yscale, height, y) { return height - (y-ymin)*yscale }
-    this.ytoj = partial(ytoj, this.yScale._min, this._yscale, this._height);
+    this.xtoi = function(x) {
+        return width*xScale.position(x)
+    }
+    
+    this.ytoj = function(y) {
+        return height*(1.0-yScale.position(y))
+    }
+    
+    /*
+    function xtoi(xmin, yfactor, x) { return (x-xmin)*yfactor }
+    this.xtoi = partial(xtoi, this.xScale._min, xfactor);
+    function ytoj(ymin, yfactor, height, y) { return height - (y-ymin)*yfactor }
+    this.ytoj = partial(ytoj, this.yScale._min, yfactor, this._height);
+    */
     
     for (var i=0; i<this.xAxes.length; i++)
-        this.xAxes[i].render(left, right, top, bottom, this.xtoi, this.ytoj);
+        this.xAxes[i].render(left, right, top, bottom);
     for (var i=0; i<this.yAxes.length; i++)
-        this.yAxes[i].render(left, right, top, bottom, this.xtoi, this.ytoj);
+        this.yAxes[i].render(left, right, top, bottom);
     for (var i=0; i<this.plots.length; i++)
-        this.plots[i].render(left, right, top, bottom, this.xtoi, this.ytoj);
+        this.plots[i].render(left, right, top, bottom);
 }
 
-SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
+SVGPlot.Axis.prototype.render = function(left, right, top, bottom) {
     var min, max, map;
     if (this.type=='x') {
         min = this.parent.xScale._min;
         max = this.parent.xScale._max;
-        map = xtoi;
+        map = this.parent.xtoi;
     }
     else if (this.type=='y') {
         min = this.parent.yScale._min;
         max = this.parent.yScale._max;
-        map = ytoj;
+        map = this.parent.ytoj;
     }
     
     // First position the axis as a whole with a transform on its group.
@@ -1284,10 +1299,10 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     else {
         if (this.type=='x') {
             translate_x = left
-            translate_y = top + ytoj(this.position);
+            translate_y = top + this.parent.ytoj(this.position);
         }
         else if (this.type=='y') {
-            translate_x = left + xtoi(this.position)
+            translate_x = left + this.parent.xtoi(this.position)
             translate_y = top;
         }
     }
@@ -1439,7 +1454,7 @@ SVGPlot.LinePlot.prototype.createElement = function () {
     SVGPlot.createGroupIfNeeded(this, 'line-plot', 'stroke');
 }
 
-SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
+SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
     
     
     MochiKit.DOM.replaceChildNodes(this.element);
@@ -1463,8 +1478,8 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
     var drawingFunction = p.moveTo;
     // TODO Handle cases where the plot goes WAY off the  scales.
     for (i=0; i<this.ydata.length; i++) {
-        var sx = xtoi(this.xdata[i]);
-        var sy = ytoj(this.ydata[i]);
+        var sx = this.parent.xtoi(this.xdata[i]);
+        var sy = this.parent.ytoj(this.ydata[i]);
         if (!isNaN(sx) && sx!=Number.MAX_VALUE && sx!=Number.MIN_VALUE &&
             sx!=Number.NEGATIVE_INFINITY && sx!=Number.POSITIVE_INFINITY &&
             !isNaN(sy) && sy!=Number.MAX_VALUE && sy!=Number.MIN_VALUE &&
@@ -1489,12 +1504,12 @@ SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
     /***
         used for auto-scale
     ***/
-    var xscale = SVGPlot.minmax(this.xdata)
-    xExtents.min = Math.min(xExtents.min, xscale.min)
-    xExtents.max = Math.max(xExtents.max, xscale.max)
-    var yscale = SVGPlot.minmax(this.ydata)
-    yExtents.min = Math.min(yExtents.min, yscale.min)
-    yExtents.max = Math.max(yExtents.max, yscale.max)
+    var xrange = SVGPlot.minmax(this.xdata)
+    xExtents.min = Math.min(xExtents.min, xrange.min)
+    xExtents.max = Math.max(xExtents.max, xrange.max)
+    var yrange = SVGPlot.minmax(this.ydata)
+    yExtents.min = Math.min(yExtents.min, yrange.min)
+    yExtents.max = Math.max(yExtents.max, yrange.max)
 }
 
 SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
@@ -1863,7 +1878,7 @@ SVGPlot.prototype.evaluate_item = function(row, key) {
 //  Override SVGCanvas to use Plot Coordinates
 ////////////////////////////
 
-
+/*
 SVGPlot.map_xtoi = function(x) {
     if (this.plotView && typeof(x) != 'undefined' && x != null)
         return this.xtoi(x);
@@ -1886,6 +1901,7 @@ SVGPlot.map_height = function(height) {
 }
 SVGPlot.map_radius = function(radius) {
 }
+*/
 /*
 SVGPlot.prototype.translate = function(tx, ty) {}
 SVGPlot.prototype.moveTo = function(x, y) {}
