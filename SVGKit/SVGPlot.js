@@ -51,7 +51,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
    autoColorIncrement = true // cycle through predefined nice default colors
 
-   be able to pass in error bars or stock ranges with any plot
+   be able to pass in error bars or stock scales with any plot
    ledgend and/or labeling of plots is automatic, alpha blended, unobtrusive, and auto-positioned.
    
    Programming interface concept:  Too many objects and layers, so expose each one's functionality
@@ -129,20 +129,20 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- Grid lines function like ticks.  Just Extended ticks?  what about checkerboard/stripes?
     -- Tests with multiple boxes and box layout.
     -- Integer-only axis labels/ticks (a parameter of the auto-axis)
-    -- Auto range has options like "always include zero"
+    -- Auto scale has options like "always include zero"
     -- Be able to draw using lineTo and things using plot coordinates, not screen coordinates. 
     -- You want to draw over a graph.  This means mapping into plot coordinates without distorting your
         line widths and shapes in some crazy way.  You obviously map (x,y) to (i,j) but do you map 
         widths, heights, and radii?  Not if you want to draw a normal looking arrow, but yes if you
         want to draw a circle or an arc that is in a specific place on the graph.
-    -- When you change ranges, you want decorations you've drawn to move too.  Decorations tied to point on plot.
+    -- When you change scales, you want decorations you've drawn to move too.  Decorations tied to point on plot.
     -- CSS Colors and Fonts
     -- For tickLabels at the edge, either move them to fit on plot or make plot bigger to accomodate them.
-    -- Check range for zeros better.
+    -- Check scale for zeros better.
     -- Box background and plot area background.
     -- Axes, ticks, and grids align themselves to nearest pixel.
     -- Smooth connect plot lines using bezier or quartic
-    -- Autorange so that at least the line-width fits.
+    -- Autoscale so that at least the line-width fits.
     -- Plot title
     -- Pie, optional pullout of wedges, optional 2nd parameter setting slice area "Spie  Chart"
     -- Excel has tick positions 'inside' 'outside' and 'cross'.  This makes more sense when 
@@ -155,8 +155,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
          current style and transform from the current state, or as a parameter?  Some things only require
          one or two style parameters and it's nicer just to set them.  Some like boxBG and plotAreaBG require lots and state is bad.
          Also, setting the fillStyle for text is confusing.
-    -- How to handle polar plots?  Keep (x,y) range, but just add a polar grid/tickLabels/ticks/etc or
-         completely change to a polar range where (x,y) now mean (r,phi)
+    -- How to handle polar plots?  Keep (x,y) scale, but just add a polar grid/tickLabels/ticks/etc or
+         completely change to a polar scale where (x,y) now mean (r,phi)
     -- TickLabels appearing over axes or other elements should be somehow avoided -- constrained layout?
     -- Right now if you want to set something, you have to either:
         * Plot a function and get the default stuff
@@ -310,17 +310,17 @@ SVGPlot.prototype.resetPlot = function() {
                 
 /*
 
-Alternative layout where things have links to the range rather than being contained in a range.  Flatter, but more interlinked heirarchy -- harder for XML
+Alternative layout where things have links to the scale rather than being contained in a scale.  Flatter, but more interlinked heirarchy -- harder for XML
 
 SVGPlot.Layout = {}
 SVGPlot.Box = {}     // box
     SVGPlot.Graphic = {}  // Random shapes tied to (i,j) not (x,y) coordinates.  When plot is zoomed/moved, do these go too?
     SVGPlot.Ledgend = {} // List of the names of the plots.  Auto or manual.
-    SVGPlot.Range = {} // becomes a list of ranges that can be linked to by everything else.
-    SVGPlot.LinePlot = {}   // plot  (xrange and yrange)
-    SVGPlot.ScatterPlot = {}   // plot  (xrange and yrange)
-    SVGPlot.Decoration = {}  // (xrange and yrange) like arrows pointing to specific places on the plot.  tied to (x,y) not (i,j).  When plot is zoomed/moved, these move around.
-    SVGPlot.Axis = {}   // xAxis, yAxis (xrange or yrange)
+    SVGPlot.Scale = {} // becomes a list of scales that can be linked to by everything else.
+    SVGPlot.LinePlot = {}   // plot  (xscale and yscale)
+    SVGPlot.ScatterPlot = {}   // plot  (xscale and yscale)
+    SVGPlot.Decoration = {}  // (xscale and yscale) like arrows pointing to specific places on the plot.  tied to (x,y) not (i,j).  When plot is zoomed/moved, these move around.
+    SVGPlot.Axis = {}   // xAxis, yAxis (xscale or yscale)
         SVGPlot.AxisTitle = {}  // xAxisTitle, yAxisTitle
         SVGPlot.Ticks = {}  // xTicks, yTicks
         SVGPlot.TickLabels = {}  // xTickLabels, yTickLabels
@@ -336,7 +336,7 @@ SVGPlot.Box = {}     // box
         SVGPlot.LinePlot = {}   // plot
         SVGPlot.ScatterPlot = {}   // plot
         SVGPlot.Decoration = {}  // like arrows pointing to specific places on the plot.  tied to (x,y) not (i,j).  When plot is zoomed/moved, these move around.
-        SVGPlot.Range = {}      // xRange, yRange
+        SVGPlot.Scale = {}      // xScale, yScale
             SVGPlot.Axis = {}   // xAxis, yAxis
                 SVGPlot.AxisTitle = {}  // xAxisTitle, yAxisTitle
                 SVGPlot.Ticks = {}  // xTicks, yTicks
@@ -351,7 +351,7 @@ SVGPlot.Box.prototype = {}
     SVGPlot.Ledgend.prototype = {}
     SVGPlot.View.prototype = {}
         SVGPlot.LinePlot.prototype = {}
-        SVGPlot.Range.prototype = {}
+        SVGPlot.Scale.prototype = {}
             SVGPlot.Axis.prototype = {}
                 SVGPlot.AxisTitle.prototype = {}
                 SVGPlot.Ticks.prototype = {}
@@ -373,95 +373,39 @@ Removers remove the object.
 //  Helper Objects
 ////////////////////////////
 
-SVGPlot.Scale = function(segmentsOrType /* = 'real' */, 
-                          minOrReversed /* = 'auto' */, 
-                          max /* = 'auto' */, 
-                          interpolation /* = 'linear' */, 
-                          reversed /* = false */) {
-    /***
-        Maps a value (real, discrete, catetory, datetime) to position between 0.0 and 1.0
-        This mapping can have gaps, so this object holds a list of ScaleSegments.
-        Since 99% of the time there is just a single ScaleSegment, the fact that there
-          can be multiple scale segments is kept from annoying the user
-        Call it two ways with logical defaults.
-            Scale(segments, reversed)
-            Scale(type, min, max, interpolation, reversed)
-            
-        Tests:
-          s = new Scale('real', -1, 1)
-          s.value(0) == 0.5
-          
-        TODO: When the range is 'auto', where and when do the actual _min and _max get set?
-    ***/
-    // Check to see if we're given a list of segments
-    if (typeof(segmentsOrType.length) == 'number') {
-        this.segments = segmentsOrType;
-        this.reversed = SVGKit.firstNonNull(minOrReversed, false);
-    }
-    else {
-        segment_types = {
-            real: ScaleSegmentReal,
-            discrete: ScaleSegmentDiscrete,
-            catetgory: ScaleSegmentCategory,
-            datetime: ScaleSegmentDateTime
-        }
-        var newSeg = new segment_types[segmentsOrType](minOrReversed, max, interpolation, reversed);
-        this.segments = [ newSeg ];
-        this.reversed = SVGKit.firstNonNull(reversed, false);
-    }
-}
-SVGPlot.Scale.prototype = {
-    segments : [],  // List of scale segments for a broken scale
-    reversed : false,
-    position: function(value) {
-        for (var i=0; i<segments.length; i++) {
-            var position = segments[i].position(value) ;
-            if (position != null) {
-                if (reversed == false)
-                    return position;
-                else
-                    return 1.0 - position;
-            }
-        }
-        return null;
-    }
-}
+// Scale -- Mapping from data to a position between 0.0 and 1.0 and back.
 
-SVGPlot.ScaleSegment = function (begin, end, required) {
-    /***
-        Abstract base class for all of the scale segment types.
-    ***/
-    this.begin = SVGKit.firstNonNull(begin, 0.0);
-    this.end = SVGKit.firstNonNull(end, 1.0);
-    this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
-}
-SVGPlot.ScaleSegment.ratioToPosition = function(ratio) {
-    return begin + ratio *(end-begin);
-}
-
-SVGPlot.ScaleSegmentReal = function(min, max, interpolation, begin, end, required) {
+SVGPlot.Scale = function(min /* ='auto' */, 
+                          max /* ='auto' */, 
+                          interpolation /* ='linear' */, 
+                          reversed /* ='false' */, 
+                          required /* =[] */) {
     /***
         Mapping real values to positions.
     ***/
-    SVGPlot.ScaleSegment(begin, end, required);
-    this.min = SVGKit.firstNonNull(min, 'auto');
-    this.max = SVGKit.firstNonNull(max, 'auto');
-    this.interpolation = SVGKit.firstNonNull(interpolation, 'linear');  // 'log', 'ln', 'lg', 'sqrt', 'atan'
+    this.set(min, max, interpolation, reversed, required);
 }
 
-SVGPlot.ScaleSegmentReal.prototype = {
+SVGPlot.Scale.prototype = {
     _min: null,  // Calculated _min if min is 'auto'
     _max: null,
+    set: function(min, max, interpolation, reversed, required) {
+        this.min = SVGKit.firstNonNull(min, 'auto');
+        this.max = SVGKit.firstNonNull(max, 'auto');
+        this.interpolation = SVGKit.firstNonNull(interpolation, 'linear');  // 'log', 'ln', 'lg', 'sqrt', 'atan'
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+    },
     position: function(value) {
-        if (_min==null || _max==null || value<_min || value>_max)
+        if (_min==null || _max==null)
             return null;
         var interpolation_function = this.interpolation_functions[this.interpolation]
         var ratio = interpolation_function(value);
-        return this.ratioToPosition(ratio);
+        return ratio;
     },
     interpolation_functions: {
         linear: function(value) {
-            return (value-_min)/(_max*_min)
+            return (value-_min)/(_max-_min)
         },
         log: function(value) {
             return (Math.log(value)-Math.log(_min))/(Math.log(_max)-Math.log(_min));
@@ -474,25 +418,78 @@ SVGPlot.ScaleSegmentReal.prototype = {
             return Math.atan(value-middle)/Math.PI+0.5
             // TODO -- max and min should provide some scaling for the width of the atan.
         }
+    },
+    setIfNotAuto: function() {
+        if (this.min != 'auto' && this.max != 'auto') {
+            this._min = this.min;
+            this._max = this.max;
+            return true
+        }
+        return false
+    },
+    setAuto: function(extents) {
+        /***
+            If there are no plots, or the plots are flat, or there
+            is something else wrong with the extents, fix them
+            Them set the internal _min and _max to the fixed extents
+        ***/
+        
+        if (extents.max<extents.min) {  // Shouldn't happen unless we didn't find any plots
+            extents = {'min':-10,
+                        'max':10 };
+        }
+        if (extents.max==extents.min) {
+            extents.min = extensts.min-1;
+            extents.max = extents.max+1;
+        }
+        
+        /*
+        var total = extents.max - extents.min;
+        */
+        
+        // If the max or min are close to zero, include zero.
+        /*
+        if (extents.min>0.0 && ( extents.min<total*SVGPlot.autoViewMarginFactor ||
+                          (typeof(include_zero) != 'undefined' && include_zero == true) ) )
+            extents.min = 0.0;
+        if (extents.max<0.0 && (-extents.max<total*SVGPlot.autoViewMarginFactor ||
+                          (typeof(include_zero) != 'undefined' && include_zero == true) ) )
+            extents.max = 0.0;
+        */
+        
+        // If neither one lies on the origin, give them a little extra room.  TODO Make this an option
+        /*
+        if (min!=0.0)
+            min = min - total * SVGPlot.autoViewMarginFactor;
+        if (max!=0.0)
+            max = max + total * SVGPlot.autoViewMarginFactor;
+        */
+        
+        this._min = (this.min!='auto') ? this.min : extents.min;
+        this._max = (this.max!='auto') ? this.max : extents.max;
     }
 }
-SVGPlot.inherit(SVGPlot.ScaleSegmentReal, SVGPlot.ScaleSegment);
 
-SVGPlot.ScaleSegmentDiscrete = function(min, max, interval, placement, begin, end, required) {
+
+SVGPlot.ScaleDiscrete = function(min, max, interval, placement, reversed, required) {
     /***
         Mapping discrete values to positions.
     ***/
-    SVGPlot.ScaleSegment(begin, end, required);
-    this.min = SVGKit.firstNonNull(min, 'auto');
-    this.max = SVGKit.firstNonNull(max, 'auto');
-    this.interval = SVGKit.firstNonNull(interval, 1);  // spacing between discrete values.  Can be any real number.
-    this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+    this.set(min, max, interval, placement, reversed, required)
 }
-SVGPlot.ScaleSegmentDiscrete.prototype = {
+SVGPlot.ScaleDiscrete.prototype = {
     _min: null,
     _max: null,
+    set: function(min, max, interval, placement, reversed, required) {
+        this.min = SVGKit.firstNonNull(min, 'auto');
+        this.max = SVGKit.firstNonNull(max, 'auto');
+        this.interval = SVGKit.firstNonNull(interval, 1);  // spacing between discrete values.  Can be any real number.
+        this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+    },
     position: function(value) {
-        if (_min==null || _max==null || value<_min || value>_max)
+        if (_min==null || _max==null)
             return null;
         var number = (this._max-this._min)/this.interval;
         return this.discreteToPosition(value, number);
@@ -503,23 +500,48 @@ SVGPlot.ScaleSegmentDiscrete.prototype = {
             ratio = i/(length-1);
         else
             ratio = (i+0.5)/length;
+        return ratio;
+    }
+}
+
+SVGPlot.ScaleDateTime = function(min, max, interval, reversed, required) {
+    /***
+        Mapping date/time values to positions.
+    ***/
+    this.set(min, max, interval, reversed, required)
+}
+SVGPlot.ScaleDateTime.prototype = {
+    _min: null,
+    _max: null,
+    set: function(min, max, interval, reversed, required) {
+        this.min = SVGKit.firstNonNull(min, 'auto');
+        this.max = SVGKit.firstNonNull(max, 'auto');
+        this.interval = SVGKit.firstNonNull(interval, 'auto');
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+    },
+    position: function(value) {
+        if (_min==null || _max==null)
+            return null;
+        var ratio = (value-_min)/(_max*_min)
         return this.ratioToPosition(ratio);
     }
 }
-SVGPlot.inherit(SVGPlot.ScaleSegmentDiscrete, SVGPlot.ScaleSegment);
 
-SVGPlot.ScaleSegmentCategory = function(categories, placement, begin, end, required) {
+SVGPlot.ScaleCategory = function(categories, placement, reversed, required) {
     /***
         Mapping category values to positions.
     ***/
-    SVGPlot.ScaleSegment(begin, end, required);
-    this.categories = SVGKit.firstNonNull(categories, 'auto');
-    this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+    this.set(categories, placement, reversed, required)
 }
-SVGPlot.ScaleSegmentCategory.prototype = {
-    position: 'on',  // 'betweeen' Plot on or between grid lines.
-    categories: 'auto',  // A mapping between categories and positions.  (Should thie be a list?)
+SVGPlot.ScaleCategory.prototype = {
     _categories: [],  // of the form ['bob', 'jim']
+    set: function(categories, placement, reversed, required) {
+        this.categories = SVGKit.firstNonNull(categories, 'auto');
+        this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+    },
     position: function(value) {
         var length = this._categories.length;
         for (var i=0; i<length; i++) {
@@ -528,30 +550,15 @@ SVGPlot.ScaleSegmentCategory.prototype = {
         }
         return null;
     },
-    discreteToPosition: SVGPlot.ScaleSegmentDiscrete.prototype.discreteToPosition
+    discreteToPosition: SVGPlot.ScaleDiscrete.prototype.discreteToPosition
 }
-SVGPlot.inherit(SVGPlot.ScaleSegmentCategory, SVGPlot.ScaleSegment);
 
-SVGPlot.ScaleSegmentDateTime = function(min, max, interval, begin, end, required) {
-    /***
-        Mapping date/time values to positions.
-    ***/
-    SVGPlot.ScaleSegment(begin, end, required);
-    this.min = SVGKit.firstNonNull(min, 'auto');
-    this.max = SVGKit.firstNonNull(max, 'auto');
-    this.interval = SVGKit.firstNonNull(interval, 'minute');
+
+SVGPlot.ScaleSegments = function(segments) {
+    // Check for non-overlap
+    // Find overall min and max (only one of each can be 'auto')
+    // Check for all same value of 'reversed'
 }
-SVGPlot.ScaleSegmentDateTime.prototype = {
-    _min: null,
-    _max: null,
-    position: function(value) {
-        if (_min==null || _max==null || value<_min || value>_max)
-            return null;
-        var ratio = (value-_min)/(_max*_min)
-        return this.ratioToPosition(ratio);
-    }
-}
-SVGPlot.inherit(SVGPlot.ScaleSegmentDateTime, SVGPlot.ScaleSegment);
 
 ////////////////////////////
 //  Graphical Plot Objects
@@ -570,12 +577,13 @@ SVGPlot.genericConstructor = function(self, svgPlot, parent) {
 SVGPlot.Box = function(svgPlot, parent,
                         layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
+    parent.boxes.push(this)
+    svgPlot.box = this
     this.boxBackgroundStroke = null;
     this.boxBackgroundFill = null;
     this.plotAreaBackgroundStroke = null;
     this.plotAreaBackgroundFill = null;
     this.set(layout, x, y, width, height);
-    parent.boxes.push(this)
     this.views = [];
 }
 
@@ -590,11 +598,12 @@ SVGPlot.Box.prototype.set = function(layout /* ='float' */, x /* =0 */, y /* =0 
 
 SVGPlot.Box.prototype.addDefaults = function() {
     // TODO: Don't rely on svgPlot to add view.
-    this.svgPlot.save();
-    this.svgPlot.setStyle(SVGPlot.defaultStyle);
-    var view = this.svgPlot.addView();
+    var p = this.svgPlot;
+    p.save();
+    p.setStyle(SVGPlot.defaultStyle);
+    var view = new SVGPlot.View(p, this)
     view.addDefaults();
-    this.svgPlot.restore();
+    p.restore();
 }
 
 SVGPlot.prototype.setBox = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
@@ -612,24 +621,17 @@ SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 
 SVGPlot.View = function(svgPlot, parent) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
     parent.views.push(this);
-    this.xRange = new SVGPlot.Range();
-    this.yRange = new SVGPlot.Range();
+    svgPlot.view = this
+    this.xScale = new SVGPlot.Scale();
+    this.yScale = new SVGPlot.Scale();
     this.plots = [];  // Plots to be drawn with this coordinate system
     this.xAxes = [];  // X-Axes to be drawn with this coordinate system
     this.yAxes = [];  // Y-Axes to be drawn with this coordinate system
 }
 
-SVGPlot.View.prototype.setXRange = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/ ) {
-    this.xRange.set(xmin, xmax, xreverse, xlog);
-}
-
-SVGPlot.View.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/ ) {
-    this.yRange.set(ymin, ymax, yreverse, ylog);
-}
-
 SVGPlot.View.prototype.addDefaults = function() {
     /***
-        Adds axes and axes defaults to current Range.
+        Adds axes and axes defaults to current Scale.
     ***/
     // TODO don't rely on svgPlot for this.
     this.svgPlot.save();
@@ -643,65 +645,40 @@ SVGPlot.View.prototype.addDefaults = function() {
     
     this.svgPlot.restore();
 }
-SVGPlot.prototype.setXRange = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/ ) {
+SVGPlot.prototype.setXScale = function(
+                          min /* ='auto' */, 
+                          max /* ='auto' */, 
+                          interpolation /* ='linear' */, 
+                          reversed /* ='false' */, 
+                          required /* =[] */) {
     if (this.view == null)
         this.view = new SVGPlot.View(this, this.box);
-    this.view.setXRange(xmin, xmax, xreverse, xlog);
-    return this.view;
+    this.view.xScale.set(min, max, interpolation, reversed, required);
+    return this.view.xScale;
 }
 
-SVGPlot.prototype.setYRange = function(ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/ ) {
+SVGPlot.prototype.setYScale = function(
+                          min /* ='auto' */, 
+                          max /* ='auto' */, 
+                          interpolation /* ='linear' */, 
+                          reversed /* ='false' */, 
+                          required /* =[] */) {
     if (this.view == null)
         this.view = new SVGPlot.View(this, this.box);
-    this.view.setYRange(ymin, ymax, yreverse, ylog);
-    return this.view;
+    this.view.yScale.set(min, max, interpolation, reversed, required);
+    return this.view.yScale;
 }
 
-SVGPlot.prototype.setRange = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/,
-                                       ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/) {
-    if (this.view == null)
-        this.view = new SVGPlot.View(this, this.box);
-    this.view.setXRange(xmin, xmax, xreverse, xlog);
-    this.view.setYRange(ymin, ymax, yreverse, ylog);
-    return this.view;
-}
-
-SVGPlot.prototype.addView = function(xmin /* ='auto' */, xmax /* ='auto' */, xreverse /*=false*/, xlog /*=false*/,
-                                       ymin /* ='auto' */, ymax /* ='auto' */, yreverse /*=false*/, ylog /*=false*/) { 
-    this.view = new SVGPlot.View(this, this.box);
-    this.view.setXRange(xmin, xmax, xreverse, xlog);
-    this.view.setYRange(ymin, ymax, yreverse, ylog);
-    return this.view;
-}
-
-// Range -- for one coordinate (either x or y)
-
-SVGPlot.LinearRange = null
-SVGPlot.LogRange = null
-SVGPlot.SqrtRange = null // See difference between theory and error
-SVGPlot.CagetoryRange = null
-SVGPlot.DateTimeRange = null  // Is this just an integer range and only labels and where auto-ticks go matter?
-
-SVGPlot.Range = function(min /* ='auto' */, max /* ='auto' */, reverse /*=false*/, log /*=false*/ ) {
-    this.set(min, max, reverse, log)
-}
-
-SVGPlot.Range.prototype.set = function(min /* ='auto' */, max /* ='auto' */, reverse /*=false*/, log /*=false*/ ) {
-    /***
-        Defaults are first the current ragne, 
-        then auto if that doesn't exist.
-    ***/
-    this.min = SVGPlot.firstNonNull(min, this.min, 'auto');
-    this.max = SVGPlot.firstNonNull(max, this.max, 'auto');
-    this.reverse = SVGPlot.firstNonNull(reverse, this.reverse, false);
-    this.log = SVGPlot.firstNonNull(log, this.log, false);
+SVGPlot.prototype.addView = function() { 
+    view = new SVGPlot.View(this, this.box);
+    return view;
 }
 
 // Axis
 
-SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' or 'left' */, range_type /* ='lnear' */) {
+SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' or 'left' */, scale_type /* ='lnear' */) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
-    this.set(type, position, range_type);
+    this.set(type, position, scale_type);
     if (type == 'x') {
         parent.xAxes.push(this);
         svgPlot.xAxis = this;
@@ -715,13 +692,13 @@ SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' or 'left' 
     this.axisTitles = [];
 }
 
-SVGPlot.Axis.prototype.set = function(type, position /* 'bottom' or 'left' */, range_type /* ='lnear' */) {
+SVGPlot.Axis.prototype.set = function(type, position /* 'bottom' or 'left' */, scale_type /* ='lnear' */) {
     this.type = type
     if (type == 'x')
         this.position = SVGPlot.firstNonNull(position, this.position, 'bottom');
     else if (type == 'y')
         this.position = SVGPlot.firstNonNull(position, this.position, 'left');
-    this.range_type = SVGPlot.firstNonNull(range_type, this.range_type, 'linear');
+    this.scale_type = SVGPlot.firstNonNull(scale_type, this.scale_type, 'linear');
 }
 
 SVGPlot.Axis.prototype.addDefaults = function() {
@@ -733,28 +710,28 @@ SVGPlot.Axis.prototype.addDefaults = function() {
     this.svgPlot.restore();
 }
 
-SVGPlot.prototype.addXAxis = function(position /* 'bottom' */, range_type /* ='lnear' */) {
-    this.xAxis = new SVGPlot.Axis(this, this.view, 'x', position, range_type);
+SVGPlot.prototype.addXAxis = function(position /* 'bottom' */, scale_type /* ='lnear' */) {
+    this.xAxis = new SVGPlot.Axis(this, this.view, 'x', position, scale_type);
     return this.xAxis;
 }
 
-SVGPlot.prototype.addYAxis = function(position /* 'left' */, range_type /* ='lnear' */) {
-    this.yAxis = new SVGPlot.Axis(this, this.view, 'y', position, range_type);
+SVGPlot.prototype.addYAxis = function(position /* 'left' */, scale_type /* ='lnear' */) {
+    this.yAxis = new SVGPlot.Axis(this, this.view, 'y', position, scale_type);
     return this.yAxis;
 }
 
-SVGPlot.prototype.setXAxis = function(position /* 'bottom' */, range_type /* ='lnear' */) {
+SVGPlot.prototype.setXAxis = function(position /* 'bottom' */, scale_type /* ='lnear' */) {
     if (this.xAxis == null)
-        this.xAxis = new SVGPlot.Axis(this, this.view, 'x', position, range_type);
+        this.xAxis = new SVGPlot.Axis(this, this.view, 'x', position, scale_type);
     else
-        this.xAxis.set('x', position, range_type);
+        this.xAxis.set('x', position, scale_type);
 }
 
-SVGPlot.prototype.setYAxis = function(position /* 'left' */, range_type /* ='lnear' */) {
+SVGPlot.prototype.setYAxis = function(position /* 'left' */, scale_type /* ='lnear' */) {
     if (this.yAxis == null)
-        this.yAxis = new SVGPlot.Axis(this, this.view, 'y', position, range_type);
+        this.yAxis = new SVGPlot.Axis(this, this.view, 'y', position, scale_type);
     else
-        this.yAxis.set('y', position, range_type);
+        this.yAxis.set('y', position, scale_type);
 }
 
 
@@ -1000,7 +977,7 @@ SVGPlot.Box.prototype.render = function () {
     // Add a clipping box (optional and not yet implimented) data shouldn't leak out (or should it?)
     
     
-    // Set any auto-ranges before we create any tickLabels. If the tickLabels are 'auto', they need to know the range.
+    // Set any auto-scales before we create any tickLabels. If the tickLabels are 'auto', they need to know the scale.
     for (var i=0; i<this.views.length; i++) {
         this.views[i].setAutoView();
         this.views[i].createElement();
@@ -1064,9 +1041,9 @@ SVGPlot.TickLabels.prototype.createElement = function() {
     this._locations = this.locations;
     if (this.locations=='auto') {
         if (this.parent.type=='x')
-            this._locations = SVGPlot.defaultlocations(this.parent.parent.xRange._min, this.parent.parent.xRange._max);
+            this._locations = SVGPlot.defaultlocations(this.parent.parent.xScale._min, this.parent.parent.xScale._max);
         else if (this.parent.type=='y')
-            this._locations = SVGPlot.defaultlocations(this.parent.parent.yRange._min, this.parent.parent.yRange._max);
+            this._locations = SVGPlot.defaultlocations(this.parent.parent.yScale._min, this.parent.parent.yScale._max);
     }
     
     var label_strs = this.labels
@@ -1114,11 +1091,11 @@ SVGPlot.AxisTitle.prototype.createElement = function() {
 
 SVGPlot.autoViewMarginFactor = 0.05;
 
-SVGPlot.View.prototype.setAutoView = function(include_zero /* =false */) {
+SVGPlot.View.prototype.setAutoView = function() {
     
-    // If the range is specified, don't waste time asking the functions
+    // If the scale is specified, don't waste time asking the functions
     // for their extents.
-    if (this.xRange.setIfNotAuto() && this.yRange.setIfNotAuto())
+    if (this.xScale.setIfNotAuto() && this.yScale.setIfNotAuto())
         return;
 
     var xExtents = {'min':Number.MAX_VALUE,
@@ -1129,54 +1106,8 @@ SVGPlot.View.prototype.setAutoView = function(include_zero /* =false */) {
         this.plots[i].updateExtents(xExtents, yExtents);
     }
     
-    this.xRange.setAuto(xExtents, include_zero)
-    this.yRange.setAuto(yExtents, include_zero)
-}
-
-SVGPlot.Range.prototype.setIfNotAuto = function() {
-    if (this.min != 'auto' && this.max != 'auto') {
-        this._min = this.min;
-        this._max = this.max;
-        return true
-    }
-    return false
-}
-
-SVGPlot.Range.prototype.setAuto = function(extents, include_zero) {
-    /***
-        If there are no plots, or the plots are flat, or there
-        is something else wrong with the extents, fix them
-        Them set the internal _min and _max to the fixed extents
-    ***/
-    
-    if (extents.max<extents.min) {  // Shouldn't happen unless we didn't find any plots
-        extents = {'min':-10,
-                    'max':10 };
-    }
-    if (extents.max==extents.min) {
-        extents.min = extensts.min-1;
-        extents.max = extents.max+1;
-    }
-    var total = extents.max - extents.min;
-    
-    // If the max or min are close to zero, include zero.
-    if (extents.min>0.0 && ( extents.min<total*SVGPlot.autoViewMarginFactor ||
-                      (typeof(include_zero) != 'undefined' && include_zero == true) ) )
-        extents.min = 0.0;
-    if (extents.max<0.0 && (-extents.max<total*SVGPlot.autoViewMarginFactor ||
-                      (typeof(include_zero) != 'undefined' && include_zero == true) ) )
-        extents.max = 0.0;
-    
-    // If neither one lies on the origin, give them a little extra room.  TODO Make this an option
-    /*
-    if (min!=0.0)
-        min = min - total * SVGPlot.autoViewMarginFactor;
-    if (max!=0.0)
-        max = max + total * SVGPlot.autoViewMarginFactor;
-    */
-    
-    this._min = (this.min!='auto') ? this.min : extents.min;
-    this._max = (this.max!='auto') ? this.max : extents.max;
+    this.xScale.setAuto(xExtents)
+    this.yScale.setAuto(yExtents)
 }
 
 SVGPlot.View.prototype.bankTo45deg = function(/*[ { xextents:[xmin, xmax], 
@@ -1302,13 +1233,13 @@ SVGPlot.View.prototype.render = function(left, right, top, bottom) {
     
     this._width = right-left;
     this._height = bottom-top;
-    this._xrange = this._width/(this.xRange._max-this.xRange._min);
-    this._yrange = this._height/(this.yRange._max-this.yRange._min);
+    this._xscale = this._width/(this.xScale._max-this.xScale._min);
+    this._yscale = this._height/(this.yScale._max-this.yScale._min);
     
-    function xtoi(xmin, xrange, x) { return (x-xmin)*xrange }
-    this.xtoi = partial(xtoi, this.xRange._min, this._xrange);
-    function ytoj(ymin, yrange, height, y) { return height - (y-ymin)*yrange }
-    this.ytoj = partial(ytoj, this.yRange._min, this._yrange, this._height);
+    function xtoi(xmin, xscale, x) { return (x-xmin)*xscale }
+    this.xtoi = partial(xtoi, this.xScale._min, this._xscale);
+    function ytoj(ymin, yscale, height, y) { return height - (y-ymin)*yscale }
+    this.ytoj = partial(ytoj, this.yScale._min, this._yscale, this._height);
     
     for (var i=0; i<this.xAxes.length; i++)
         this.xAxes[i].render(left, right, top, bottom, this.xtoi, this.ytoj);
@@ -1321,13 +1252,13 @@ SVGPlot.View.prototype.render = function(left, right, top, bottom) {
 SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     var min, max, map;
     if (this.type=='x') {
-        min = this.parent.xRange._min;
-        max = this.parent.xRange._max;
+        min = this.parent.xScale._min;
+        max = this.parent.xScale._max;
         map = xtoi;
     }
     else if (this.type=='y') {
-        min = this.parent.yRange._min;
-        max = this.parent.yRange._max;
+        min = this.parent.yScale._min;
+        max = this.parent.yScale._max;
         map = ytoj;
     }
     
@@ -1530,7 +1461,7 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom, xtoi, yto
     p.beginPath();
     // Handle infinite and NaN properly.
     var drawingFunction = p.moveTo;
-    // TODO Handle cases where the plot goes WAY off the  ranges.
+    // TODO Handle cases where the plot goes WAY off the  scales.
     for (i=0; i<this.ydata.length; i++) {
         var sx = xtoi(this.xdata[i]);
         var sy = ytoj(this.ydata[i]);
@@ -1556,14 +1487,14 @@ SVGPlot.prototype.setPlotStyle = function() {
 
 SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
     /***
-        used for auto-range
+        used for auto-scale
     ***/
-    var xrange = SVGPlot.minmax(this.xdata)
-    xExtents.min = Math.min(xExtents.min, xrange.min)
-    xExtents.max = Math.max(xExtents.max, xrange.max)
-    var yrange = SVGPlot.minmax(this.ydata)
-    yExtents.min = Math.min(yExtents.min, yrange.min)
-    yExtents.max = Math.max(yExtents.max, yrange.max)
+    var xscale = SVGPlot.minmax(this.xdata)
+    xExtents.min = Math.min(xExtents.min, xscale.min)
+    xExtents.max = Math.max(xExtents.max, xscale.max)
+    var yscale = SVGPlot.minmax(this.ydata)
+    yExtents.min = Math.min(yExtents.min, yscale.min)
+    yExtents.max = Math.max(yExtents.max, yscale.max)
 }
 
 SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
@@ -1763,8 +1694,8 @@ SVGPlot.defaultInterval = function(min, max, number /* =7 */) {
 SVGPlot.defaultlocations = function(min, max, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
     /***
         Come up with locations for the ticks/grids/tickLabels, etc.
-        @param min -- the actual start of the range (can be some non-round number)
-        @param max -- the actual end of the range (can be some non-round number)
+        @param min -- the actual start of the scale (can be some non-round number)
+        @param max -- the actual end of the scale (can be some non-round number)
         @param interval -- the interval at which you want the ticks, usually 1, 2, 3, 5, 10, 20, etc.
         @param avoid -- an array of locations to avoid putting a mark (usually the axes and endpoints.)
         @param offset -- the ticks start counting around here (defaults to zero)
@@ -1998,8 +1929,8 @@ SVGPlot.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
 // plotPolar()  // similar implimentation to plotPie
 // plotParametric()
 
-// independent vertical ranges on same plot for different types of data overlayed
-// that have the same x-axis.  Dependent ranges like foot and meter.
+// independent vertical scales on same plot for different types of data overlayed
+// that have the same x-axis.  Dependent scales like foot and meter.
 
 // Be able to set defaults for all plots.
 // defaultColor = 'auto-increment'
