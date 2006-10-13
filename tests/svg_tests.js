@@ -30,4 +30,4 @@ var testFunctions = {
     }
 };
 
-addLoadEvent(partial(addTests, 0, 50, 'svg'));
+addLoadEvent(partial(addTests, 1, 50, 'svg'));

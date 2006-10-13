@@ -79,14 +79,14 @@ var testFunctions = {
         p.setXRange(-7,7)
         var locations = [-2*Math.PI, -Math.PI, 0, Math.PI, 2*Math.PI]
         p.setXTicks(locations)
-        p.setXStubs(locations, ['-2pi', '-pi', '0', 'pi', '2pi'])
+        p.setXTickLabels(locations, ['-2pi', '-pi', '0', 'pi', '2pi'])
         locations = [-1, -0.5, 0, 0.5, 1]
         p.setYTicks(locations)
-        p.setYStubs(locations)
+        p.setYTickLabels(locations)
         p.fontSize = '10';
         p.fontFamily="Verdana, Arial, Helvetica, Sans"
-        p.setXLabel("Time (ns)");
-        p.setYLabel("Voltage (V)");
+        p.setXAxisTitle("Time (ns)");
+        p.setYAxisTitle("Voltage (V)");
         p.render();
     },
     
@@ -94,8 +94,8 @@ var testFunctions = {
         p.plotLine(trigx, sin)
         p.setXTicks(trigx)
         p.setYTicks(sin)
-        p.removeXStubs()
-        p.removeYStubs()
+        p.removeXTickLabels()
+        p.removeYTickLabels()
         p.render()
     },
     
@@ -214,4 +214,4 @@ var testFunctions = {
     
 };
 
-addLoadEvent(partial(addTests, 0, 50, 'plot'));
+addLoadEvent(partial(addTests, 6, 1, 'plot'));
