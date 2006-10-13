@@ -200,7 +200,7 @@ SVGCanvas.startingState =
       'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
       'transformations' : "",  // Applys to all subpaths.
       'currentGroup' : null // When you start, there is no clipping and you're not in a marker.
-    };  // if this is changed, you also have to change the currentGroup
+    };
 
 
 ////////////////////////////
