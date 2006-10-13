@@ -752,7 +752,7 @@ SVGPlot.prototype.setYAxis = function(position /* 'left' */, range_type /* ='lne
     if (this.yAxis == null)
         this.yAxis = new SVGPlot.Axis(this, this.view, 'y', position, range_type);
     else
-        this.xAxis.set('y', position, range_type);
+        this.yAxis.set('y', position, range_type);
 }
 
 
@@ -797,7 +797,7 @@ SVGPlot.prototype.setXAxisTitle = function(text, location /* ='50%' */, position
         this.xAxisTitle.set(text, location, position);
 }
 
-SVGPlot.prototype.setYAxisTitle = function(text, loc /* ='50%' */, position /* 'left' */) {
+SVGPlot.prototype.setYAxisTitle = function(text, location /* ='50%' */, position /* 'left' */) {
     if (this.yAxisTitle == null)
         this.yAxisTitle = new SVGPlot.AxisTitle(this, this.yAxis, text, location, position);
     else
@@ -892,7 +892,7 @@ SVGPlot.TickLabels = function(svgPlot, parent,
     else if (parent.type == 'y') {
         svgPlot.yTickLabels = this;
     }
-    this.set(locations, position, labels);
+    this.set(locations, labels, position);
 }
 SVGPlot.inherit(SVGPlot.TickLabels, SVGPlot.AxisItem)
 
@@ -1094,7 +1094,7 @@ SVGPlot.TickLabels.prototype.createElement = function() {
 }
 
 SVGPlot.AxisTitle.prototype.createElement = function() {
-    SVGPlot.createGroupIfNeeded(this, 'label', 'text');
+    SVGPlot.createGroupIfNeeded(this, 'axisTitle', 'text');
 
     MochiKit.DOM.replaceChildNodes(this.element);
 
@@ -1106,7 +1106,7 @@ SVGPlot.AxisTitle.prototype.createElement = function() {
     else if (this.position=='right')
         p.rotate(Math.PI/2)
     p.applyStyles = false;
-    this._text = p.text(this.label);
+    this._text = p.text(this.text);
     p.restore();
 }
 
@@ -1217,7 +1217,7 @@ SVGPlot.Axis.prototype.layout = function(totalXSize, totalYSize) {
             var component = components[i][j];
             var size = component.getSize(this.type);
             var position = component.position;
-            var direction =  (position=='top' || position=='left') ? -1 : 1
+            var direction = (position=='top' || position=='left') ? -1 : 1
             if (position=='top' || position=='right') {
                 component._offset = direction*offsets.above;
                 extents.above = Math.max(extents.above, size+SVGPlot.componentMargin);
@@ -1292,8 +1292,6 @@ SVGPlot.getTextSize = function(element, type) {
         return bbox.width;
 }
 
-SVGPlot.AxisTitle.prototype.layoutText = SVGPlot.TickLabels.prototype.layoutText;
-
 SVGPlot.View.prototype.render = function(left, right, top, bottom) {
     this._left = left;
     this._right = right;
@@ -1321,13 +1319,13 @@ SVGPlot.View.prototype.render = function(left, right, top, bottom) {
 SVGPlot.Axis.prototype.render = function(left, right, top, bottom, xtoi, ytoj) {
     var min, max, map;
     if (this.type=='x') {
-        min = this.parent._xmin;
-        max = this.parent._xmax;
+        min = this.parent.xRange._min;
+        max = this.parent.xRange._max;
         map = xtoi;
     }
     else if (this.type=='y') {
-        min = this.parent._ymin;
-        max = this.parent._ymax;
+        min = this.parent.yRange._min;
+        max = this.parent.yRange._max;
         map = ytoj;
     }
     
@@ -1433,7 +1431,7 @@ SVGPlot.AxisTitle.prototype.render = function(min, max, map) {
     SVGPlot.translateBottomText(this)
     // When rotation is applied to a <text>, the bounding box doens't change.
     // It does, however, change for any group that contains it.
-    SVGPlot.renderText(this._text, this.loc, 
+    SVGPlot.renderText(this._text, this.location, 
                              this._text.parentNode.getBBox(), 
                              this.position, min, max, map)
 }
@@ -1446,25 +1444,25 @@ SVGPlot.translateBottomText = function(component) {
     }
 }
 
-SVGPlot.renderText = function (text, loc, bbox, position, min, max, map) {
-    if (loc<min || loc>max)
+SVGPlot.renderText = function (text, location, bbox, position, min, max, map) {
+    if (typeof(location)=='string' && location[location.length-1] == '%')
+        location = min + parseFloat(location.substring(0, location.length-1)) / 100 * (max-min)
+    if (location<min || location>max)
         text.setAttribute('display', 'none');
     else
         text.removeAttribute('display');
-    if (typeof(loc)=='string' && loc[loc.length-1] == '%')
-        loc = min + parseFloat(loc.substring(0, loc.length-1)) / 100 * (max-min)
     var transform = text.getAttribute('transform');
     if (typeof(transform)=='undefined' || transform == null)
         transform = '';
     //var bbox = text.getBBox(); //{'x':0, 'y':0, 'width':10, 'height':10};
     if (position=='top')
-        transform = 'translate('+(map(loc)-bbox.width/2)+', 0)' + transform;
+        transform = 'translate('+(map(location)-bbox.width/2)+', 0)' + transform;
     else if (position=='bottom')
-        transform = 'translate('+(map(loc)-bbox.width/2)+', 0)' + transform;
+        transform = 'translate('+(map(location)-bbox.width/2)+', 0)' + transform;
     else if (position=='right')
-        transform = 'translate(0, '+(map(loc)+bbox.height/2)+')' + transform;
+        transform = 'translate(0, '+(map(location)+bbox.height/2)+')' + transform;
     else if (position=='left')
-        transform = 'translate('+(-bbox.width-bbox.x)+', '+(map(loc)+bbox.height/2)+')' + transform;
+        transform = 'translate('+(-bbox.width-bbox.x)+', '+(map(location)+bbox.height/2)+')' + transform;
     text.setAttribute('transform', transform);
 }
 

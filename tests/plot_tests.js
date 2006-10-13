@@ -101,8 +101,8 @@ var testFunctions = {
     
     'axisstyles' : function(p) {
         p.fillStyle = "#950";
-        p.addBox();
-        p.addBoxDefaults();
+        var box = p.addBox();
+        box.addDefaults();
         p.strokeStyle = "rgba(255,0,0,.5)";
         p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
         p.strokeStyle = "rgba(0,0,255,.5)";
@@ -123,31 +123,33 @@ var testFunctions = {
     
     'dependentaxes' : function(p) {
         p.addBox()
-        p.addRange(-10, 10, -7, 7)
+        p.addView()
+        p.setXRange(-10, 10)
+        p.setYRange(-7, 7)
         var colors = ['#990000', '#009900', '#000099'];
         for (var i=0; i<3; i++) {
             p.strokeStyle = colors[i];
             p.fillStyle = colors[i];
             p.addXAxis('top')
             p.addXTicks('auto', 'top')
-            p.addXStubs('auto', 'auto', 'top')
+            p.addXTickLabels('auto', 'auto', 'top')
             p.addXTicks([-5, 0, 5], 'bottom')
-            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addXTickLabels([-5, 0, 5], 'auto', 'bottom')
             p.addXAxis('bottom')
             p.addXTicks('auto', 'top')
-            p.addXStubs('auto', 'auto', 'top')
+            p.addXTickLabels('auto', 'auto', 'top')
             p.addXTicks([-5, 0, 5], 'bottom')
-            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addXTickLabels([-5, 0, 5], 'auto', 'bottom')
             p.addYAxis('right')
             p.addYTicks('auto', 'left')
-            p.addYStubs('auto', 'auto', 'left')
+            p.addYTickLabels('auto', 'auto', 'left')
             p.addYTicks([-5, 0, 5], 'right')
-            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.addYTickLabels([-5, 0, 5], 'auto', 'right')
             p.addYAxis('left')
             p.addYTicks('auto', 'left')
-            p.addYStubs('auto', 'auto', 'left')
+            p.addYTickLabels('auto', 'auto', 'left')
             p.addYTicks([-5, 0, 5], 'right')
-            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.addYTickLabels([-5, 0, 5], 'auto', 'right')
         }
         p.strokeStyle = "rgba(255,0,0,.5)";
         p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
@@ -162,27 +164,29 @@ var testFunctions = {
         for (var i=0; i<3; i++) {
             p.strokeStyle = colors[i];
             p.fillStyle = colors[i];
-            p.addRange(-i*3-1, i*3+1, -i*3-1, i*3+1)
+            p.addView()
+            p.setXRange(-i*3-1, i*3+1)
+            p.setYRange(-i*3-1, i*3+1)
             p.addXAxis('top')
             p.addXTicks('auto', 'top')
-            p.addXStubs('auto', 'auto', 'top')
+            p.addXTickLabels('auto', 'auto', 'top')
             p.addXTicks([-5, 0, 5], 'bottom')
-            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addXTickLabels([-5, 0, 5], 'auto', 'bottom')
             p.addXAxis('bottom')
             p.addXTicks('auto', 'top')
-            p.addXStubs('auto', 'auto', 'top')
+            p.addXTickLabels('auto', 'auto', 'top')
             p.addXTicks([-5, 0, 5], 'bottom')
-            p.addXStubs([-5, 0, 5], 'auto', 'bottom')
+            p.addXTickLabels([-5, 0, 5], 'auto', 'bottom')
             p.addYAxis('right')
             p.addYTicks('auto', 'left')
-            p.addYStubs('auto', 'auto', 'left')
+            p.addYTickLabels('auto', 'auto', 'left')
             p.addYTicks([-5, 0, 5], 'right')
-            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.addYTickLabels([-5, 0, 5], 'auto', 'right')
             p.addYAxis('left')
             p.addYTicks('auto', 'left')
-            p.addYStubs('auto', 'auto', 'left')
+            p.addYTickLabels('auto', 'auto', 'left')
             p.addYTicks([-5, 0, 5], 'right')
-            p.addYStubs([-5, 0, 5], 'auto', 'right')
+            p.addYTickLabels([-5, 0, 5], 'auto', 'right')
             p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
         }
         p.render();
@@ -190,28 +194,28 @@ var testFunctions = {
     
     'draw_on_plot' : function(p) {
         p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
-        p.circle(Math.PI/2, Math.sin(Math.PI/2), 10);
         p.render();
+        p.circle(Math.PI/2, Math.sin(Math.PI/2), 10);
     },
     
     'label' : function(p) {
         p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
-        p.label(Math.PI/2, Math.sin(Math.PI/2), "sin(pi/2)");
-        p.label(Math.PI/2, Math.sin(-Math.PI/2), "sin(-pi/2)", 'arrow');
-        p.label(Math.PI/2, Math.sin(3*Math.PI/2), "sin(3pi/2)", 'dot');
-        p.label(Math.PI/2, Math.sin(-3*Math.PI/2), "sin(-3pi/2)", 'line');
+        //p.label(Math.PI/2, Math.sin(Math.PI/2), "sin(pi/2)");
+        //p.label(Math.PI/2, Math.sin(-Math.PI/2), "sin(-pi/2)", 'arrow');
+        //p.label(Math.PI/2, Math.sin(3*Math.PI/2), "sin(3pi/2)", 'dot');
+        //p.label(Math.PI/2, Math.sin(-3*Math.PI/2), "sin(-3pi/2)", 'line');
         p.render();
     },
     
     'post_style' : function(p) {
         p.plotFunction("Math.sin(x)", "x", -2 * Math.PI, 2 * Math.PI);
         p.box.background = 'red'
-        p.xaxis.strokeStyle = 'blue'
-        p.xgrid.spacing = .3
-        p.ygrid.fillStyle = "rgba(100, 0, 100, .5)";
+        //p.xAxis.strokeStyle = 'blue'
+        //p.xGrid.spacing = .3
+        //p.yGrid.fillStyle = "rgba(100, 0, 100, .5)";
         p.render();
     }
     
 };
 
-addLoadEvent(partial(addTests, 6, 1, 'plot'));
+addLoadEvent(partial(addTests, 0, 50, 'plot'));

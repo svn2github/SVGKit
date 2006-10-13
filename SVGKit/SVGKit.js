@@ -139,8 +139,8 @@ SVGKit.EXPORT_OK = [
 ////////////////////////////
 
 //SVGKit._defaultType = 'embed';
-//SVGKit._defaultType = 'object';
-SVGKit._defaultType = 'inline';
+SVGKit._defaultType = 'object';
+//SVGKit._defaultType = 'inline';
 SVGKit._svgNS = 'http://www.w3.org/2000/svg';
 SVGKit._svgMIME = 'image/svg+xml';
 SVGKit._svgEmptyName = 'empty.svg';
