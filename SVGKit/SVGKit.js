@@ -139,8 +139,8 @@ SVGKit.EXPORT_OK = [
 ////////////////////////////
 
 //SVGKit._defaultType = 'embed';
-SVGKit._defaultType = 'object';
-//SVGKit._defaultType = 'inline';
+//SVGKit._defaultType = 'object';
+SVGKit._defaultType = 'inline';
 SVGKit._svgNS = 'http://www.w3.org/2000/svg';
 SVGKit._svgMIME = 'image/svg+xml';
 SVGKit._svgEmptyName = 'empty.svg';
@@ -167,7 +167,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     this._redrawId = null;   // The reference that SVG's suspendRedraw returns.  Needed to cancel suspension.
     //SVGKit._defaultType = // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
-    log("SVGKit.__init__(", p1, p2, p3, p4, p5, ")");
+    //log("SVGKit.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
     if (MochiKit.Base.isUndefinedOrNull(p1)) {
         // This JS was included inside of an SVG file, and this was included in the
@@ -192,9 +192,9 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     }
     // Note that this.svgDocument and this.svgElement may not be set at this point.  Must wait for onload callback.
 
-    log("Done creating/grabing svg.");
+    //log("Done creating/grabing svg.");
     this._addDOMFunctions();
-    log("Done with _addDOMFunctions");
+    //log("Done with _addDOMFunctions");
     document.svg = this;  // For debugging, especially in IE
 }
 
@@ -332,10 +332,10 @@ SVGKit.prototype.createSVG = function (width, height, id /* optional */, type /*
         Loads a blank SVG and sets its size and the size of any HTML
         element it lives in to the given width and height.
     ***/
-    log("createSVG(", width, height, id , type,")");
+    //log("createSVG(", width, height, id , type,")");
     
     type = SVGKit.firstNonNull(type, SVGKit._defaultType);
-    log("type=", type);
+    //log("type=", type);
     
     if (type=='inline') {
         this.createInlineSVG(width, height, id);
@@ -370,7 +370,7 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         this.htmlElement = this.svgElement;   // html can work with the <svg> tag directly
         //this.svgDocument = this.svgElement.getSVGDocument()
         this.svgDocument = this.svgElement.ownerDocument;
-        log("in create: this.svgDocument=",this.svgDocument);
+        //log("in create: this.svgDocument=",this.svgDocument);
     }
     else
     {
@@ -439,12 +439,12 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
     }
     type = SVGKit.firstNonNull(type, SVGKit._defaultType);
     
-    log("loadSVG(", filename, id, type, width, height,")");
+    //log("loadSVG(", filename, id, type, width, height,")");
     
     if (type=='inline') {
         if (this.isIE()) {
             this.createSVG(width, height, id, type);
-            log("after create: this.svgElement=",this.svgElement);
+            //log("after create: this.svgElement=",this.svgElement);
         }
         //this.htmlElement = null;  // This is required to tell whenReady that we won't be ready until the assynch request returns.
         var copyXMLtoSVG = function(event) {
@@ -495,8 +495,8 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
             // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
             // and move them around. This seems to work in IE.
             // width=0, height=0 works in Firefox, but not IE.
-            log("new embed: this.htmlElement = " + this.htmlElement) ;
-            log("new embed: Going to this.htmlElement.getSVGDocumen() )") ;
+            //log("new embed: this.htmlElement = " + this.htmlElement) ;
+            //log("new embed: Going to this.htmlElement.getSVGDocumen() )") ;
             this.svgDocument = this.htmlElement.getSVGDocument();
             this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
             this.resizeHTMLElement(width, height);
@@ -527,10 +527,10 @@ SVGKit.importXML = function (file, onloadCallback) {
         xmlDoc.onload = onloadCallback;
     }
     else if (ie) {
-        log("jason = ", "jason");
+        log("importXML for ie");
         xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
         xmlDoc.async = false;
-        log("Jason was here");
+        log("set xmlDoc.async = false");
         //document.xmlDoc = xmlDoc;
         //xmlDoc.loadXML(xmlString)
         //while(xmlDoc.readyState != 4) {};
@@ -682,9 +682,9 @@ SVGKit.prototype.createUniqueID = function(base) {
         this.uniqueIdCount++;
         element = this.svgDocument.getElementById(id);  // Works in IE and Firefox
         //element = this.svgElement.getElementById(id);  // Works in IE, not Firefox
-        log("createUniqueID: Going to try id=",id,"  element=", element);
+        //log("createUniqueID: Going to try id=",id,"  element=", element);
     } while ( !MochiKit.Base.isUndefinedOrNull(element) );
-    log("Got unique id=",id);
+    //log("Got unique id=",id);
     return id;
 }
 

@@ -221,6 +221,8 @@ if (typeof(SVGPlot) == 'undefined' || SVGCanvas == null) {
     };
 }
 
+// In order for forceRedraw and getBBox to work, you need to have an object type.
+SVGKit._defaultType = 'object';
 
 // Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
 //SVGPlot.prototype = new SVGCanvas();  // TODO: Fix Inheritance
