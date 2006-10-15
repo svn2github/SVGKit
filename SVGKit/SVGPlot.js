@@ -397,7 +397,7 @@ SVGPlot.Scale.prototype = {
         this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
     },
     position: function(value) {
-        if (this._min==null || this._max==null)
+        if (this._min==null || this._max==null || this._min > this._max)
             return null;
         var interpolation_function = this.interpolation_functions[this.interpolation]
         var ratio = interpolation_function.call(this, value);
@@ -408,6 +408,8 @@ SVGPlot.Scale.prototype = {
             return (value-this._min)/(this._max-this._min)
         },
         log: function(value) {
+            if (this._min <= 0.0)
+                return null;
             return (Math.log(value)-Math.log(this._min))/(Math.log(this._max)-Math.log(this._min));
         },
         sqrt: function(value) {
@@ -467,6 +469,123 @@ SVGPlot.Scale.prototype = {
         
         this._min = (this.min!='auto') ? this.min : extents.min;
         this._max = (this.max!='auto') ? this.max : extents.max;
+    },
+    defaultLocations : function(/* arguments to be passed on */) {
+        var location_function = this.location_functions[this.interpolation]
+        var locations = location_function.apply(this, arguments);
+        return locations;
+    },
+    location_functions: {
+        linear: function(type, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
+            /***
+                Come up with locations for the ticks/grids/tickLabels, etc.
+                @param min -- the actual start of the scale (can be some non-round number)
+                @param max -- the actual end of the scale (can be some non-round number)
+                @param interval -- the interval at which you want the ticks, usually 1, 2, 3, 5, 10, 20, etc.
+                @param avoid -- an array of locations to avoid putting a mark (usually the axes and endpoints.)
+                @param offset -- the ticks start counting around here (defaults to zero)
+                
+                @returns an array of floats which list the tick locations.
+                
+            ***/
+            var min = this._min
+            var max = this._max
+            
+            if (typeof(avoid)=='undefined' || avoid==null)
+                avoid = []; //[min, max];
+            if (typeof(offset)=='undefined' || offset==null)
+                offset = 0;
+            if (typeof(interval)=='undefined' || interval==null || isNaN(interval))
+                interval = this.defaultInterval(number)
+            
+            // Make sure we won't loop forever:
+            interval = Math.abs(interval);
+            if (interval==0)
+                interval = 1;
+            
+            var locations = [];
+            var avoidance = (max-min)*SVGPlot.autoViewMarginFactor;
+            var mark = Math.ceil( (min-offset)/interval ) * interval + offset;
+            while (mark < max) {
+                var reject = false;
+                for (var i=0; i<avoid.length; i++)
+                    if (Math.abs(mark-avoid[i]) < avoidance/2)
+                        reject = true;
+                if ( reject==false )
+                    locations.push(mark)
+                mark += interval;
+            }
+            return locations;
+        },
+        log: function(type, base /* = 10 */, sub_marks /*= false*/) {
+            /***
+                Locations for ticks/trids/tickLabels for log scale
+            ***/
+            var min = this._min
+            var max = this._max
+            
+            base = SVGPlot.firstNonNull(base, this.base, 10)
+            sub_marks = SVGPlot.firstNonNull(sub_marks, this.sub_marks, type=='ticks')
+            
+            var logbase = Math.log(base)
+            var logmin = Math.log(min)/logbase
+            var logmax = Math.log(max)/logbase
+            var logstart = Math.floor(logmin)
+            var logend = Math.ceil(logmax)
+            
+            var locations = []
+            for (var logmark = logstart; logmark <= logend; logmark++) {
+                var mark = Math.pow(base, logmark)
+                locations.push(mark)
+                if (sub_marks && logmark != logend) {
+                    var next_mark = Math.pow(base, logmark+1)
+                    for (var sub_mark = mark+mark; sub_mark < next_mark; sub_mark += mark) {
+                        locations.push(sub_mark)
+                    }
+                }
+            }
+            return locations;
+        },
+        sqrt: function() {
+            return []
+        },
+        atan: function() {
+            []
+        }
+    },
+    defaultInterval : function(number /* =7 */) {
+        /***
+            return a nice spacing interval.  Nice is a power of 10,
+            or a power of ten times 2, 3, or 5.  What you get out is one of:
+            ..., .1, .2, .3, .5, 1, 2, 3, 5, 10, 20, 30, 50, 100, ...
+        ***/
+        var min = this._min
+        var max = this._max
+        
+        if (typeof(number)=='undefined' || number==null || isNaN(number))
+            number = 7;
+        var raw_interval = (max-min)/number;
+        // First find the nearest power of ten
+        var log_base10 = Math.log(raw_interval)/Math.LN10;
+        var power_of_ten = Math.pow(10, Math.floor(log_base10));
+        // Find what you have to multiply this nearest power of ten by to get the interval
+        var increment_multiple = raw_interval/power_of_ten;
+        function log_closest_to(x, array) {
+            var logx = Math.log(x);
+            var best_value = -1;
+            var best_distance = Number.MAX_VALUE;
+            for (var i=0; i<array.length; i++) {
+                var log_distance = Math.abs(logx - Math.log(array[i]));
+                if (log_distance<best_distance) {
+                    best_distance = log_distance;
+                    best_value = array[i];
+                }
+            }
+            return best_value;
+        }
+        // Finally find the round multiple to get closest.
+        var increment = power_of_ten * log_closest_to(increment_multiple, [1, 2, 3, 5, 10]);
+        return increment;
     }
 }
 
@@ -507,6 +626,7 @@ SVGPlot.ScaleDiscrete.prototype = {
 SVGPlot.ScaleDateTime = function(min, max, interval, reversed, required) {
     /***
         Mapping date/time values to positions.
+        interval can be 'minute', 'day' or whatever.  It determines where ticks will be.
     ***/
     this.set(min, max, interval, reversed, required)
 }
@@ -807,6 +927,13 @@ SVGPlot.AxisItem.prototype.set = function(locations /*='auto'*/, position /* ='b
         this.position = SVGPlot.firstNonNull(position, this.position, 'left');
 }
 
+SVGPlot.AxisItem.prototype.getDefaultLocations = function(type) {
+    if (this.parent.type=='x')
+        this._locations = this.parent.parent.xScale.defaultLocations(type)
+    else if (this.parent.type=='y')
+        this._locations = this.parent.parent.yScale.defaultLocations(type)
+}
+
 // Ticks -- includes functionality also for TickLabels and TickLines (grid)
 
 SVGPlot.Ticks = function(svgPlot, parent,
@@ -1044,12 +1171,8 @@ SVGPlot.TickLabels.prototype.createElement = function() {
     SVGPlot.createGroupIfNeeded(this, 'tickLabels', 'text');
     
     this._locations = this.locations;
-    if (this.locations=='auto') {
-        if (this.parent.type=='x')
-            this._locations = SVGPlot.defaultlocations(this.parent.parent.xScale._min, this.parent.parent.xScale._max);
-        else if (this.parent.type=='y')
-            this._locations = SVGPlot.defaultlocations(this.parent.parent.yScale._min, this.parent.parent.yScale._max);
-    }
+    if (this.locations=='auto')
+        this.getDefaultLocations('tickLabels');
     
     var label_strs = this.labels
     if (this.labels=='auto')
@@ -1346,9 +1469,11 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom) {
 SVGPlot.Ticks.prototype.render = function(min, max, map) {
     SVGPlot.createGroupIfNeeded(this, 'ticks', 'stroke');
     
-    var locations = this.locations
-    if (this.locations=='auto')
-        locations = SVGPlot.defaultlocations(min, max, this.interval, this.number);
+    this._locations = this.locations
+    if (this.locations=='auto') {
+        this.getDefaultLocations('ticks');
+    }
+    var locations = this._locations;
     var path = '';
     for (var k=0; k<locations.length; k++) {
         if (locations[k]>min && locations[k]<max) {
@@ -1415,6 +1540,32 @@ SVGPlot.renderText = function (text, location, bbox, position, min, max, map) {
 }
 
 
+////////////////////////////
+//  plot commands
+////////////////////////////
+
+SVGPlot.prototype.plot = function() {
+    /***
+        Does the right thing depending on the data passed
+    ***/
+    if ( typeof(arguments[0]) == 'string')
+        return this.plotFunction.apply(this, arguments)
+    else if ( typeof(arguments[0].length) == 'number')
+        return this.plotLine.apply(this, arguments)
+}
+
+SVGPlot.prototype.logplot = function() {
+    var plot = this.plot.apply(this, arguments)
+    this.yScale.interpolation = 'log'
+    return plot
+}
+
+SVGPlot.prototype.loglogplot = function() {
+    var plot = this.plot.apply(this, arguments)
+    this.xScale.interpolation = 'log'
+    this.yScale.interpolation = 'log'
+    return plot
+}
 
 
 ////////////////////////////
@@ -1432,7 +1583,8 @@ SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
         this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
     }
     
-    if (this.box == null) {
+    if ( MochiKit.Base.isUndefinedOrNull(this.box) || 
+          MochiKit.Base.isUndefinedOrNull(this.view) ) {
         this.addBox();
         this.box.addDefaults();
     }
@@ -1448,7 +1600,6 @@ SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
     this.xdata = xdata;
     this.ydata = ydata;
 }
-
 
 SVGPlot.LinePlot.prototype.createElement = function () {
     SVGPlot.createGroupIfNeeded(this, 'line-plot', 'stroke');
@@ -1673,78 +1824,6 @@ SVGPlot.arrayToString = function(array) {
     }
     return str;
 }
-
-SVGPlot.defaultInterval = function(min, max, number /* =7 */) {
-    /***
-        return a nice spacing interval.  Nice is a power of 10,
-        or a power of ten times 2, 3, or 5.  What you get out is one of:
-        ..., .1, .2, .3, .5, 1, 2, 3, 5, 10, 20, 30, 50, 100, ...
-    ***/
-    if (typeof(number)=='undefined' || number==null || isNaN(number))
-        number = 7;
-    var raw_interval = (max-min)/number;
-    // First find the nearest power of ten
-    var log_base10 = Math.log(raw_interval)/Math.LN10;
-    var power_of_ten = Math.pow(10, Math.floor(log_base10));
-    // Find what you have to multiply this nearest power of ten by to get the interval
-    var increment_multiple = raw_interval/power_of_ten;
-    function log_closest_to(x, array) {
-        var logx = Math.log(x);
-        var best_value = -1;
-        var best_distance = Number.MAX_VALUE;
-        for (var i=0; i<array.length; i++) {
-            var log_distance = Math.abs(logx - Math.log(array[i]));
-            if (log_distance<best_distance) {
-                best_distance = log_distance;
-                best_value = array[i];
-            }
-        }
-        return best_value;
-    }
-    // Finally find the round multiple to get closest.
-    var increment = power_of_ten * log_closest_to(increment_multiple, [1, 2, 3, 5, 10]);
-    return increment;
-}
-
-SVGPlot.defaultlocations = function(min, max, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
-    /***
-        Come up with locations for the ticks/grids/tickLabels, etc.
-        @param min -- the actual start of the scale (can be some non-round number)
-        @param max -- the actual end of the scale (can be some non-round number)
-        @param interval -- the interval at which you want the ticks, usually 1, 2, 3, 5, 10, 20, etc.
-        @param avoid -- an array of locations to avoid putting a mark (usually the axes and endpoints.)
-        @param offset -- the ticks start counting around here (defaults to zero)
-        
-        @returns an array of floats which list the tick locations.
-        
-    ***/
-    if (typeof(avoid)=='undefined' || avoid==null)
-        avoid = []; //[min, max];
-    if (typeof(offset)=='undefined' || offset==null)
-        offset = 0;
-    if (typeof(interval)=='undefined' || interval==null || isNaN(interval))
-        interval = SVGPlot.defaultInterval(min, max, number)
-    
-    // Make sure we won't loop forever:
-    interval = Math.abs(interval);
-    if (interval==0)
-        interval = 1;
-    
-    locations = [];
-    var avoidance = (max-min)*SVGPlot.autoViewMarginFactor;
-    var mark = Math.ceil( (min-offset)/interval ) * interval + offset;
-    while (mark < max) {
-        var reject = false;
-        for (var i=0; i<avoid.length; i++)
-            if (Math.abs(mark-avoid[i]) < avoidance/2)
-                reject = true;
-        if ( reject==false )
-            locations.push(mark)
-        mark += interval;
-    }
-    return locations;
-}
-
 
 SVGPlot.createGroupIfNeeded = function(self, cmd, style_type /* 'stroke' 'fill' or 'text' */) {
     if (self.element == null) {

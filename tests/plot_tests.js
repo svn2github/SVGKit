@@ -1,10 +1,6 @@
 
 var POINT_COUNT = 40;
 
-var intsquares = Array(POINT_COUNT); // squares of their position
-for (var i=0; i<POINT_COUNT; i++)
-    intsquares[i] = i*i;
-
 var TRIG_XMIN = -2*Math.PI;
 var TRIG_XMAX = 2*Math.PI;
 var trigx = Array(POINT_COUNT);
@@ -12,6 +8,8 @@ var sin = Array(POINT_COUNT);
 var cos = Array(POINT_COUNT);
 var tan = Array(POINT_COUNT);
 var atan = Array(POINT_COUNT);
+var ints = Array(POINT_COUNT);
+var squares = Array(POINT_COUNT);
 for (var i=0; i<POINT_COUNT; i++) {
     var x = TRIG_XMIN + (TRIG_XMAX-TRIG_XMIN)*i/(POINT_COUNT-1);
     //log("in trig x=" + x);
@@ -20,16 +18,15 @@ for (var i=0; i<POINT_COUNT; i++) {
     cos[i] = Math.cos(x);
     tan[i] = Math.tan(x);
     atan[i] = Math.atan(x);
+    ints[i] = i;
+    squares[i] = i*i;
 }
 
 
 var testFunctions = {
     
     'simpleLine' : function(p) {
-        var intsquares = Array(POINT_COUNT); // squares of their position
-        for (var i=0; i<POINT_COUNT; i++)
-            intsquares[i] = i*i;
-        p.plotLine(intsquares)
+        p.plotLine(squares)
         p.render()
     },
     
@@ -192,12 +189,13 @@ var testFunctions = {
         p.render();
     },
     
-    'logLine' : function(p) {
-        var intsquares = Array(POINT_COUNT); // squares of their position
-        for (var i=0; i<POINT_COUNT; i++)
-            intsquares[i] = i*i;
-        p.plotLine(intsquares)
-        p.yScale.interpolation = 'log'
+    'logplot' : function(p) {
+        p.logplot(ints.slice(1,ints.length-1), squares.slice(1,squares.length-1))
+        p.render()
+    },
+    
+    'loglogplot' : function(p) {
+        p.loglogplot(ints.slice(1,ints.length-1), squares.slice(1,squares.length-1))
         p.render()
     },
     
@@ -227,4 +225,4 @@ var testFunctions = {
     
 };
 
-addLoadEvent(partial(addTests, 0, 10, 'plot'));
+addLoadEvent(partial(addTests, 0, 50, 'plot'));
