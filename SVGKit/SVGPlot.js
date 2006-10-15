@@ -1681,9 +1681,14 @@ SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
 
 // ScatterPlot
  
-SVGPlot.prototype.plotScatter = function(xdata, ydata) {
+SVGPlot.prototype.plotScatter = function(xdata, ydata, plotFunctionOrOptions) {
 }
- 
+
+// scatterplot(xdata, ydata, f)
+// scatterplot(xdata, ydata, {color:'red', size:3, shape:'triangle'})
+// scatterplot(xdata, ydata, {hue:0.3, saturation:0.5, brightness:0.7, size:3, shape:'triangle'})
+// scatterplot(xdata, ydata, {red:0.5, green:0.5, blue:0.5, alpha:0.5, size:3, shape:'triangle'})
+
 SVGPlot.prototype.plotScatterStyle = function(xdata, ydata /* val1, val2, val3 */) {
 }
 
