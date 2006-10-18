@@ -117,7 +117,7 @@ var testFunctions = {
         p.setYAxis(-4)
         p.render();
     },
-    
+    /*
     'dependentaxes' : function(p) {
         p.addBox()
         p.addView()
@@ -188,7 +188,7 @@ var testFunctions = {
         }
         p.render();
     },
-    
+    */
     'logplot' : function(p) {
         p.logplot(ints.slice(1,ints.length-1), squares.slice(1,squares.length-1))
         p.render()

@@ -476,7 +476,11 @@ SVGPlot.Scale.prototype = {
         return locations;
     },
     location_functions: {
-        linear: function(type, interval /* defaultInterval */, number /* =7 */, avoid /* = [min, max] */, offset /* = 0*/) {
+        linear: function(type, 
+                            interval /* defaultInterval */, 
+                            number /* =7 */, 
+                            avoid /* = [min, max] */, 
+                            offset /* = 0*/) {
             /***
                 Come up with locations for the ticks/grids/tickLabels, etc.
                 @param min -- the actual start of the scale (can be some non-round number)
@@ -517,12 +521,17 @@ SVGPlot.Scale.prototype = {
             }
             return locations;
         },
-        log: function(type, base /* = 10 */, sub_marks /*= false*/) {
+        log: function(type, 
+                        base /* = 10 */, 
+                        sub_marks /*= false*/) {
             /***
                 Locations for ticks/trids/tickLabels for log scale
             ***/
             var min = this._min
             var max = this._max
+            
+            if (min <=0)
+                return []
             
             base = SVGPlot.firstNonNull(base, this.base, 10)
             sub_marks = SVGPlot.firstNonNull(sub_marks, this.sub_marks, type=='ticks')
