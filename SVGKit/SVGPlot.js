@@ -118,10 +118,12 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- Object/dictionary {min:-5, max:5} 
     
   Input data:
-   -- Table (2D array) with column headings (most efficient). First row may be heading.
-      [[['x', 'y', 'a'], [7, 3, 6], [4, 2, 9], ...]
-   -- List of objects with uniform attributes. Uniform, and what SQLObject returns
-      [{x:7, y:3, a:6}, {x:4, y:2, a:9}, ...]
+   -- Table (2D array) with column headings (most efficient). First row may be heading. Spreadsheet-like.
+      [ ['x', 'y', 'a'], [7, 3, 6], [4, 2, 9], ...]
+   -- Dictionary with variable names as keys and data as arrays.
+	  { x:[7, 3, 6], y:[4, 2, 9], a:[...], ... }
+   -- List of objects with uniform attributes. Uniform, and what SQLObject returns. Inefficient.
+      [ {x:7, y:3, a:6}, {x:4, y:2, a:9}, ... ]
    
   TODO
     -- Make all list parameters both comma or space seperated like in SVG.
@@ -449,6 +451,7 @@ SVGPlot.Scale.prototype = {
                     'max':-Number.MAX_VALUE };
 		
 		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+		// TODO:  Remove duplicates so we only to expensive calculation of min/max once.
 		for (var i=0; i<this.dataSets.length; i++) {
 			var data = this.dataSets[i]
 			if (data.length > 0) {
@@ -1666,10 +1669,6 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
     return plot;
 }
 
-SVGPlot.prototype.setPlotStyle = function() {
-    this.plot.style = this.getStyle();
-}
-
 SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
     var POINT_COUNT = 200;
     var xdata = Array(POINT_COUNT);
@@ -1689,13 +1688,38 @@ SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
 // ScatterPlot
  
 SVGPlot.prototype.plotScatter1D = function(data) {
-	// Create an axis
-	// Create a range
+	var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
+	
+    if ( isUndefinedOrNull(this.box) || isUndefinedOrNull(this.view) ) {
+        this.addBox();
+        this.box.addDefaults();
+		this.box.view.removeYAxis();
+    }
+    
+    this.plot = new SVGPlot.ScatterPlot1D(this, this.view, data);
+}
+
+SVGPlot.ScatterPlot1D = function(svgPlot, parent, data) {
+    SVGPlot.genericConstructor(this, svgPlot, parent);
+    parent.plots.push(this)  // Add this plot to the view
+    this.data = data;
+	// Add this data to the x and y scales for autoScaling
+	parent.xScale.dataSets.push(data)
+	parent.yScale.dataSets.push([0]*data.length)
+}
+
+SVGPlot.ScatterPlot1D.prototype.createElement = function () {
+    SVGPlot.createGroupIfNeeded(this, 'scatter1D-plot', 'stroke');
+}
+
+SVGPlot.ScatterPlot1D.prototype.render = function(left, right, top, bottom) {
+	// Should this be treated exactly like 2D scatter plot with all y-values zero?
+	
 	// Deal with degeneracies (bigger symbol, stacked symbols?)
 	// Plot points on axis
-	
 }
- 
+
+
 SVGPlot.prototype.plotScatter = function(xdata, ydata, plotFunctionOrOptions) {
 }
 
@@ -1742,7 +1766,45 @@ SVGPlot.prototype.markerColor = function() {
 
 
 
+////////////////////////////
+// Shapes, all unit area
+////////////////////////////
 
+// Does unit perimeter matter more perceptually when stroked rather than filled?
+// These functions don't stroke or fill, just create the path
+// They can be passed as shape functions
+// Drawing functions need to be stroked and/or filled and can affect the style.
+
+SVGPlot.prototype.shapeFunctions = {
+	circle : function() {
+	},
+	square : function() {
+		// Same as SVGCanvas.prototype.pollygon(4, 1)
+		this.beginPath()
+		this.moveTo( 0.5,  0.5)
+		this.lineTo( 0,5, -0.5)
+		this.lineTo(-0,5, -0.5)
+		this.lineTo(-0,5,  0.5)
+	    this.closePath();
+	},
+	triangle : function() {
+	},
+	diamond : function() {
+		this.save()
+		this.rotate(45)
+		this.square()
+		this.restore()
+	}
+	// Should have polygons up to n=3, 4, 5, 6, 8
+	// Stars n=4, 5, 6, 8
+	// Asterisks, pluses, and crosses? Can only be stroked, unless thickened.
+}
+
+SVGPlot.prototype.strokeFunctions = {}
+SVGPlot.prototype.fillFunctions = {}
+SVGPlot.prototype.drawFunctions = {}
+// Add wrappers arond the shape functions to stroke and/or fill
+// Can add half-filled, diagonally-filled, plused, and crossed shapes
 
 ////////////////////////////
 // Utility Functions
