@@ -176,6 +176,13 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- Plot boxes to show relative scales between plots like in Global Warming example.
     -- Combeine Ticks with TickLables because they almost always come together. If you want labels without ticks, set length to zero
     
+	-- SQL Injection attacts, strip out [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
+	
+	
+	-- horizontalLine(value, color)
+	-- horizontalLines(data, colors)
+	-- horizontalStrips([[1,2], [2,3]], ['red', 'green'])
+	
     Example:
     with p {
         createBoxes(1,2,2) // One plot on the first line, two on the second, etc.
@@ -389,7 +396,8 @@ SVGPlot.Scale = function(min /* ='auto' */,
 SVGPlot.Scale.prototype = {
     _min: null,  // Calculated _min if min is 'auto'
     _max: null,
-    set: function(min, max, interpolation, reversed, required) {
+    set: function(min, max, interpolation, reversed, required) { // Constructor
+		this.dataSets = [];  // Lists of data, each in form [1,7,4,6]
         this.min = SVGKit.firstNonNull(min, 'auto');
         this.max = SVGKit.firstNonNull(max, 'auto');
         this.interpolation = SVGKit.firstNonNull(interpolation, 'linear');  // 'log', 'ln', 'lg', 'sqrt', 'atan'
@@ -421,56 +429,70 @@ SVGPlot.Scale.prototype = {
             // TODO -- max and min should provide some scaling for the width of the atan.
         }
     },
-    setIfNotAuto: function() {
-        if (this.min != 'auto' && this.max != 'auto') {
-            this._min = this.min;
-            this._max = this.max;
-            return true
-        }
-        return false
-    },
-    setAuto: function(extents) {
+    setAuto: function() {
         /***
-            If there are no plots, or the plots are flat, or there
-            is something else wrong with the extents, fix them
-            Them set the internal _min and _max to the fixed extents
+			Set _max and _min.
+			If either max or min are 'auto',
+			Take the list of dataSets and find their overall max and min
+			
+            If there are no plots, or the plots are flat,
+			make sure _max and _min have a reasonable value.
         ***/
         
-        if (extents.max<extents.min) {  // Shouldn't happen unless we didn't find any plots
-            extents = {'min':-10,
-                        'max':10 };
+        if (this.min != 'auto' && this.max != 'auto') {
+			// Bypass calculating the min and max
+            this._min = this.min;
+            this._max = this.max;
+			return extents = {'min':this.min, 'max':this.max};
         }
-        if (extents.max==extents.min) {
-            extents.min = extensts.min-1;
-            extents.max = extents.max+1;
-        }
-        
+		var extents = {'min':Number.MAX_VALUE,
+                    'max':-Number.MAX_VALUE };
+		
+		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+		for (var i=0; i<this.dataSets.length; i++) {
+			var data = this.dataSets[i]
+			if (data.length > 0) {
+				var notNaN = function(number) {
+					return !isNaN(number)
+				}
+				var filtered = filter(notNaN, data)
+			    extents.min = Math.min(extents.min, listMin(filtered))
+			    extents.max = Math.max(extents.max, listMax(filtered))
+			}
+		}
+		this.dataSets.pop()
+		
         /*
         var total = extents.max - extents.min;
-        */
         
         // If the max or min are close to zero, include zero.
-        /*
         if (extents.min>0.0 && ( extents.min<total*SVGPlot.autoViewMarginFactor ||
                           (typeof(include_zero) != 'undefined' && include_zero == true) ) )
             extents.min = 0.0;
         if (extents.max<0.0 && (-extents.max<total*SVGPlot.autoViewMarginFactor ||
                           (typeof(include_zero) != 'undefined' && include_zero == true) ) )
             extents.max = 0.0;
-        */
         
         // If neither one lies on the origin, give them a little extra room.  TODO Make this an option
-        /*
-        if (min!=0.0)
-            min = min - total * SVGPlot.autoViewMarginFactor;
-        if (max!=0.0)
-            max = max + total * SVGPlot.autoViewMarginFactor;
+        if (extents.min!=0.0)
+            extents.min = extents.min - total * SVGPlot.autoViewMarginFactor;
+        if (extents.max!=0.0)
+            extents.max = extents.max + total * SVGPlot.autoViewMarginFactor;
         */
+        
+        if (extents.max<extents.min) {  // Shouldn't happen unless there were no datasets
+            extents = {'min':-10, 'max':10 };
+        }
+        if (extents.max==extents.min) {  // Happens if data is all the same.
+            extents.min -= 1;
+            extents.max += 1;
+        }
         
         this._min = (this.min!='auto') ? this.min : extents.min;
         this._max = (this.max!='auto') ? this.max : extents.max;
+		return extents
     },
-    defaultLocations : function(/* arguments to be passed on */) {
+    defaultLocations : function(/* arguments to be passed on to location_function */) {
         var location_function = this.location_functions[this.interpolation]
         var locations = location_function.apply(this, arguments);
         return locations;
@@ -752,7 +774,7 @@ SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 
 SVGPlot.View = function(svgPlot, parent) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
     parent.views.push(this);
-    svgPlot.view = this
+    svgPlot.view = this;
     this.xScale = new SVGPlot.Scale();
     svgPlot.xScale = this.xScale;
     this.yScale = new SVGPlot.Scale();
@@ -1229,22 +1251,8 @@ SVGPlot.AxisTitle.prototype.createElement = function() {
 SVGPlot.autoViewMarginFactor = 0.05;
 
 SVGPlot.View.prototype.setAutoView = function() {
-    
-    // If the scale is specified, don't waste time asking the functions
-    // for their extents.
-    if (this.xScale.setIfNotAuto() && this.yScale.setIfNotAuto())
-        return;
-
-    var xExtents = {'min':Number.MAX_VALUE,
-                    'max':-Number.MAX_VALUE };
-    var yExtents = {'min':Number.MAX_VALUE,
-                    'max':-Number.MAX_VALUE };
-    for (var i=0; i<this.plots.length; i++) {
-        this.plots[i].updateExtents(xExtents, yExtents);
-    }
-    
-    this.xScale.setAuto(xExtents)
-    this.yScale.setAuto(yExtents)
+	this.xScale.setAuto();
+	this.yScale.setAuto();
 }
 
 SVGPlot.View.prototype.bankTo45deg = function(/*[ { xextents:[xmin, xmax], 
@@ -1557,9 +1565,9 @@ SVGPlot.prototype.plot = function() {
     /***
         Does the right thing depending on the data passed
     ***/
-    if ( typeof(arguments[0]) == 'string')
+    if ( typeof(arguments[0]) == 'string')  // if passed 'sin(x)'
         return this.plotFunction.apply(this, arguments)
-    else if ( typeof(arguments[0].length) == 'number')
+    else if ( typeof(arguments[0].length) == 'number')  // If passed an aray
         return this.plotLine.apply(this, arguments)
 }
 
@@ -1582,32 +1590,36 @@ SVGPlot.prototype.loglogplot = function() {
 ////////////////////////////
 
 
-SVGPlot.prototype.plotLine = function(xorydata /* ydata1, ydata2, ... */) {
+SVGPlot.prototype.plotLine = function(data /* ydata1, ydata2, ... */) {
 
     if (arguments.length==1) {
         // If only one argument given, treat it as a y array and plot it against the integers.
-        var xdata = new Array(xorydata.length);  // ydata = xorydata;
-        for (var i=0; i<xorydata.length; i++)
+        var xdata = new Array(data.length);  // ydata = data;
+        for (var i=0; i<data.length; i++)
             xdata[i] = i;
-        this.plotLine(xdata, xorydata);  // Call myself again with two arguments this time.
+        this.plotLine(xdata, data);  // Call myself again with two arguments this time.
     }
     
-    if ( MochiKit.Base.isUndefinedOrNull(this.box) || 
-          MochiKit.Base.isUndefinedOrNull(this.view) ) {
+	var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
+	
+    if ( isUndefinedOrNull(this.box) || isUndefinedOrNull(this.view) ) {
         this.addBox();
         this.box.addDefaults();
     }
     
     for (var i=1; i<arguments.length; i++)
-        this.plot = new SVGPlot.LinePlot(this, this.view, xorydata, arguments[i]);
+        this.plot = new SVGPlot.LinePlot(this, this.view, data, arguments[i]);
     return this.plot;  // Last line plot.  Not of much use, really.
 }
 
 SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.plots.push(this)
+    parent.plots.push(this)  // Add this plot to the view
     this.xdata = xdata;
     this.ydata = ydata;
+	// Add this data to the x and y scales for autoScaling
+	parent.xScale.dataSets.push(xdata)
+	parent.yScale.dataSets.push(ydata)
 }
 
 SVGPlot.LinePlot.prototype.createElement = function () {
@@ -1615,9 +1627,7 @@ SVGPlot.LinePlot.prototype.createElement = function () {
 }
 
 SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
-    
-    
-    MochiKit.DOM.replaceChildNodes(this.element);
+	MochiKit.DOM.replaceChildNodes(this.element);
     
     var p = this.svgPlot;
     
@@ -1644,8 +1654,8 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
             sx!=Number.NEGATIVE_INFINITY && sx!=Number.POSITIVE_INFINITY &&
             !isNaN(sy) && sy!=Number.MAX_VALUE && sy!=Number.MIN_VALUE &&
             sy!=Number.NEGATIVE_INFINITY && sy!=Number.POSITIVE_INFINITY ) {
-                drawingFunction.call(p, sx, sy);
                 //log("Plotting point ("+sx+","+sy+")");
+                drawingFunction.call(p, sx, sy);
                 drawingFunction = p.lineTo;
         }
     }
@@ -1658,18 +1668,6 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
 
 SVGPlot.prototype.setPlotStyle = function() {
     this.plot.style = this.getStyle();
-}
-
-SVGPlot.LinePlot.prototype.updateExtents = function(xExtents, yExtents) {
-    /***
-        used for auto-scale
-    ***/
-    var xrange = SVGPlot.minmax(this.xdata)
-    xExtents.min = Math.min(xExtents.min, xrange.min)
-    xExtents.max = Math.max(xExtents.max, xrange.max)
-    var yrange = SVGPlot.minmax(this.ydata)
-    yExtents.min = Math.min(yExtents.min, yrange.min)
-    yExtents.max = Math.max(yExtents.max, yrange.max)
 }
 
 SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
@@ -1689,6 +1687,14 @@ SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
 
 
 // ScatterPlot
+ 
+SVGPlot.prototype.plotScatter1D = function(data) {
+	// Create an axis
+	// Create a range
+	// Deal with degeneracies (bigger symbol, stacked symbols?)
+	// Plot points on axis
+	
+}
  
 SVGPlot.prototype.plotScatter = function(xdata, ydata, plotFunctionOrOptions) {
 }
@@ -1746,7 +1752,7 @@ SVGPlot.prototype.markerColor = function() {
 
 SVGPlot.add = function (self, child, array, Name) {
     /***
-        used all over the place to add elements to arrays and svg elements beofre or after other
+        used all over the place to add elements to arrays and svg elements before or after other
         custom processing.
         
         @param child -- If this is a string, treat it as the name of a constructor.
@@ -1776,16 +1782,6 @@ SVGPlot.remove = function(self, child, array, Name) {
         self.svgPlot[Name] = (array.length>0) ? array[array.length-1] : null;  // Set  to the last item or null
     }
     return child;
-}
-
-SVGPlot.minmax = function(array) {
-    var min = Number.MAX_VALUE;
-    var max = -Number.MAX_VALUE;
-    for (var i=0; i<array.length; i++) {
-        max = array[i]>max ? array[i] : max;
-        min = array[i]<min ? array[i] : min;
-    }
-    return {'min':min, 'max':max};
 }
 
 SVGPlot.firstNonNull = function() {
@@ -1827,12 +1823,16 @@ SVGPlot.prettyNumber = function(number) {
     return str;
 }
 
-SVGPlot.arrayToString = function(array) {
+SVGPlot.arrayToString = function(array, seperator /* =' '*/) {
+	/***
+	Turns [1,2,3] into '1 2 3' if the seperator is kept a space.
+	***/
+	seperator = this.firstNonNull(seperator, ' ')
     var str = '';
     for (var i=0; i<array.length; i++) {
         if (typeof(array[i]) == 'number' || typeof(array[i]) == 'string') {
             if (i!=0)
-                str += ' ';
+                str += seperator;
             str += array[i];
         }
     }
