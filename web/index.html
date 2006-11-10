@@ -23,7 +23,7 @@
   additions, and SVGPlot plots/graphs data and functions.</p>
 <table>
   <tr>
-    <td><a href="SVGKit.html"><strong>SVGKit</strong></a> -- A low-level JavaScript SVG library. Create a new SVG at runtime. Load SVG data from a URL. Conveniently handle quirks of three ways SVG can be included in browsers: object, embed, and inline. Handle different browsers and different SVG engines. Has convenience functions for DOM manipulation ala MochiKit. It manages the objects: HTMLElement, SVGDocument, SVGElement. Basic interactive event handling like scroll, zoom, object select and manipulate (maybe this should go in SVGEvent.js)</td>
+    <td><a href="SVGKit.html"><strong>SVGKit</strong></a> -- A low-level JavaScript SVG library. Create a new SVG at runtime. Load SVG data from a URL. Conveniently handle quirks of three ways SVG can be included in browsers: object, embed, and inline. Handle different browsers and different SVG engines. Has convenience functions for DOM manipulation ala MochiKit. It manages the objects: HTMLElement, SVGDocument, SVGElement.</td>
     <td><img src="svgkit.png" width="200" height="200" /></td>
   </tr>
   <tr>
@@ -61,6 +61,7 @@ type interface for stars. I started  working on this in January
   <li>SVGLaTeX -- Math for SVG. LaTeX fonts. Providing a <code>&lt;path&gt;</code> as an alternative to text. MathML would be more appropriate, perhaps, but it just doens't look as good yet. </li>
   <li>Plot Interactivity --  create and edit plots, smarter zooming, selecting data, position legend, click to edit title, select colors with GUI, etc.</li>
   <li>Realtime plots -- stocks, web logs, ... -- add additional data points without undoing changes.</li>
+  <li>Plots from a database -- interactively select data to plot and plot options. WikiDatabase where people can add and view structured data? </li>
   <li>Interactive math/physics educational stuff like <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/java/zirkel/doc_en/index.html">Compass &amp; Ruler</a></li>
   <li>Clean up the SVG that SVGCanvas and SVGPlot generate and make the code run faster. These are sometimes at odds. For example, should it spend time factoring out common styles to an enclosing group?</li>
   <li>Graphics are an excellent way to learn programing. Using client-side JavaScript anybody can instantly learn by modifying and writing examples.</li>
@@ -76,7 +77,7 @@ type interface for stars. I started  working on this in January
 <h2> License</h2>
 <ul>
   <li> SVGKit is copyright (c) 2006 Jason Gallicchio.
-Licensed under theMIT license (least restrictive of the BSD-style
+Licensed under the MIT license (least restrictive of the BSD-style
 licenses). It is <a href="http://www.fsf.org/licensing/licenses/">GPL-compatible</a>.</li>
 </ul>
 <h2>Projects that Use SVGKit</h2>
