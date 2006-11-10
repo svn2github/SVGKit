@@ -178,6 +178,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- Plot boxes to show relative scales between plots like in Global Warming example.
     -- Combeine Ticks with TickLables because they almost always come together. If you want labels without ticks, set length to zero
     
+    -- xtoi and ytoj should take into account transformation to currentGroup
+    
 	-- SQL Injection attacts, strip out [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
 	
 	
