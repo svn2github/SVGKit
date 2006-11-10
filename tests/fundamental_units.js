@@ -66,8 +66,8 @@ var units = function() {
     units['g/cm^3'] = {dim:4, planck: units['g']['planck'] / 
                                         Math.pow(units['cm']['planck'],3)}
     
-    //var displayUnits = ['s', 'yr', 'm', 'ly', 'Kg', 'J', 'eV', 'GeV', 'K', 'M_pl']
-    var displayUnits = ['J', 'GeV', 'M_pl']
+    var displayUnits = ['s', 'yr', 'm', 'ly', 'Kg', 'J', 'eV', 'GeV', 'K', 'M_pl']
+    //var displayUnits = ['s', 'J', 'GeV', 'M_pl']
     
     // Find: (".*")
     // Replace: [\1],
@@ -209,9 +209,10 @@ var units = function() {
         appendChildNodes(tbody, tr)
     }
     
-
-    var p = new SVGPlot(1400,1200)
-    replaceChildNodes('fundamental_units_div', p.svg.htmlElement)
+    var width = 800
+    var height = 2400
+    var p = new SVGPlot(width, height)
+    replaceChildNodes('svg_div', p.svg.htmlElement)
     var doit = function() {
         var sortNumber = function(a,b) {
             return a - b
@@ -219,7 +220,8 @@ var units = function() {
         GeVs.sort(sortNumber)
         Mpls.sort(sortNumber)
         
-        p.addBox()
+        var margin = 20;
+        p.addBox('float', margin, margin, width-margin*2, height-margin*2)
         
         var loground = function(num, direction) {
             var log10 = Math.log(num)/Math.LN10
@@ -233,7 +235,7 @@ var units = function() {
         var everyNDecade = function(bottom, top, n) {
             // n can be positive to go up and negative to go down
             var decades = []
-            for (var x = bottom; x < top; x *= Math.pow(10, n)) {
+            for (var x = bottom; n>0 ? x<top : x>top; x *= Math.pow(10, n)) {
                 decades.push(x)
             }
             return decades
@@ -252,8 +254,8 @@ var units = function() {
             var dim = units[unit].dim
             var planck = units[unit].planck
             
-            var bottom = Math.pow(min_mpl/planck, dim)
-            var top = Math.pow(max_mpl/planck, dim)
+            var bottom = Math.pow(min_mpl,dim)/planck
+            var top = Math.pow(max_mpl,dim)/planck
 
             var bottom_round = loground(bottom, -dim)
             var top_round = loground(top, dim)
@@ -276,15 +278,44 @@ var units = function() {
             }
             var decades3_sci = map(scientific2, decades3);
             
-            p.addYAxis('left')
+            p.addYAxis('left')  // Add axes at specific x-locations
             p.addYTicks(locations, 'left')
             p.addYTickLabels(locations3, decades3_sci, 'left')
         })
         
-        // Draw Horizontal Lines for the data points
         p.render()
+        
+        // Draw Horizontal Lines for the data points
+        p.strokeStyle = 'rgba(0.5,0.5,0.5,0.2)'
+        p.currentGroup = p.view.element
+        var offset = 0
+        forEach(data, function(item) {
+            var name = item[0]
+            var pl_masses = item[3]
+            p.beginPath()
+            var j = p.view.ytoj(pl_masses)
+            p.moveTo(0, j)
+            p.lineTo(width, j)
+            p.stroke()
+            p.text(name, 200+offset, j)
+            offset = (offset+100)%(width-200)
+        })
     }
+    
+    var makesource = function() {
+        var form = FORM( { name:'form', method:'post', action:"http://brainflux.org/cgi-bin/convert_svg.py"}, 
+                       svgSrcArea=TEXTAREA({rows:"14", cols:"60", wrap:"off", name:'source'} , p.svg.toXML() ),
+                       BR(null),
+                       buttonSVG=INPUT({type:"submit", name:"type", value:"svg"}), " ",
+                       buttonPDF=INPUT({type:"submit", name:"type", value:"pdf"}), " ",
+                       buttonPNG=INPUT({type:"submit", name:"type", value:"png"}), " ",
+                       buttonJPEG=INPUT({type:"submit", name:"type", value:"jpg"}) )
+        
+        appendChildNodes('form_div', form)
+    }
+    
     p.svg.whenReady(doit)
+    p.svg.whenReady(makesource)
 }
 
 addLoadEvent(units);
