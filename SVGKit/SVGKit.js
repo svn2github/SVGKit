@@ -64,6 +64,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
      * Automatically generate links to an image translation server.
     
     Fatures:
+     * Automatic resizing with browser window (like Google Maps)
      * Mouse tracking -- ala KevLinDev?  Do you need the clear 100% rectangle?
      * enablePan(element), enableZoom(element), enableFollow(), enableDrag() enablePanZoomImmunity()
      * Create PNGs: http://www.kevlindev.com/gui/utilities/js_png/index.htm
