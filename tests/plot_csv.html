@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+      
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <head>
+    <title>SVGPlot CSV Plotter</title>
+
+    <!-- START Required for IE to support  inlined SVG -->
+<object id="AdobeSVG" width="1" height="1" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"></object>
+    <?import namespace="svg" implementation="#AdobeSVG"?>
+    <!-- END   Required for IE to support inlined SVG -->
+
+    <link href="simple.css" rel="stylesheet" type="text/css"></link>
+
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script type="text/javascript" src="../MochiKit/DateTime.js"></script>
+    <script type="text/javascript" src="../MochiKit/Format.js"></script>
+    <script type="text/javascript" src="../MochiKit/Async.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/LoggingPane.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Signal.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Position.js"></script>
+    <script type="text/javascript" src="../MochiKit/Visual.js"></script>
+
+    <script type="text/javascript" src="../SVGKit/SVGKit.js" ></script>
+    <script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
+    <script type="text/javascript" src="../SVGKit/SVGPlot.js"></script>
+    <script type="text/javascript" src="../SVGKit/SVGPlot_CSV.js"></script>
+    <script type="text/javascript" src="../SVGKit/SVGPlot_DateTime.js"></script>
+
+    <script type="text/javascript" src="test_table.js"></script>
+    <script type="text/javascript" src="plot_csv.js"></script>
+  </head>
+
+  <body>
+
+    <h2>SVGPlot CSV Plotter</h2>
+
+    <div>
+    <form name="form1" id="form1" method="post" action="">
+		<p>CSV Input with comma, tab, and | as delimiters (you can paste from Excel):<br/>
+          <textarea name="textarea" id="csv_input" cols="80" rows="8">0,   0.00
+30,   0.50
+60,   0.87
+90,   1.00
+120,   0.87
+150,   0.50
+180,   0.00
+210,   -0.50
+240,   -0.87
+270,   -1.00
+300,   -0.87
+330,   -0.50
+360,   0.00
+</textarea>
+          <br />
+	    Number of rows to skip (colunm headings): 
+	    <input name="textfield" type="text" value="0" size="5" />
+</p>
+		<table>
+          <tr>
+            <th scope="col">col 1 </th>
+            <th scope="col">col 2 </th>
+            <th scope="col">col 3 </th>
+            <th scope="col">col 4 </th>
+            <th scope="col">col 5 </th>
+            <th scope="col">col 6 </th>
+          </tr>
+          <tr>
+            <td><select name="select2">
+              <option value="off">off</option>
+              <option value="x" selected="selected">x</option>
+              <option value="black">y (black)</option>
+              <option value="blue">y (blue)</option>
+              <option value="red">y (red)</option>
+            </select></td>
+            <td><select name="select3">
+              <option value="off">off</option>
+              <option value="x">x</option>
+              <option value="black" selected="selected">y (black)</option>
+              <option value="blue">y (blue)</option>
+              <option value="red">y (red)</option>
+                        </select></td>
+            <td><select name="select4">
+              <option value="off">off</option>
+              <option value="x">x</option>
+              <option value="black">y (black)</option>
+              <option value="blue" selected="selected">y (blue)</option>
+              <option value="red">y (red)</option>
+                        </select></td>
+            <td><select name="select5">
+              <option value="off">off</option>
+              <option value="x">x</option>
+              <option value="black">y (black)</option>
+              <option value="blue">y (blue)</option>
+              <option value="red" selected="selected">y (red)</option>
+                        </select></td>
+            <td><select name="select6">
+              <option value="off" selected="selected">off</option>
+              <option value="x">x</option>
+              <option value="black">y (black)</option>
+              <option value="blue">y (blue)</option>
+              <option value="red">y (red)</option>
+                        </select></td>
+            <td><select name="select7">
+              <option value="off" selected="selected">off</option>
+              <option value="x">x</option>
+              <option value="black">y (black)</option>
+              <option value="blue">y (blue)</option>
+              <option value="red">y (red)</option>
+                        </select></td>
+          </tr>
+        </table>
+    </form>
+    </div>
+
+    <div>
+
+    <table border="1">
+    <tbody id="tests">
+    <tr>
+    <td align="center"><strong>Image</strong></td>
+    <td align="center"><strong>Source</strong></td>
+    <td align="center" width="210"><strong>SVG</strong></td>
+    <td align="center"><strong>SVG Source</strong></td>
+    </tr>
+    </tbody>
+    </table>
+
+    </div>
+
+  </body>
+</html>

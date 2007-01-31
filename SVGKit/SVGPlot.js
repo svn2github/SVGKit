@@ -11,8 +11,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
    I don't like the way  plotting programs handle things. I set out to create one that:
    * Outputs SVG and LaTeX and can easily be converted to PDF, PS, PNG
    * Works in a client-side browser for real-time manipulation of plots 
-   * can hook up live data (JSON, XML, CSV)
-   * server-side rendering through Mozilla's command-line JS
+   * can hook up live data (JSON, XML, CSV, SQL query, HTML <table> element) 
+   * server-side rendering through Mozilla's command-line JS or Batik
    * Has good features of Matlab, Mathematica, Asymptote, Ploticus, SuperMongo, GNU Plot, Origin
    * Can reproduce any plot in Science and Nature as strighforwardly as possible
    * Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible.
@@ -37,7 +37,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
    completly reconstruct these objects uppon load like Inkscape
     * API & script commands common across languages: JS, Java, Python, C++
     * Data format just Plain XML, Plain SVG, or Combined
-    * Write quickly with small script, but have ability to modify tree later.
+    * Write quickly with small script, but have ability to modify tree later. (Does origional script get stored and added to?)
    Select plot or layer by color (or some other characteristic) rather than reference.
    in a histogram, you want steps and not column plot.
    
@@ -76,7 +76,9 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
      -- Want to drag to move graph around.
      -- Drag on axes to zoom
           * always from origin?  For date plots this is dumb.
-          * zoom uniformly to keep axis ratios fixed.
+          * how to zoom uniformly to keep axis ratios fixed?   Locked checkbox?
+          * Zoom in around where you first clicked (keeping that point fixed)
+            by an amount determined by how much you drag.
     
    Procedural model (plot function) versus data model (XML/JSON rep).
     -- Like Canvas vs SVG.
@@ -89,6 +91,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
      -- Stack-based state method like Canvas
      -- Explicitly with each function like Mathematica
              plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )
+     -- A Combo: passing in a dictionary as the last parameter which overrides current state
+            plot(vec, {stroke: 'red', point_style: 'circle'})
      -- Create objects and set properties with setter functions like vtk
      * properties are nice for stack-based, but bad for object-based unless you're 
          in Python where you can capture the setting or you're willing to register callbacks
@@ -99,6 +103,10 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
          ones and adding new ones.  When you change a parameter, does it affect the 
          axes or just the drawing of the new axes?  What if you don't want all of the
          default ticks and stuff - do you have to delete them all explicitly?
+    
+  Ways to pass parameters:
+    -- List like Mathematica [min, max] or [name, min, max]
+    -- Object/dictionary {min:-5, max:5} 
     
   Drawing Function can take all of the row and do whatever it wants.
     it draws a shape around the origin given the parameters, 
@@ -113,21 +121,18 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
   Use this feature to re-impliment the star viewer with displayed coordinates and 
     mouseover star names.
     
-  Ways to pass parameters:
-    -- List like Mathematica [min, max] or [name, min, max]
-    -- Object/dictionary {min:-5, max:5} 
     
   Input data:
    -- Table (2D array) with column headings (most efficient). First row may be heading. Spreadsheet-like.
       [ ['x', 'y', 'a'], [7, 3, 6], [4, 2, 9], ...]
    -- Dictionary with variable names as keys and data as arrays.
 	  { x:[7, 3, 6], y:[4, 2, 9], a:[...], ... }
-   -- List of objects with uniform attributes. Uniform, and what SQLObject returns. Inefficient.
+   -- List of objects with uniform attributes. Uniform, and what SQLObject returns. Inefficient.  Easily passed to Drawing Function
       [ {x:7, y:3, a:6}, {x:4, y:2, a:9}, ... ]
    
   TODO
     -- Make all list parameters both comma or space seperated like in SVG.
-    -- Scatter plot is line plot with transparent stroke, but with markers? Can't have data-dependent markers.
+    -- Scatter plot is line plot with transparent stroke, but with markers? No. Can't have data-dependent markers.
     -- Grid lines function like ticks.  Just Extended ticks?  what about checkerboard/stripes?
     -- Tests with multiple boxes and box layout.
     -- Integer-only axis labels/ticks (a parameter of the auto-axis)
@@ -140,12 +145,15 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- When you change scales, you want decorations you've drawn to move too.  Decorations tied to point on plot.
     -- CSS Colors and Fonts
     -- For tickLabels at the edge, either move them to fit on plot or make plot bigger to accomodate them.
-    -- Check scale for zeros better.
+    -- Check scale for zeros better.  Don't print a zero right over the other axis.
     -- Box background and plot area background.
     -- Axes, ticks, and grids align themselves to nearest pixel.
     -- Smooth connect plot lines using bezier or quartic
     -- Autoscale so that at least the line-width fits.
     -- Plot title
+    -- Plot Ledgend, recording attributes of lines and glyphs
+    -- Plot arrows pointing to thd different types (better than a ledgend where appropriate -- look at pre-computer plots)
+    -- Exponents 2e12 or 2 10^12 or just 10^12 on log plots, etc.
     -- Pie, optional pullout of wedges, optional 2nd parameter setting slice area "Spie  Chart"
     -- Excel has tick positions 'inside' 'outside' and 'cross'.  This makes more sense when 
           axes are on the sides, but not when it's in the middle.  We should have a 'cross' though.
@@ -155,8 +163,9 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
          For categories, often you want ticks/grid in between bars and labels on bars
     -- How much to mix state-machine vs explicit options.  When you draw a box, do you take the
          current style and transform from the current state, or as a parameter?  Some things only require
-         one or two style parameters and it's nicer just to set them.  Some like boxBG and plotAreaBG require lots and state is bad.
-         Also, setting the fillStyle for text is confusing.
+         one or two style parameters and it's nicer just to set them.  
+         Some like boxBG and plotAreaBG require lots and state is bad.
+         Also, setting the fillStyle instead of the strokeStyle for text is confusing, but Canvas and SVG standard
     -- How to handle polar plots?  Keep (x,y) scale, but just add a polar grid/tickLabels/ticks/etc or
          completely change to a polar scale where (x,y) now mean (r,phi)
     -- TickLabels appearing over axes or other elements should be somehow avoided -- constrained layout?
@@ -176,16 +185,25 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- In above example, should plotFunction return the whole plot, a reference to just
          the function ploted, the SVGElement that corresponds to what was plotted, what?
     -- Plot boxes to show relative scales between plots like in Global Warming example.
-    -- Combeine Ticks with TickLables because they almost always come together. If you want labels without ticks, set length to zero
+    -- Combeine Ticks with TickLables they come together. Want labels without ticks? set tick-length to zero
+    -- Seperate datetype from the concept of a category scale versus a linear scale.  For example, you might
+       have a bunch of random number that you want to plot values for as a bar chart, not (x,y) points.
+       this is true also for dates.  Hits/day is more of a category thing than a linear scale thing.
+       Histograms are categories, but what happens when the categories are ranges: 10.0-20.0, 20.0-30.0, etc?
     
     -- xtoi and ytoj should take into account transformation to currentGroup
     
-	-- SQL Injection attacts, strip out [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
-	
+	-- SQL Injection attacts, strip out
+        [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
+        
+    -- Margin between ploted data and axes (so zero doesn't lie in corner, there is padding around glyphs, and zero label fits)
+	-- Have the GUI teach about the plotting commands
 	
 	-- horizontalLine(value, color)
 	-- horizontalLines(data, colors)
-	-- horizontalStrips([[1,2], [2,3]], ['red', 'green'])
+    -- horizontalStrip(start, end, color?)  // Draws a rect with given stroke and fill settings  What about stroking ends?
+	-- horizontalStrips([[1,2], [2,3]], ['red', 'green'])  
+    
 	
     Example:
     with p {
@@ -194,6 +212,31 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
         nextBox()
         plotFunction("sin(x)", {"x", -6, 6}, {color: "blue"})
     }
+    
+    Interesting tests:
+    * stocks
+    * weather
+    * weblog
+    * fake temp data (year/month/day cyclic plus random noise)
+    * trace real plots to extract data
+    * CIA World Factbook
+    * US Census data
+    * real-time mouse movement (distance, location, time spent up/down, correlations)
+    * Chromaticity diagram
+    
+    Annotations:
+    * Label on plot
+    * Pointer with label kinked or curved arrow: horizontal near text, perpendicular to plot)
+      - Sometimes more than one plot corresponds to same label
+    * Labeled point
+    * Labeled vector
+    * Labeled span, which auto-adjusts based on length (curved verions for angles)
+      - Biggest has arrows on ends and label in middle (optional bars at end of arrows)
+      - Smallest has arrows outside pointing in with label to right/left or above
+      - One sided arrows from an axis, for example
+    * Angle 1, angle 2, right angle
+    * line 1, similar to line 2, etc.
+    * Speudo shading (hash marks on one side of curve) Maybe with soft gradient
 ***/
 
 
@@ -409,11 +452,16 @@ SVGPlot.Scale.prototype = {
         this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
     },
     position: function(value) {
+        /*** 
+            @returns a float from 0->1 if value is between _max and _min, 
+              but can return a number outside 0->1 if input is outside rnage.
+              If _max or _min have not yet been set or set illegally, this returns null.
+        ***/
         if (this._min==null || this._max==null || this._min > this._max)
             return null;
         var interpolation_function = this.interpolation_functions[this.interpolation]
-        var ratio = interpolation_function.call(this, value);
-        return ratio;
+        var position = interpolation_function.call(this, value);
+        return position;
     },
     interpolation_functions: {
         linear: function(value) {
@@ -591,6 +639,7 @@ SVGPlot.Scale.prototype = {
     },
     defaultInterval : function(number /* =7 */) {
         /***
+            utility function used in defaultLocations
             return a nice spacing interval.  Nice is a power of 10,
             or a power of ten times 2, 3, or 5.  What you get out is one of:
             ..., .1, .2, .3, .5, 1, 2, 3, 5, 10, 20, 30, 50, 100, ...
@@ -626,6 +675,168 @@ SVGPlot.Scale.prototype = {
 }
 
 
+SVGPlot.ScaleDateTime = function(min, max, interval, reversed, required) {
+    /***
+        Mapping date/time values to positions.
+        interval can be 'minute', 'day' or whatever.  It determines where ticks will be.
+        
+        Decide what the most reasonable interval is and make ticks based on that
+        
+        omitweekends option where Friday is followed directly by monday
+        elapsed time can be more than 24 hrs.
+        Datetime with time windowing for just showing work/day
+        
+        ScaleDateTime has burried in it a real Scale object which stores miliseconds since the epoc
+        and is used to do all of the auto-everything.
+    ***/
+    this.set(min, max, interval, reversed, required)
+}
+//SVGPlot.inherit(SVGPlot.ScaleDateTime, SVGPlot.Scale);
+SVGPlot.ScaleDateTime.prototype = {
+    _min: null,
+    _max: null,
+    _realScale: null,
+    milliseconds : function(value) {
+        // Can be used in map()
+        // value can either be an ISO timestamp string or a Date object
+        if ( typeof(valye) == "string" )
+            return isoTimestamp(str).getTime()
+        if ( typeof(value) == "object" && value.constructor == Date )
+            return value.getTime()
+    },
+    set: function(min, max, interval, reversed, required) {
+        this.min = SVGKit.firstNonNull(min, 'auto');
+        this.max = SVGKit.firstNonNull(max, 'auto');
+        this.interval = SVGKit.firstNonNull(interval, 'auto');
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+        
+        // Convert min, max, and required into miliseconds since 1970 
+        // to pass to the underlying _realScale
+        var min_ms = this.min;
+        var max_ms = this.max;
+        var required_ms = [];
+        if (this.min != 'auto')
+            min_ms = this.milliseconds(min)
+        if (this.max != 'auto')
+            max_ms = this.milliseconds(max)
+        if ( compare(this.required,[]) != 0 )
+            required_ms = map(this.milliseconds, this.required)
+        this._realScale = new SVGPlot.Scale(min_ms, max_ms, 'linear', reversed, required_ms)
+    },
+    position: function(value) {
+        value_ms = this.milliseconds(value)
+        return this._realScale.position(value_ms)
+    },
+    setAuto: function() {
+        var milliseconds_array = function(array) {
+            return map(this.milliseconds, array)
+        }
+        this._realScale.dataSets = map(milliseconds_array, this.dataSets)
+        this._realScale.setAuto()
+    },
+    defaultLocations : function() {
+        // Should this return a list of strings or milliseconds or what
+        return []
+    },
+    oneRow : function(start, end, extend_to_nearest) {
+        /***
+            Returns a list of pairs [date Object, field]
+            in evenly spaced intervals of the biggest change.
+            If you go from 1:00 to 1:59, it will return 60 pairs spaced by one minute
+            
+            If extend_to_nearest is true, the list that gets returned will
+            have its first element before or at the start and 
+            its last element after or at the end
+            
+            The list returned for (2:00:01 to 6:59:59) won't include 
+            2:00 and 7:00 if extend_to_nearest is false.
+            Instead it will return the list  [3:00, 4:00, 5:00, 6:00]
+            
+            If extend_to_nearestis set, the plot has to be re-auto-ranged to include
+            these possible new endpoints, otherwise they'll print off the scale.
+        ***/
+        if (start.getTime() >= end.getTime())
+            return null
+        
+        var i = this.firstDifferent(start, end)
+        var getter = 'get' + this.fields[i]
+        var setter = 'set' + this.fields[i]
+        
+        var iter = this.roundDate(start, i, !extend_to_nearest)
+        var field = iter[getter]()
+        result = [ [iter, field] ]
+        while ( iter[getter]() < end[getter]() && extend_to_nearest==false ||
+                 iter[getter]() <= end[getter]() && extend_to_nearest==true ) {
+            iter[setter](field+1)
+            field = iter[getter]()
+            result.push( [iter, field] )
+        }
+        return result
+    },
+    twoRows : function() {
+    }
+    /***
+        Reasonable intervals:
+        years: 1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000
+        months: 1, 2, 3, 4, 6
+        days: 1, 2, 3, 5, 10
+        hours: 1, 2, 3, 4, 6, 12
+        minutes: 1, 2, 3, 5, 10, 15, 20, 30
+        seconds: 1, 2, 3, 5, 10, 20, 30 (same as minutes)
+        miliseconds: 1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000 (same as years)
+        
+        Special cases:
+        weeks
+        days in year
+        days, hours, minutes, seconds that go forever just use the real-scale algorithm
+        (same for years and miliseconds. If the interval is too long or too short, just
+        the real algorithm.)
+        
+        Algorithm takes start, end, and goal number of intervals
+        Returns the interval that comes cloest to dividing the 
+        time into goal number of intervals
+    ***/
+}
+
+test = function() {
+var s = new SVGPlot.ScaleDateTime()
+var start = isoTimestamp('2007-01-27 10:17')
+var end = isoTimestamp('2007-01-27 10:23')
+log('s.firstDifferent(start,end) == 4 ?', s.firstDifferent(start,end) == 4)
+log('s.commonPart(start,end) == "2007-00-27 10:00" ?', s.commonPart(start,end) == "2007-00-27 10:00")
+for (var i=0; i<s.fields.length; i++) {
+    log('s.roundDate down to', s.fields[i], toISOTimestamp(s.roundDate(start, i, false)) )
+    log('s.roundDate up to', s.fields[i], toISOTimestamp(s.roundDate(start, i, true)) )
+}
+return s.oneRow(start, end)
+}
+
+/*
+Discrete and Category scales are the same concept.
+They are used for things like bar charts and histograms.
+When you fit a function on top of a histogram, do you need two different scales?
+Rather than a range of real numbers, there are a fixed number of items N
+Things can be sorted by the category name itself or by another column
+What you want it to return is one of the following:
+* beginning
+* middle
+* end
+* size (end-beginning)
+* beginning of rectangle that doesn't take up the whole space
+* end of rectangle
+
+Discrete plot takes integer values from min to max with spacing interval
+Category plot takes a list of strings
+DateTime Category takes a beginning, end, and interval (useful for datetime hisogram)
+
+3      *   *   *
+2  *   *   *   *
+1  *   *   *   *   *
+0 -0-|-1-|-2-|-3-|-4-
+
+*/
+
 SVGPlot.ScaleDiscrete = function(min, max, interval, placement, reversed, required) {
     /***
         Mapping discrete values to positions.
@@ -659,31 +870,6 @@ SVGPlot.ScaleDiscrete.prototype = {
     }
 }
 
-SVGPlot.ScaleDateTime = function(min, max, interval, reversed, required) {
-    /***
-        Mapping date/time values to positions.
-        interval can be 'minute', 'day' or whatever.  It determines where ticks will be.
-    ***/
-    this.set(min, max, interval, reversed, required)
-}
-SVGPlot.ScaleDateTime.prototype = {
-    _min: null,
-    _max: null,
-    set: function(min, max, interval, reversed, required) {
-        this.min = SVGKit.firstNonNull(min, 'auto');
-        this.max = SVGKit.firstNonNull(max, 'auto');
-        this.interval = SVGKit.firstNonNull(interval, 'auto');
-        this.reversed = SVGKit.firstNonNull(reversed, false);
-        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
-    },
-    position: function(value) {
-        if (_min==null || _max==null)
-            return null;
-        var ratio = (value-_min)/(_max*_min)
-        return this.ratioToPosition(ratio);
-    }
-}
-
 SVGPlot.ScaleCategory = function(categories, placement, reversed, required) {
     /***
         Mapping category values to positions.
@@ -711,10 +897,33 @@ SVGPlot.ScaleCategory.prototype = {
 
 
 SVGPlot.ScaleSegments = function(segments) {
+    // This is for splitting the scale into many regions, each of which should have the same type
     // Check for non-overlap
     // Find overall min and max (only one of each can be 'auto')
     // Check for all same value of 'reversed'
 }
+
+SVGPlot.newScaleFromType = function(example) {
+    // Return a new scale object that's appropriate for the type of data passed in
+    // Priority to resolve ambiguity: Real, DateTime, category
+    // Right now, the only strings that will be recognized as dates 
+    // (and therefore not categories) are ISO timestamps: YYYY-MM-DD hh:mm:ss
+    var type = typeof(example)
+    if ( type == number )
+        return new SVGPlot.Scale()
+    if ( type == string ) {
+        if ( isoTimestamp(example) != null )
+            return new SVGPlot.ScaleDateTime()
+        else
+            return new SVGPlot.ScaleCategory()
+    }
+    if ( type == "object" && example.constructor == Date ) {
+        log("Making new ScaleDateTime")
+        return new SVGPlot.ScaleDateTime()
+    }
+    return null
+}
+
 
 ////////////////////////////
 //  Graphical Plot Objects
@@ -1614,7 +1823,7 @@ SVGPlot.prototype.plotLine = function(data /* ydata1, ydata2, ... */) {
     
     for (var i=1; i<arguments.length; i++)
         this.plot = new SVGPlot.LinePlot(this, this.view, data, arguments[i]);
-    return this.plot;  // Last line plot.  Not of much use, really.
+    return this.plot;  // Return the last line plot.  Not of much use, really.
 }
 
 SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
@@ -1959,6 +2168,52 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
 ////////////////////////////
 // Plot Data
 ////////////////////////////
+
+
+
+
+SVGPlot.prototype.listToObject = function(list) {
+    /***
+        Converts SQL/JSON style data of the form "list of objects":
+        [{x:7, y:3, a:6}, {x:4, y:2, a:9}, ...]
+        
+        Into array style data "object of lists":
+        { x:[7, 4, ...], 
+          y:[3, 2, ...],
+          a:[6, 9, ...] }
+    ***/
+    // Should there be any checking of consistency: 
+    // each row having exactly the same fields?
+    var object = {}
+    forEach(list, function(row) {
+        for (key in row) {
+            if (object[key] == null)  // object doens't array of this name yet
+                object[key] = []
+            object[key].push(row[key])
+        }
+    })
+    return object
+}
+
+
+
+SVGPlot.prototype.transpose = function(table) {
+    /***
+        Transposes the rows and columns of a table.
+        Useful after you read in CSV data and want columns to plot
+        
+        transpose([[1,2],[3,4],[5,6]]) => [[1,3,5],[2,4,6]]
+    ***/
+    var result = []
+    forEach(table, function(row) {
+        for (var i=0; i<row.length; i++) {
+            if (i >= result.length)
+                result.push([])
+            result[i].push(row[i])
+        }
+    })
+    return result
+}
 
 
 /***

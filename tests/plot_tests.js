@@ -221,8 +221,24 @@ var testFunctions = {
         //p.xGrid.spacing = .3
         //p.yGrid.fillStyle = "rgba(100, 0, 100, .5)";
         p.render();
+    },
+    
+    'date_plot' : function(p) {
+        d = new Date()
+        now = d.getTime()
+        dates = []
+        data = []
+        for (var i=0; i<20; i++) {
+            // Add days
+            date = new Date(now + i*1000*60*60*24)
+            //dates.push( toISOTimestamp(date) )
+            dates.push( date.getTime() )
+            data.push(Math.random())
+        }
+        p.plot(dates, data)
+        p.render();
     }
     
 };
 
-addLoadEvent(partial(addTests, 0, 50, 'plot'));
+addLoadEvent(partial(addTests, 15, 1, 'plot'));
