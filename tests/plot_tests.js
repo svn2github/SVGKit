@@ -241,4 +241,4 @@ var testFunctions = {
     
 };
 
-addLoadEvent(partial(addTests, 15, 1, 'plot'));
+addLoadEvent(partial(addTests, 0, 30, 'plot'));
