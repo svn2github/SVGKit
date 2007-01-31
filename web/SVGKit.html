@@ -16,21 +16,23 @@
 <div id="content">
 <h1>SVGKit</h1>
 <h2>Introduction</h2>
-<p>Lowest level.Create a new SVG at runtime.
+<p>Lowest level. Create a new SVG at runtime.
  Load SVG data from a URL. Conveniently handle quirks of three
   ways SVG can be included in browsers: object, embed, and inline. Handle
   differnet browsers and different SVG engines.  Has convenience
   functions for DOM manipulation ala MochiKit. It manages the objects:
-  HTMLElement, SVGDocument, SVGElement.  Basic intaractive event
-  handling like scroll, zoom, object select and manipulate (maybe this
-  should go in SVGEvent.js)<br />
+  HTMLElement, SVGDocument, SVGElement.<br />
   <br />
   Once you have an SVGKit object, adding content is simple.  Inspired by MochiKit DOM, there is an all-caps function for every
   tag defined in the SVG spec.<br />
   <br />
   <code>svg.append(CIRCLE( {'cx':50, 'cy':50, 'r':20, 'fill':'purple', 'fill-opacity':.3) );</code></p>
-<p>It's annoying to have external javascript files in an SVG, especially a big library like MochiKit and SVGKit, but for anything more than a simple demo, it's worth it. You can also pick which functions you want to include and paste them into your SVG.<br />
-</p>
+<p>It's annoying to have external javascript files in an SVG, especially a big library like MochiKit and SVGKit, but for anything more than a simple demo, it's worth it. You can also pick which functions you want to include and paste them into your SVG.</p>
+<h2>Live Demos </h2>
+<ul>
+  <li><a href="../tests/svg_tests.html">live demo</a> - Table of tests that you can modify and re-run client side.</li>
+  <li><a href="../tests/svg_type_tests.xhtml">type tests</a> - Tests browser support for different ways of including and getting at SVG</li>
+</ul>
 <h2>Overview of Code</h2>
 There is a single object SVGKit.  You instantiate one for each SVG
 you want access too.  You can use its constructor to grab an
