@@ -83,7 +83,7 @@ MochiKit.Async.Deferred.prototype = {
             this.results[0].cancel();
         }
     },
-            
+
     _resback: function (res) {
         /***
 
@@ -284,8 +284,10 @@ MochiKit.Base.update(MochiKit.Async, {
                 // pass
                 // MochiKit.Logging.logDebug('error getting status?', repr(items(e)));
             }
-            //  200 is OK, 304 is NOT_MODIFIED
-            if (status == 200 || status == 304) { // OK
+            // 200 is OK, 201 is CREATED, 204 is NO CONTENT
+            // 304 is NOT MODIFIED, 1223 is apparently a bug in IE
+            if (status == 200 || status == 201 || status == 204 ||
+                    status == 304 || status == 1223) {
                 d.callback(this);
             } else {
                 var err = new MochiKit.Async.XMLHttpRequestError(this, "Request failed");
@@ -313,7 +315,7 @@ MochiKit.Base.update(MochiKit.Async, {
         req.abort();
     },
 
-    
+
     /** @id MochiKit.Async.sendXMLHttpRequest */
     sendXMLHttpRequest: function (req, /* optional */ sendContent) {
         if (typeof(sendContent) == "undefined" || sendContent === null) {
@@ -323,7 +325,7 @@ MochiKit.Base.update(MochiKit.Async, {
         var m = MochiKit.Base;
         var self = MochiKit.Async;
         var d = new self.Deferred(m.partial(self._xhr_canceller, req));
-        
+
         try {
             req.onreadystatechange = m.bind(self._xhr_onreadystatechange,
                 req, d);
@@ -341,25 +343,79 @@ MochiKit.Base.update(MochiKit.Async, {
 
     },
 
-    /** @id MochiKit.Async.doSimpleXMLHttpRequest */
-    doSimpleXMLHttpRequest: function (url/*, ...*/) {
+    /** @id MochiKit.Async.doXHR */
+    doXHR: function (url, opts) {
+        var m = MochiKit.Base;
+        opts = m.update({
+            method: 'GET',
+            sendContent: ''
+            /*
+            queryString: undefined,
+            username: undefined,
+            password: undefined,
+            headers: undefined,
+            mimeType: undefined
+            */
+        }, opts);
         var self = MochiKit.Async;
         var req = self.getXMLHttpRequest();
-        if (arguments.length > 1) {
-            var m = MochiKit.Base;
-            var qs = m.queryString.apply(null, m.extend(null, arguments, 1));
+        if (opts.queryString) {
+            var qs = m.queryString(opts.queryString);
             if (qs) {
                 url += "?" + qs;
             }
         }
-        req.open("GET", url, true);
-        return self.sendXMLHttpRequest(req);
+        // Safari will send undefined:undefined, so we have to check.
+        // We can't use apply, since the function is native.
+        if ('username' in opts) {
+            req.open(opts.method, url, true, opts.username, opts.password);
+        } else {
+            req.open(opts.method, url, true);
+        }
+        if (req.overrideMimeType && opts.mimeType) {
+            req.overrideMimeType(opts.mimeType);
+        }
+        if (opts.headers) {
+            var headers = opts.headers;
+            if (!m.isArrayLike(headers)) {
+                headers = m.items(headers);
+            }
+            for (var i = 0; i < headers.length; i++) {
+                var header = headers[i];
+                var name = header[0];
+                var value = header[1];
+                req.setRequestHeader(name, value);
+            }
+        }
+        return self.sendXMLHttpRequest(req, opts.sendContent);
+    },
+
+    _buildURL: function (url/*, ...*/) {
+        if (arguments.length > 1) {
+            var m = MochiKit.Base;
+            var qs = m.queryString.apply(null, m.extend(null, arguments, 1));
+            if (qs) {
+                return url + "?" + qs;
+            }
+        }
+        return url;
+    },
+
+    /** @id MochiKit.Async.doSimpleXMLHttpRequest */
+    doSimpleXMLHttpRequest: function (url/*, ...*/) {
+        var self = MochiKit.Async;
+        url = self._buildURL.apply(self, arguments);
+        return self.doXHR(url);
     },
 
     /** @id MochiKit.Async.loadJSONDoc */
-    loadJSONDoc: function (url) {
+    loadJSONDoc: function (url/*, ...*/) {
         var self = MochiKit.Async;
-        var d = self.doSimpleXMLHttpRequest.apply(self, arguments);
+        url = self._buildURL.apply(self, arguments);
+        var d = self.doXHR(url, {
+            'mimeType': 'text/plain',
+            'headers': [['Accept', 'application/json']]
+        });
         d = d.addCallback(self.evalJSONRequest);
         return d;
     },
@@ -406,7 +462,7 @@ MochiKit.Async.DeferredLock.prototype = {
     __class__: MochiKit.Async.DeferredLock,
     /** @id MochiKit.Async.DeferredLock.prototype.acquire */
     acquire: function () {
-        d = new MochiKit.Async.Deferred();
+        var d = new MochiKit.Async.Deferred();
         if (this.locked) {
             this.waiting.push(d);
         } else {
@@ -445,7 +501,7 @@ MochiKit.Async.DeferredList = function (list, /* optional */fireOnOneCallback, f
 
     // call parent constructor
     MochiKit.Async.Deferred.apply(this, [canceller]);
-    
+
     this.list = list;
     var resultList = [];
     this.resultList = resultList;
@@ -466,7 +522,7 @@ MochiKit.Async.DeferredList = function (list, /* optional */fireOnOneCallback, f
     if (list.length === 0 && !fireOnOneCallback) {
         this.callback(this.resultList);
     }
-    
+
 };
 
 MochiKit.Async.DeferredList.prototype = new MochiKit.Async.Deferred();
@@ -474,7 +530,7 @@ MochiKit.Async.DeferredList.prototype = new MochiKit.Async.Deferred();
 MochiKit.Async.DeferredList.prototype._cbDeferred = function (index, succeeded, result) {
     this.resultList[index] = [succeeded, result];
     this.finishedCount += 1;
-    if (this.fired !== 0) {
+    if (this.fired == -1) {
         if (succeeded && this.fireOnOneCallback) {
             this.callback([index, result]);
         } else if (!succeeded && this.fireOnOneErrback) {
@@ -540,9 +596,10 @@ MochiKit.Async.EXPORT = [
     "DeferredLock",
     "DeferredList",
     "gatherResults",
-    "maybeDeferred"
+    "maybeDeferred",
+    "doXHR"
 ];
-    
+
 MochiKit.Async.EXPORT_OK = [
     "evalJSONRequest"
 ];
@@ -550,8 +607,8 @@ MochiKit.Async.EXPORT_OK = [
 MochiKit.Async.__new__ = function () {
     var m = MochiKit.Base;
     var ne = m.partial(m._newNamedError, this);
-    
-    ne("AlreadyCalledError", 
+
+    ne("AlreadyCalledError",
         /** @id MochiKit.Async.AlreadyCalledError */
         function (deferred) {
             /***
@@ -591,7 +648,7 @@ MochiKit.Async.__new__ = function () {
         }
     );
 
-    ne("GenericError", 
+    ne("GenericError",
         /** @id MochiKit.Async.GenericError */
         function (msg) {
             this.message = msg;

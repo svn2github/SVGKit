@@ -15,7 +15,7 @@ if (typeof(dojo) != 'undefined') {
 
 if (typeof(JSAN) != 'undefined') {
     JSAN.use("MochiKit.Base", []);
-}   
+}
 
 try {
     if (typeof(MochiKit.Base) == 'undefined') {
@@ -23,12 +23,12 @@ try {
     }
 } catch (e) {
     throw "MochiKit.Iter depends on MochiKit.Base!";
-}  
-            
+}
+
 if (typeof(MochiKit.Iter) == 'undefined') {
     MochiKit.Iter = {};
-}           
-        
+}
+
 MochiKit.Iter.NAME = "MochiKit.Iter";
 MochiKit.Iter.VERSION = "1.4";
 MochiKit.Base.update(MochiKit.Iter, {
@@ -154,7 +154,7 @@ MochiKit.Base.update(MochiKit.Iter, {
             }
         };
     },
-            
+
     /** @id MochiKit.Iter.next */
     next: function (iterator) {
         return iterator.next();
@@ -218,7 +218,7 @@ MochiKit.Base.update(MochiKit.Iter, {
             }
         };
     },
-     
+
     /** @id MochiKit.Iter.islice */
     islice: function (seq/*, [start,] stop[, step] */) {
         var self = MochiKit.Iter;
@@ -273,7 +273,7 @@ MochiKit.Base.update(MochiKit.Iter, {
             }
         };
     },
-        
+
     /** @id MochiKit.Iter.applymap */
     applymap: function (fun, seq, self) {
         seq = MochiKit.Iter.iter(seq);
@@ -415,11 +415,19 @@ MochiKit.Base.update(MochiKit.Iter, {
     /** @id MochiKit.Iter.list */
     list: function (iterable) {
         // Fast-path for Array and Array-like
-        var m = MochiKit.Base;
-        if (typeof(iterable.slice) == 'function') {
+        var rval;
+        if (iterable instanceof Array) {
             return iterable.slice();
-        } else if (m.isArrayLike(iterable)) {
-            return m.concat(iterable);
+        } 
+        // this is necessary to avoid a Safari crash
+        if (typeof(iterable) == "function" &&
+                !(iterable instanceof Function) &&
+                typeof(iterable.length) == 'number') {
+            rval = [];
+            for (var i = 0; i < iterable.length; i++) {
+                rval.push(iterable[i]);
+            }
+            return rval;
         }
 
         var self = MochiKit.Iter;
@@ -439,7 +447,7 @@ MochiKit.Base.update(MochiKit.Iter, {
         return undefined;
     },
 
-        
+
     /** @id MochiKit.Iter.reduce */
     reduce: function (fn, iterable, /* optional */initial) {
         var i = 0;
@@ -504,7 +512,7 @@ MochiKit.Base.update(MochiKit.Iter, {
             toString: MochiKit.Base.forwardCall("repr")
         };
     },
-            
+
     /** @id MochiKit.Iter.sum */
     sum: function (iterable, start/* = 0 */) {
         if (typeof(start) == "undefined" || start === null) {
@@ -524,7 +532,7 @@ MochiKit.Base.update(MochiKit.Iter, {
         }
         return x;
     },
-            
+
     /** @id MochiKit.Iter.exhaust */
     exhaust: function (iterable) {
         var self = MochiKit.Iter;
@@ -657,13 +665,14 @@ MochiKit.Base.update(MochiKit.Iter, {
         };
 
         var first = true;
+        var compare = m.compare;
         return {
             repr: function () { return "groupby(...)"; },
             next: function() {
                 // iterator-next
 
                 // iterate until meet next group
-                while (k == pk) {
+                while (compare(k, pk) === 0) {
                     fetch();
                     if (first) {
                         first = false;
@@ -677,7 +686,7 @@ MochiKit.Base.update(MochiKit.Iter, {
                         if (v == undefined) { // Is there something to eat?
                             fetch();
                         }
-                        if (k != pk) {
+                        if (compare(k, pk) !== 0) {
                             throw self.StopIteration;
                         }
                         return eat();
@@ -699,6 +708,7 @@ MochiKit.Base.update(MochiKit.Iter, {
         var result = [];
         var first = true;
         var prev_key;
+        var compare = m.compare;
         while (true) {
             try {
                 var value = iterable.next();
@@ -709,7 +719,7 @@ MochiKit.Base.update(MochiKit.Iter, {
                 }
                 throw e;
             }
-            if (first || key != prev_key) {
+            if (first || compare(key, prev_key) !== 0) {
                 var values = [];
                 result.push([key, values]);
             }
@@ -826,7 +836,7 @@ MochiKit.Iter.__new__ = function () {
     };
 
     m.nameFunctions(this);
-        
+
 };
 
 MochiKit.Iter.__new__();
