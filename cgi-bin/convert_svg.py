@@ -18,7 +18,7 @@ import os
 import time
 import md5
 sys.stderr = sys.stdout
-cgi.maxlen = 100*1024
+cgi.maxlen = 1024*1024
 
 mediatypes={
   'pdf':'application/pdf',
