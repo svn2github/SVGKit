@@ -376,6 +376,38 @@ var testFunctions = {
         }
     },
     
+    'linespacing' : function(ctx) {
+        //ctx.strokeRect(0, 0, 200, 200);
+        for (j = 0; j < 12; j++) {
+            var max = j < 4 ?80 : Math.floor(3*80/j);
+            for (i = 0; i < max; i++) {
+                ctx.beginPath();
+                var spacing = j < 4 ? j / 3 : j;
+                var x = 0.5 + i * (spacing + 1.1);
+                var y = j * 17;
+                ctx.moveTo(x, y);
+                ctx.lineTo(x, y + 13);
+                ctx.stroke();
+            }
+        }
+    },
+    
+    'linespacing_rounded' : function(ctx) {
+        //ctx.strokeRect(0, 0, 200, 200);
+        for (j = 0; j < 12; j++) {
+            var max = j < 4 ?80 : Math.floor(3*80/j);
+            for (i = 0; i < max; i++) {
+                ctx.beginPath();
+                var spacing = j < 4 ? j / 3 : j;
+                var x = 0.5 + Math.round(i * (spacing  + 1.1));
+                var y = Math.round(j * 17);
+                ctx.moveTo(x, y);
+                ctx.lineTo(x, y + 13);
+                ctx.stroke();
+            }
+        }
+    },
+    
     'linecap' : function(ctx) {
     var lineCap = ['butt','round','square'];
         // Draw guides
