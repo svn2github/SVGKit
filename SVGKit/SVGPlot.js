@@ -6,29 +6,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
-   Another kit I found:  http://www.liquidx.net/plotkit/
-
-   I don't like the way  plotting programs handle things. I set out to create one that:
-   * Outputs SVG and LaTeX and can easily be converted to PDF, PS, PNG
-   * Works in a client-side browser for real-time manipulation of plots 
-   * can hook up live data (JSON, XML, CSV, SQL query, HTML <table> element) 
-   * server-side rendering through Mozilla's command-line JS or Batik
-   * Has good features of Matlab, Mathematica, Asymptote, Ploticus, SuperMongo, GNU Plot, Origin
-   * Can reproduce any plot in Science and Nature as strighforwardly as possible
-   * Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible.
-   * Clean programatic canvas-like interface and also clean SVG-like XML representation.
-   * Reasonable defaults, but ability to tweak everything.
-   * Client-side features of zooming, panning, and exploring the data.
-   * Allows raw data to be published on the web along with suggested ways of viewing it,
-      but allows viewer to painlessly view raw data in other ways (e.g. change scale to log)
    
-   Additional Packages:
-   * Statistics -- mean, stddev, median, quartile, etc, which can then be plotted (box plot)
-   * Histogram -- fixed bins, 10% bins, etc.
-   * Fits -- parameterized functions
-   * Curves -- LOSES method for smooth curve
-   * Spreadsheet-like data manipulator
-
    Everything is object-oriented, but objects get created for you rather than 
    having to call constructors and link them in.  Complimentary like SVG DOM vs Canvas.
    You can always access the objects through the scene-tree.
@@ -80,34 +58,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
           * Zoom in around where you first clicked (keeping that point fixed)
             by an amount determined by how much you drag.
     
-   Procedural model (plot function) versus data model (XML/JSON rep).
-    -- Like Canvas vs SVG.
-    -- The procedural model makes it easier to crate variables based on the data
-        and use them in other parts without a lotof xrefs. (How to even do in JSON?)
-    -- The data model makes it easier to change parameters with a UI, 
-        add data, and re-render.
    
-   Ways to pass graph properties:
-     -- Stack-based state method like Canvas
-     -- Explicitly with each function like Mathematica
-             plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )
-     -- A Combo: passing in a dictionary as the last parameter which overrides current state
-            plot(vec, {stroke: 'red', point_style: 'circle'})
-     -- Create objects and set properties with setter functions like vtk
-     * properties are nice for stack-based, but bad for object-based unless you're 
-         in Python where you can capture the setting or you're willing to register callbacks
-         that check if the  state is different than it was when it was drawn
-         Periodic updates aren't so bad.  Mozilla's native SVG element['width']=10 does it this way.
-     * Defaults are hard to deal wtih.  Should axes, ticks, and labels start up on
-         automatically?  Sure.  Then there's a difference between setting the 
-         ones and adding new ones.  When you change a parameter, does it affect the 
-         axes or just the drawing of the new axes?  What if you don't want all of the
-         default ticks and stuff - do you have to delete them all explicitly?
-    
-  Ways to pass parameters:
-    -- List like Mathematica [min, max] or [name, min, max]
-    -- Object/dictionary {min:-5, max:5} 
-    
   Drawing Function can take all of the row and do whatever it wants.
     it draws a shape around the origin given the parameters, 
     which gets translated to the right spot based on the x,y coords.
@@ -122,13 +73,6 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     mouseover star names.
     
     
-  Input data:
-   -- Table (2D array) with column headings (most efficient). First row may be heading. Spreadsheet-like.
-      [ ['x', 'y', 'a'], [7, 3, 6], [4, 2, 9], ...]
-   -- Dictionary with variable names as keys and data as arrays.
-	  { x:[7, 3, 6], y:[4, 2, 9], a:[...], ... }
-   -- List of objects with uniform attributes. Uniform, and what SQLObject returns. Inefficient.  Easily passed to Drawing Function
-      [ {x:7, y:3, a:6}, {x:4, y:2, a:9}, ... ]
    
   TODO
     -- Make all list parameters both comma or space seperated like in SVG.
@@ -190,7 +134,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
        have a bunch of random number that you want to plot values for as a bar chart, not (x,y) points.
        this is true also for dates.  Hits/day is more of a category thing than a linear scale thing.
        Histograms are categories, but what happens when the categories are ranges: 10.0-20.0, 20.0-30.0, etc?
-    
+    -- Strike a balance between ultra-dense plotting and leaving some room for comfort
+    -- Strike a balance between optimizing for the screen (pixel alignment) and a printer
     -- xtoi and ytoj should take into account transformation to currentGroup
     
 	-- SQL Injection attacts, strip out
@@ -223,6 +168,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     * US Census data
     * real-time mouse movement (distance, location, time spent up/down, correlations)
     * Chromaticity diagram
+    * Maps of earth in different projections
     
     Annotations:
     * Label on plot
@@ -983,7 +929,7 @@ SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 
     return this.box;
 }
 
-// View  -- View eventually defines mapping (x,y) -> (i,j).  What about polar?
+// View  -- View eventually defines mapping (x,y) -> (i,j).  What about polar?  What about map projections?
 
 SVGPlot.View = function(svgPlot, parent) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
@@ -1778,6 +1724,16 @@ SVGPlot.renderText = function (text, location, bbox, position, min, max, map) {
 SVGPlot.prototype.plot = function() {
     /***
         Does the right thing depending on the data passed
+        If there's no plot, assume 
+        (y1) to be plotted against integers for one argument
+        and (x, y1, y2, ...) for more than one argument.
+        If there is already a plot, should we assume 
+        (x2, y3, y4) again, or assume (y3, y4, y5...)?
+        
+        Does this take object or lists and list of object formats?
+        
+        Does it take an optional final parameter that is a mapping to override
+        the current settings?
     ***/
     if ( typeof(arguments[0]) == 'string')  // if passed 'sin(x)'
         return this.plotFunction.apply(this, arguments)
@@ -2170,8 +2126,6 @@ SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'te
 ////////////////////////////
 
 
-
-
 SVGPlot.prototype.listToObject = function(list) {
     /***
         Converts SQL/JSON style data of the form "list of objects":
@@ -2257,6 +2211,8 @@ SVGPlot.prototype.maxmin = function(data, max, min) {
     })
 }
 
+/* Some spreadsheet-like functions to evaluate a row where
+   some of the items are functions.  */
 SVGPlot.prototype.evaluate_table = function(raw_table) {
     return applymap(this.evaluate_row, raw_table);
 }
@@ -2284,6 +2240,143 @@ SVGPlot.prototype.evaluate_item = function(row, key) {
         row['__circular_check__'][key] = null;
     }
 }
+
+////////////////////////////
+//  Drawer / Mapper / Renderer / DrawingFunction
+////////////////////////////
+
+/***
+    The concept behnid the mapper is that sometimes you want to write a
+    funcion that takes a row of data {x:1, y:2, a:3, b:4, c:'bob'} and draws
+    a point on the graph -- you want complete control of the color, shape, and size
+    as some complicated function of each row's elements.
+    
+    Other times you want a simple interface that says, "get (x,y) position
+    from the x and y fields, map a to the shape, b to the color, and have a constant size,
+    and finally stick a label on each point given by c.
+    
+    There can be combinations too where you want to write your own function
+    to calculate the color based on some combination of the elements,
+    but you want the shape to be determined by parameter a and the color
+    to be the next constant color in line.
+    
+    What's the best way to do this so the interface is simple and intuitive for
+    everybody?
+    
+    You want to set these things to one of three things: a constant, a function, or a field name.
+    How to distinguish between constants that are strings and field names that are too?
+    
+    Each variable must keep a scale to map between inputs and outputs.  Maybe sometimes
+    you want the color to be mapped logarithmically, but you still don't want to write a custom function.
+    
+    pm = new PointMapper()
+    pm.position = ['x', 'y']
+    // pm.x = 'x'; pm.y = 'y'
+    pm.shape = 'square'
+    pm.color = function(row, max, min) {
+        var a = row['a']
+        var b = row['b']
+        var mag = Math.sqrt(a*a+b*b)
+        var phase = Math.atan2(b,a)
+        retrurn hsv(pase, mag, 1.0)
+    }
+    p.scatterPlot(dataset, pm)
+***/
+
+SVGPlot.PointMapper = function() {
+}
+
+
+SVGPlot.PositionMapper = function() {
+    /*** Maps data to x,y location
+         common for points, lines, areas, & bars ****/
+}
+SVGPlot.PositionMapper.prototype{
+    position: function(row, max, min) {},
+    x: 'x',
+    y: 'y',
+}
+
+SVGPlot.PanelMapper = function() {
+}
+SVGPlot.PanelMapper.prototype = {
+    panel: function(row, max, min) {},
+}
+
+SVGPlot.PointMapper.prototype = {
+    draw: function(row, max, min) {},
+    orientation: null,
+    size: null,
+    aspect_ratio: null,
+    
+    shape: function(row, max, mni) {},
+    shape_cycle: false,  // Each plot gets its own shape
+    shape_indexed: null
+    shape_index: {'s':'square', 'c':'circle'}
+    
+    fill_rgba : function(row, max, min) {},
+    fill_alpha: function(row, max, min) {},
+    fill_color: function(row, max, min) {},
+    fill_color_cycle: false,
+    fill_color_indexed: null,
+    fill_color_index: {'r': 'red', 'g':'green'},
+    fill_rgb: function(row, max, min) {},
+    fill_red: null,
+    fill_green: null,
+    fill_blue: null,
+    fill_red_green: null,
+    fill_yellow_blue: null,
+    fill_black_white: null,
+    fill_color_scale: null,  // Temperature map, height map, etc.
+    fill_color_scale2d: null,  // (red, blue), (hue, saturation) or (red_green, yellow_blue)
+    fill_hue: null,
+    fill_saturation: null,
+    fill_value: null,  // cone
+    fill_lightness: null,  // double cone (also called brightness)
+    
+    stroke_rgba : function(row, max, min) {},
+    stroke_alpha: function(row, max, min) {},
+    stroke_color: function(row, max, min) {},
+    stroke_color_cycle: false,
+    stroke_color_indexed: null,
+    stroke_color_index: {'r': 'red', 'g':'green'},
+    stroke_rgb: function(row, max, min) {},
+    stroke_red: null,
+    stroke_green: null,
+    stroke_blue: null,
+    stroke_red_green: null,
+    stroke_yellow_blue: null,
+    stroke_black_white: null,
+    stroke_color_scale: null,  // Temp map, height map, etc.
+    stroke_hue: null,
+    stroke_saturation: null,
+    stroke_value: null,  // cone
+    stroke_lightness: null,  // double cone (also called brightness)
+    
+    //'lineCap': "butt", // also "round" and "square"
+    //'lineJoin': "miter", // also "round" and "bevel"
+    //'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
+    //'miterLimit': null, 
+    //'dasharray' : null,  // a string list "1,2" to make strokes dashed
+    //'dashoffset' : null, // a number like 3 which specifies how to start the dashing
+}
+
+
+SVGPlot.LineMapper = function() {
+}
+// Thickness and dashing are included
+
+SVGPlot.ShadingMapper = function() {
+}
+// Shade to where?  x-axis, y-axis, another plot?
+
+SVGPlot.LabelMapper = function() {
+}
+// rgba, font, size, position, orientation
+
+SVGPlotBarMapper = function() {
+}
+// stroke, fill, width_percent, location, horizontal/vertical, 
 
 
 ////////////////////////////
