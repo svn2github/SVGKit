@@ -1,5 +1,6 @@
 /***
-SVGPlot 0.1
+
+SVGPlot.DateTime 0.1
 
 See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
@@ -304,6 +305,24 @@ SVGPlot.DateTime = {
             These differ based on country.
             This uses the strings stored in months and days, so can be localized
         ***/
+        formats = [
+            'm/d/yyyy',
+            'm/d/yy',
+            'h:m'
+        ]
+        /*
+            Look for the various items:
+            Words are either weekdays, months, or timezones
+            Things seperated by slashes or dashes are dates
+            Things seperated by colons are times h:m or m:s
+            Use valid ranges to determine month/day/year order ambiguity
+            If ranges fail, favor either month first or day first
+            
+            How to tell intervals versus absolute date/times?
+            Excel cheats and treats "5:04" as "1/0/1900 5:04 AM"
+            using Jan-0 to mean "abstract time" 
+            It treats 1/1 as "1/1/<current year>"
+        */
         return null
     },
     firstDifferent : function(start, end) {
