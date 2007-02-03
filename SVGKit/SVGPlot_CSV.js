@@ -1,3 +1,18 @@
+/***
+
+SVGPlot.CSV 0.1
+
+See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
+
+(c) 2006 Jason Gallicchio.  All rights Reserved.
+
+    This is a JavaScript library for reading and writing 
+    Comma Seperated Variable strings.
+
+    TODO: Handle space-seperated data properly -- many tables are given in this format
+    TODO: Converstions to and from JSON, XML, HTML table
+    TODO: Make an HTML table out of the read-in CSV table in the test page
+***/
 
 SVGPlot.CSV = {
 
@@ -46,11 +61,6 @@ SVGPlot.CSV = {
 
     readCSV : function(string, delimiter /*=','*/) {
         /***
-        Both commas and new-lines can be contained between quotes
-        Handle final empty line?
-        Auto-detect how much?
-        Auto parse dates how?
-        
         Input:
         CSV is defined to map a 2D array of arbitrary strings 
         called "fields" into one long string that can be stored in a file.
