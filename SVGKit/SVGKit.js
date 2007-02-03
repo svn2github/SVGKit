@@ -33,7 +33,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
        always makes the second of the two work graphically, but fail DOM/XML wise.
        
     IE doesn't seem to be able to pull anything out once it's put in:
-      >>> document.svg.svgElement.getElementsByTagName('path')
+      >>> document.svgkit.svgElement.getElementsByTagName('path')
       [undefined, undefined, undefined, undefined]
     It knows that I added four paths, but I can't get them out.  Same for svgElement.childNodes
     
@@ -171,13 +171,16 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     //log("SVGKit.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
     if (MochiKit.Base.isUndefinedOrNull(p1)) {
+        /*
         // This JS was included inside of an SVG file, and this was included in the
         // root element's onload event, which you need to to do get a target.
         var evt = p1;
         if ( window.svgDocument == null )
             this.svgDocument = evt.target.ownerDocument;
-            this.svgElement = this.svgDocument.rootElement;  // or svgDocument.documentElement; 
-            this.htmlElement = this.svgElement;
+        */
+        this.svgDocument = document;
+        this.svgElement = this.svgDocument.rootElement;  // or svgDocument.documentElement; 
+        this.htmlElement = this.svgElement;
     }
     else if (typeof(p1) == 'string') {
         if (p1.length>5 && p1.substr(p1.length-4,4).toLowerCase()=='.svg')  // IE doesn't do substr(-4)
@@ -196,7 +199,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     //log("Done creating/grabing svg.");
     this._addDOMFunctions();
     //log("Done with _addDOMFunctions");
-    document.svg = this;  // For debugging, especially in IE
+    document.svgkit = this;  // For debugging, especially in IE
 }
 
 
