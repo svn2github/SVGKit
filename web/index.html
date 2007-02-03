@@ -91,7 +91,7 @@ Fonts are a huge problem. The SVG spec is written so that you can embed
 a font and use it so you get precise alignment and pixel-perfect
 anti-aliased rendering. When you're rendering axis labels, I query the
 exact dimensions of the resulting text for optimal placement.
-None of this works (very well) in Firefox yet.</p>
+None of this works (very well) in Firefox yet. Unline TrueType, SVG fonts don't support hinting (the mechanism that says &quot;render the resolution independent path for the letter A ten pixels high, but then flip the following pixels because it'll look better that way). SVG creation programs have to manually lay out glyphs and will never have great low-resolution output. </p>
 <p>
 Sounds. This is more of a JavaScript problem, but I'd like to
 give it .wav and .mp3 files to play, and be able to generate  raw

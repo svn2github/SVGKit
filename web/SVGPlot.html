@@ -15,17 +15,190 @@
 <div id="content">
 <h1>SVGPlot</h1>
 <h2>Introduction</h2>
-<p>A full plotting suite to eventually rival Excel, Matlab, etc. It generates clean SVG in the browser that can be saved, sent back to server for conversion to PDF, PS, PNG, etc. Live updates via AJAX for real-time data like stocks or web stats. Allows multiple plots arranged on an SVG, multiple related or unrelated axes per plot, and control of styles. Originally I was going to write it in pure Canvas code so you could have either underneath, but things like text made it too frustrating. For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more more production quality release. 
+<p>SVGPlot will be the combunation of three things:
+<ul>
+  <li>JavaScript API for creating plots from data</li>
+<li>XML file format (PlotXML) that can be modified by hand up to edit plot parameters and re-opened in the GUI. </li>
+<li>Online web service to graphically create and manipulate plots  </li>
+</ul>
+<p> The goal is to make these three as clean as possible
+<ul>
+  <li>Simple things are easy -- good defaults and intelligent assumptions</li>
+<li>It's general enough to allow any complicated plot </li>
+<li>Advanced things are are only as complex as they need to be -- no need to always drop back to low level graphics commands. </li>
+</ul>
+<p>I set out to create a plotting program that:
+<ul>
+  <li>Outputs SVG  that can easily be converted to PDF, PS, PNG, JPEG, LaTeX+PS.</li>
+<li>Works in a client-side browser for real-time manipulation of plots </li>
+<li>Can hook up live data (JSON, XML, CSV, SQL query, HTML <code>&lt;table&gt;</code> element) </li>
+<li>Server-side / command-line rendering through <a href="http://xmlgraphics.apache.org/batik/">Batik</a>, a Java program with an embeded JavaScript interpreter that handles SVG. </li>
+<li>Good features of Matlab, Mathematica, <a href="http://www.gnuplot.info/">GNUPlot</a>, <a href="http://ploticus.sourceforge.net/">Ploticus</a>, <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a>, <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a>. Eventually I'd like to write bridges so people's existing scripts and familiarity can be used to generate interactive web content.</li>
+<li>Can reproduce any plot in journals like Science and Nature as strighforwardly as possible. These tend to convey large amounts of data in a small space. </li>
+<li>Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible. These tend to be more instructive with thick lines and simple axes. </li>
+<li>Client-side features of panning, zooming, and exploring the data.</li>
+<li>Allows raw data to optionally be published inside of PlotXML file along with the &quot;suggested way&quot; of viewing it, but the GUI allows viewer to painlessly explore data (e.g. change scale to log)</li>
+</ul>
+
+<h2>Design/Philosophy</h2>
+<p>Looking around, I found most of the existing plotting APIs lacking and decided to start from scratch. </p>
+<p>The idea is to plot data sets. You can think of data sets as an area in a spreadsheet or a table in a database. Each piece of data (row) has values for attributes (columns). Ploting is the act of mapping one or more of these values to one or more plot characteristics: x-position, y-position, color, shape, size, orientation, pannel-number.</p>
+<table border="0">
+  <tr>
+    <td><table  border="0">
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Temperature</th>
+        <th scope="col">Phase of Moon </th>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+      </tr>
+    </table></td>
+    <td>&lt;plot&gt;</td>
+  </tr>
+</table>
+<p>The simplest and most common case is plotting one variable against another. </p>
+<table border="0">
+  <tr>
+    <td><table  border="0">
+        <tr>
+          <th scope="col">x</th>
+          <th scope="col">y</th>
+          </tr>
+        <tr>
+          <td>1</td>
+          <td>1</td>
+          </tr>
+        <tr>
+          <td>2</td>
+          <td>4</td>
+          </tr>
+        <tr>
+          <td>3</td>
+          <td>9</td>
+          </tr>
+        <tr>
+          <td>4</td>
+          <td>16</td>
+          </tr>
+    </table></td>
+    <td>&lt;plot&gt;</td>
+  </tr>
+</table>
+<p>There are two main types of data:</p>
+<ul>
+  <li>Linear -- numbers (real and inegers), dates, times, money</li>
+<li>Category -- names, days of the week, some dates and numbers which you don't want relatively poisitioned. There may or may not be a natural ordering. </li>
+</ul>
+<p>A histogram is a higher-level construct. Here the data isn't directly mapped to the plot, but something is first calculated (how many data points fit into each category) and then the category versus counts are plotted.</p>
+<h2>Plot Features to Support </h2>
+<ul>
+  <li>Auto-scaling axes based on data range. Option to definately include zero. Option to include a little extra padding (go to the nearest integer)</li>
+<li>Tick marks on the axes, explicitly given or auto generated to be reasonably spaced.</li>
+  <li>Grid - lines, stripes, checkerboard </li>
+  <li>Labels along the axes, explicit or auto</li>
+  <li>Multiple axes referring to the same plot area -- either dependent axes (like Celsius and Fahrenheit) or independent axes for plotting two different types of variables in the same area </li>
+  <li>Axis titles, plot titles</li>
+  <li>Ledgends </li>
+  <li>Multiple plot pannels, either independent or dependent (sharing axes which must auto-scale together despite different data.) </li>
+  <li>Annotations
+    <ul>
+      <li> labels on each dataset</li>
+    <li>arrows with or without labels</li>
+    <li>span indicators of vaious kinds: <code>|---- x ----|</code>  or <code>---&gt; &lt;---</code></li>
+    <li>SVG graphics and effects on top of plot, but whose position can be given in terms of plot coordinates.</li>
+    </ul>
+  </li>
+  <li>Polar Coordinates (and other coordinate systems like hyperbolic and triangular)</li>
+  <li>Logarithmic, arctan, and other kinds of scales. (Should this be a property of the plot canvas or a property of the mapping of the dataset onto the plot canvas?)</li>
+  <li>Pie Charts</li>
+  <li>Area Charts </li>
+  <li>Bar Charts, both horizontal and vertical of many styles and information (absolute, percent of whole, etc) </li>
+  <li>Double bar charts where one category is horizontal and within that there are several bars for a second category. </li>
+  <li>Dates, times, and Date-time stamps. Relative times (durations expressed in seconds, minutes, days, etc.) </li>
+</ul>
+<h2>Inspiration/Othe Programs </h2>
+<p>
+<p><b>Data Plotting </b><a href="http://ploticus.sourceforge.net/">Ploticus</a> / <a href="http://www.gnuplot.info/">GNUPlot</a> / <a href="http://matplotlib.sourceforge.net/">Matplotlib</a> / <a href="http://www.gnu.org/software/plotutils/plotutils.html">GNU PlotUtils</a> / <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a> / <a href="http://www.wavemetrics.com/">Igor Pro Galary</a> / <a href="http://www.originlab.com/">Origin (Comm)</a> / <a href="http://www.mathworks.com/access/helpdesk/help/techdoc/learn_matlab/learn_matlab.html">Matlab Tutorial</a> / <a href="http://www.dplot.com/features.htm">Dplot Galery (Win Trial)</a> / <a href="http://www.kylebank.com/">Graphis</a> / <a href="http://www.kde-apps.org/content/show.php?content=9881">LabPlot KDE</a> / <a href="http://www.jfree.org/jfreechart/">JFreeChart</a> / <a href="http://plasma-gate.weizmann.ac.il/Grace/">Grace for X</a> / <a href="http://nces.ed.gov/nceskids/createagraph/">Create A Graph Website</a> / <a href="http://www.gnu.org/software/octave/">Octave (OSS Matlab)</a> / <a href="http://www.liquidx.net/plotkit/">PlotKit</a> / <a href="http://www.dotnetcharting.com/gallery/">.netCharting</a> /
+  </p>
+<p><b>Function Plotting </b> <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a> / <a href="http://www.nucalc.com/">NuCalc (old Mac)</a> / <a href="http://www.peda.com/grafeq/gallery/rogue.html">GrafEQ Interval</a> / <a href="http://www.mps.mpg.de/dislin/">DLSin</a> / <a href="http://mtac.sourceforge.net/">MTAC Java</a> / <a href="http://gcalc.net/">Java Online</a> / <a href="http://www.graphcalc.com/index.shtml">GraphCalc OSS Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/16712-Graph-Plotter.html">GraphPlotter Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/15448-Fornux-Calculator-Student-Edition.html">Fornux Win</a> / <a href="http://www.teber.biz/">Math 3D Explorer</a> / <a href="http://www.math.tu-berlin.de/geometrie/lab/curvesnsurfaces.shtml">Virtual Labs</a> / </p>
+<p><b>Complex and Vector Plotting</b> <a href="http://www.usfca.edu/vca/websites.html">Visual Complex Analysis Websites</a> / <a href="http://www.sunsite.ubc.ca/LivingMathematics/V001N01/UBCExamples/Flow/flow.html">Draw Rect Vector Flow</a> / <a href="http://math.la.asu.edu/~kawski/vfa2/index.html">Vector Field Analizer (Applet)</a> / <a href="http://www.math.ttu.edu/~pearce/complex/complexviewer.html">Complex Mapping Viewer</a> / <a href="http://www.cs.berkeley.edu/~flab/complex/gallery.html">Complex Functions</a> / </p>
+<p><strong>Visualization </strong><a href="http://public.kitware.com/VTK/">VTK</a> / <a href="http://www.paraview.org/">ParaView</a> / <a href="http://www.llnl.gov/visit/home.html">VisIT</a> / <a href="http://www.opendx.org/">OpenDX (IBM's Viz Data Explorer)</a> / <a href="http://software.sci.utah.edu/scirun.html">SCIRun</a> / <a href="http://www.nag.co.uk/welcome_iec.asp">NAG's Iris Explorer</a> / <a href="http://ltc.smm.org/visualize/">OSS Package</a> / <a href="http://www.math.yorku.ca/SCS/Gallery/">Gallary of Viz</a> / </p>
+<p><strong>Data Analysis</strong> <a href="http://root.cern.ch/">Root</a> / <a href="http://jas.freehep.org/jas3/">Java Analysis Studio (JAS3)</a> / <a href="http://www.slac.stanford.edu/grp/ek/hippodraw/">HippoDraw</a> / <a href="http://aida.freehep.org/">AIDA: Abstract Interfaces for Data Analysis</a></p>
+<p><strong>Computer Algebra Systems</strong> <a href="http://sourceforge.net/projects/maxima">Maxima</a> / <a href="http://yacas.sourceforge.net/">Yacas</a> / <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/euler/">Euler</a> / <a href="http://www.matheclipse.org/">Eclipse</a> / <a href="http://sage.math.washington.edu/sage/">Sage</a> / </p>
 <h2>Live Demos </h2>
 <ul>
   <li><a href="../tests/plot_tests.html">live demo</a> - Table of tests that you can modify and re-run client side.</li>
   <li><a href="../tests/plot_csv.html">csv demo</a> - Type or past in CSV from a spread sheet and plot it. </li>
 </ul>
-<h2>In Flux </h2>
-<p>I'm in the process of changing the way SVGPlot works in fundamental ways in order to insure nobody will learn an obsolete API. If you want to know when it comes out, e-mail me at <a href="mailto:jason@physics.harvard.edu">jason@physics.harvard.edu</a></p>
-<p>
+<h2>Design Issues/Tradeoffs </h2>
+<ul>
+  <li>Densly pack information in the available space mimimizing margins and extraneous &quot;ink?&quot; This is good for web viewing. Or shoud it more leasurely arrange things for optimal print viewing?</li>
+<li>Pixel align vertial and horizontal lines to avoid annoying anti-aliasing effects or position ploted object &quot;properly&quot; for accurate printing?</li>
+<li>When the SVG DOM is modified, those changes are reflected in the resulting image. I don't think there's a way to &quot;capture&quot; possible modifications on the PlotXML DOM tree and to change the plot (or other calculated information) accordingly in real time. This means there really needs to be a duplication between the API function calls and the XML representation. Put another way, changing the DOM can't have side effects like calling a function.</li>
+<li>Procedural model (plot function) versus data model (XML/JSON rep).
+  <ul>
+    <li>Like Canvas vs SVG.</li>
+  <li>The procedural model makes it easier to crate variables based on the data and use them in other parts without a lotof xrefs. (How to even do in JSON?)</li>
+  <li>The data model makes it easier to change parameters with a UI, add data, and re-render.</li>
+  </ul>
+</li>
+<li>Ways to pass graph properties:
+  <ul>
+    <li>Stack-based state method like Canvas<br />
+      <code>      strokeStyle = 'red'; plot(func, {'x', 0, 10})</code>    </li>
+  <li>Explicitly with each function like Mathematica:<br />
+    <code>plot(func, {'x', 0, 10}, {'strokeStyle':'red'} )</code></li>
+  <li>A Combo: passing in a dictionary as the last parameter which overrides current state</li>
+  <li> Create objects and set properties with setter functions explicitly like vtk</li>
+  </ul>
+</li>
+<li>Properties are nice for stack-based, but bad for object-based unless you're in Python where you can capture the setting or you're willing to register callbacks that check if the state is different than it was when it was drawn Periodic updates aren't so bad. Mozilla's native SVG element['width']=10 does it this way.</li>
+<li>Defaults are hard to deal wtih. Should axes, ticks, and labels start up on automatically? Sure. Then there's a difference between setting the ones and adding new ones. When you change a parameter, does it affect the  axes or just the drawing of the new axes? What if you don't want all of the default ticks and stuff - do you have to delete them all explicitly?</li>
+<li>Input data:
+  <ul>
+    <li>Table (2D array) with column headings (most efficient). First row may be heading. Spreadsheet-like.<br />
+        <code>[ ['x', 'y', 'a'], [7, 3, 6], [4, 2, 9], ...]</code></li>
+  <li>Dictionary with variable names as keys and data as arrays.<br />
+        <code>{ x:[7, 3, 6], y:[4, 2, 9], a:[...], ... }</code></li>
+  <li>List of objects with uniform attributes. Uniform, and what SQLObject returns. Inefficient. Easily passed to Drawing Function<br />
+      <code>[ {x:7, y:3, a:6}, {x:4, y:2, a:9}, ... ]</code></li>
+  </ul>
+</li>
+<li>What about truely 2D or 3D data like an image or height map? Would like to read in PNG/JPEG, etc. Would like to read astronomy's FITS files.</li>
+<li>What about topological information like regular grids, irregular grids, mesh of cells? These can all be described by tables where each datum includes all of this information, but that's not a good way to format or think about the data.</li>
+<li>Should 3D data even be supported by generating one-view SVG, or should this wait until a true web-friendly XML-based 3D data standard like X3D becomes universally adopted?</li>
+<li>Shoud the PlotXML format and JavaScript API be written extensibly to support these kinds of plots once the underlying 3D technology is feasable, or would that make simple things too complicated?</li>
+<li>I'd love to have written this whole thing in Python or a combination of Python and C++ for the low-level stuff, but alas JavaScript is the only supported scripting language on the web and in SVG. Opening and saving files is imposible without going through a server, as is connecting to real-time data aquisition hardware. </li>
+</ul>
+<h2>Future Plans or Additional Packages </h2>
+<ul>
+  <li>Curve Fitting</li>
+<li>Histograms</li>
+  <li>Statistical Analysis</li>
+<li>Computer Algebra system for function plotting </li>
+</ul>
+
+<p>&nbsp;</p>
 </div> <!-- content -->
-</p>
 <!--#include virtual="footer.html" -->
 </div>  <!-- container -->
 

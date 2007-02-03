@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>SVGFontKit</title>
+	<link href="./simple.css" rel="stylesheet" type="text/css"></link>
+	<link href="./twocol.css" rel="stylesheet" type="text/css"></link>
+	<!--<link rel="SHORTCUT ICON" href="favicon.ico"></link>-->
+	<meta name="author" content="Jason Gallicchio"></meta>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+
+<div id="container">
+<!--#include virtual="menu.html" -->
+<div id="content">
+<h1>SVGFontKit (under development)</h1>
+<h2>The Problem </h2>
+<p>Firefox doesn't yet handle embeded SVG fonts. Despite the fact that it handles text, it does so in a way that sucks. I'm sure they have their reasons like &quot;integration with the rest of the text on the page&quot; but it sucks.
+<h2>Introduction</h2>
+<p>This is a hack to replace all SVG &lt;text&gt; and &lt;tspan&gt; elements that reference an embeded SVG font with references to the font's glyphs properly positioned and spaced. This hack is necesary because Firefox lacks support for SVG Fonts, and currently &lt;text&gt; elements are rendered and sized according to the rest of the web pages's fonts rather than pixel-perfectly as demanded by the SVG spec. </p>
+<p>The major motivation for this is to render TeX equations for SVGPlot. TeX's fonts are natively specified using METAFONT, which uses a different way of describing fonts compared to PostScript (and SVG). Rather than giving a mathematical description for the outline, which get filled, METAFONT fonts are actually the stroke of a variable-width pen. Also, different sizes aren't just exact scalings of each other -- a whole program gets run with new parameters to generate new strokes. Computer Modern 5 is smaller then 10, but has more relative spacing between the letters and the same stroke thickness for greater readability. </p>
+<h2>What it does </h2>
+<p>It's a stand-alone JavaScript that doesn't require SVGKit or MochiKit that:
+<ul>
+  <li>Takes an SVG font and creates a list of <code>&lt;path&gt;</code> elements in the <code>&lt;defs&gt;</code> section which can be referenced in the next step. </li>
+  <li>Each path is assigned a unique id that includes the font name and the unicode field of the origional glyph.  This is becayse the glyph-name field doesn't have to be present or unique.  Unfortunately there can be more than one glyph for a given unicode, which means the glyph-name is used, but I won't worry about this here.  For example, if the font is "Bitstream Vera Sans" and the unicode is "A" the reference becomes "Bitstream Vera Sans _ A"  Maybe this can be shortened to save space.
+<li>Goes through and replaces the SVG <code>&lt;text&gt;</code> and <code>&lt;tspan&gt;</code> elements that reference an embeded font with a series of properly spaced &lt;use&gt; elements that reference <code>&lt;paths&gt;</code> corresponding to the glyphs.</li>
+  <li>Calculates bounding boxes</li>
+<li>Is able to do the inverse (switch back to <code>&lt;text&gt;</code> elements) making it a one-to-one lossless mapping. This is so the SVG can be exported with <code>&lt;text&gt;</code> elements.  It achieves this by tagging the <code>&lt;text&gt;</code> elements with "display=none" and everything it touched by class=SVGFontKit".  What about if the text started out display:none?  It wouldn't be modified on the forward or inverse pass.</li>
+</ul>
+<h2>Things that make this a horrible hack </h2>
+<ul>
+  <li>Text is no longer searchable or copyable to the system clipboard</li>
+<li>The DOM tree will be altered to a bunch of <code>&lt;use&gt;</code> elements rather than the &lt;text&gt; element</li>
+<li>It may not handle CSS applied to the <code>&lt;font&gt;</code> and <code>&lt;glyph&gt;</code> elements properly. </li>
+</ul>
+<p>To steal from the <a href="http://www.w3.org/TR/SVG11/fonts.html">spec</a>:</p>
+<pre>
+&lt;?xml version="1.0" standalone="yes"?&gt;
+&lt;svg width="400px" height="300px" version="1.1"
+  xmlns = 'http://www.w3.org/2000/svg'&gt;
+  &lt;defs&gt;
+
+    &lt;font id="Font1" horiz-adv-x="1000"&gt;
+      &lt;font-face font-family="Super Sans" font-weight="bold" font-style="normal"
+          units-per-em="1000" cap-height="600" x-height="400"
+          ascent="700" descent="300"
+          alphabetic="0" mathematical="350" ideographic="400" hanging="500"&gt;
+        &lt;font-face-src&gt;
+          &lt;font-face-name name="Super Sans Bold"/&gt;
+        &lt;/font-face-src&gt;
+      &lt;/font-face&gt;
+
+      &lt;missing-glyph&gt;&lt;path d="M0,0h200v200h-200z"/&gt;&lt;/missing-glyph&gt;
+      &lt;glyph unicode="!" horiz-adv-x="300"&gt;&lt;!-- Outline of exclam. pt. glyph --&gt;&lt;/glyph&gt;
+      &lt;glyph unicode="@"&gt;&lt;!-- Outline of @ glyph --&gt;&lt;/glyph&gt;
+      &lt;!-- more glyphs --&gt;
+
+    &lt;/font&gt;
+  &lt;/defs&gt;
+  &lt;text x="100" y="100" 
+           style="font-family: 'Super Sans', Helvetica, sans-serif;
+                  font-weight: bold; font-style: normal"&gt;Text 
+    using embedded font&lt;/text&gt;
+&lt;/svg&gt;
+</pre>
+
+
+<h2>References</h2>
+<p><a href="http://freetype.sourceforge.net/freetype2/docs/glyphs/index.html">FreeType Glyph Conventions</a></p>
+<h2>What Makes Fonts Hard</h2>
+<ul>
+<li>Unicode - huge number of glyphs to embed in every file</li>
+<li>Character substitution</li>
+<li>Kerning</li>
+<li>Hinting - to align each character to a pixel and space the next one appropriately makes the bounding box not scale with the font size even though the vector paths themselves do.</li>
+<li>Licences on the fonts, Trademarks on the names, and Patents on the technology (like TrueType's hinting engine.)</li>
+</ul>
+<h2>SVG Font Issues </h2>
+<p>No hinting (grid-fitting) -- Hinting has to do with aligning a vector outline to a screen or printer's pixels. This can be good or bad, depending on the application. PDF and SVG are supposed to be device-independent, so hinting should't affect the placement of characters. Unfortunately this means that at low resolution, the text might not look as good as it would with hinting. </p>
+<h2>Font Recomendations </h2>
+<ul>
+  <li>For the web, use <a href="http://en.wikipedia.org/wiki/Bitstream_Vera">Bitstream Vera</a> or the <a href="http://en.wikipedia.org/wiki/DejaVu_fonts">DejaVu</a> unicode extension of it (which include more unicode characters). They are TrueType fonts with full hinting instructions, designed to render on low-resolution devices such as computer monitors. They are free and open, unlike Microsoft's excellent <a href="http://en.wikipedia.org/wiki/Verdana">Verdana</a> which is free-as-in-beer, but restrictively distributed.</li>
+<li>For printing, use <a href="http://en.wikipedia.org/wiki/Computer_Modern">Computer Modern</a>, TeX's defult font, especially for complex equations.</li>
+</ul>
+<p>&nbsp;</p>
+</div> 
+<!--#include virtual="footer.html" -->
+</div>  <!-- container -->
+
+</body>
+</html>
