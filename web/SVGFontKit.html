@@ -15,7 +15,7 @@
 <div id="content">
 <h1>SVGFontKit (under development)</h1>
 <h2>The Problem </h2>
-<p>Firefox doesn't yet handle embeded SVG fonts. Despite the fact that it handles text, it does so in a way that sucks. I'm sure they have their reasons like &quot;integration with the rest of the text on the page&quot; but it sucks.
+<p>Firefox doesn't yet handle embeded SVG fonts. Despite the fact that it handles text, it does so in a way that sucks. I'm sure they have their reasons like &quot;integration with the rest of the text on the page&quot; but it sucks -- increasing or decreasing the size of text on the page changes the text in the SVG, which makes it look stupid since SVG text is absolutely positioned. This is, hopefully, a temporary hack to solve the problems I'm having. Unlike the other parts of SVGKit, it will only be made as general as I (or user requests) need it to be. 
 <h2>Introduction</h2>
 <p>This is a hack to replace all SVG &lt;text&gt; and &lt;tspan&gt; elements that reference an embeded SVG font with references to the font's glyphs properly positioned and spaced. This hack is necesary because Firefox lacks support for SVG Fonts, and currently &lt;text&gt; elements are rendered and sized according to the rest of the web pages's fonts rather than pixel-perfectly anti-aliased as demanded the SVG spec seems to require. </p>
 <p>The major motivation for this is to render TeX equations for SVGPlot. TeX's fonts are natively specified using METAFONT, which uses a different way of describing fonts compared to PostScript (and SVG). Rather than giving a mathematical description for the outline, which get filled, METAFONT fonts are actually the stroke of a variable-width pen. Also, different sizes aren't just exact scalings of each other -- a whole program gets run with new parameters to generate new strokes. Computer Modern 5 is smaller then 10, but has more relative spacing between the letters and the same stroke thickness for greater readability. </p>
@@ -27,11 +27,13 @@
 <li>Goes through and replaces the SVG <code>&lt;text&gt;</code> and <code>&lt;tspan&gt;</code> elements that reference an embeded font with a series of properly spaced &lt;use&gt; elements that reference <code>&lt;paths&gt;</code> corresponding to the glyphs.</li>
   <li>Calculates bounding boxes</li>
 <li>Is able to do the inverse (switch back to <code>&lt;text&gt;</code> elements) making it a one-to-one lossless mapping. This is so the SVG can be exported with <code>&lt;text&gt;</code> elements.  It achieves this by tagging the <code>&lt;text&gt;</code> elements with "display=none" and everything it touched by class=SVGFontKit".  What about if the text started out display:none?  It wouldn't be modified on the forward or inverse pass.</li>
+<li>Useful Bit: Integrate another SVG image's fonts, perhaps even going so far as to add only new glyphs. This would be useful for TeX equations. </li>
 </ul>
 <h2>Things that make this a horrible hack </h2>
 <ul>
   <li>Text is no longer searchable or copyable to the system clipboard</li>
-<li>The DOM tree will be altered to a bunch of <code>&lt;use&gt;</code> elements rather than the &lt;text&gt; element</li>
+<li>The DOM tree will be altered to a bunch of <code>&lt;use&gt;</code> elements rather than the <code>&lt;text&gt;</code> element</li>
+<li>Text elements are no longer editable -- at the end of the day you'll want to restore your <code>&lt;text&gt;</code> elements and will lose style and transform information. (Maybe there can be an outter group which starts off with no stye.)</li>
 <li>It may not handle CSS applied to the <code>&lt;font&gt;</code> and <code>&lt;glyph&gt;</code> elements properly. </li>
 </ul>
 <p>To steal from the <a href="http://www.w3.org/TR/SVG11/fonts.html">spec</a>:</p>
@@ -66,13 +68,19 @@
 </pre>
 
 
+<h2>Tests</h2>
+<ul>
+  <li>Font cards created by Batik</li>
+<li>Batik examples</li>
+<li>TeX Output </li>
+</ul>
 <h2>References</h2>
 <p><a href="http://freetype.sourceforge.net/freetype2/docs/glyphs/index.html">FreeType Glyph Conventions</a></p>
 <h2>What Makes Fonts Hard</h2>
 <ul>
 <li>Unicode - huge number of glyphs to embed in every file</li>
-<li>Character substitution</li>
-<li>Kerning</li>
+<li>Character substitution for things like ligatures: 'fi'</li>
+<li>Kerning - Like moving the 'A' back a little in the pair 'WA'. </li>
 <li>Hinting - to align each character to a pixel and space the next one appropriately makes the bounding box not scale with the font size even though the vector paths themselves do.</li>
 <li>Licences on the fonts, Trademarks on the names, and Patents on the technology (like TrueType's hinting engine.)</li>
 </ul>
