@@ -1239,7 +1239,7 @@ SVGPlot.prototype.removeYTickLabels = function() {
 
 
 ////////////////////////////
-//  createElement(), layout() and render()
+//  createElements(), layout() and render()
 ////////////////////////////
 
 SVGPlot.prototype.render = function () {
@@ -1305,7 +1305,7 @@ SVGPlot.Box.prototype.render = function () {
     // Set any auto-scales before we create any tickLabels. If the tickLabels are 'auto', they need to know the scale.
     for (var i=0; i<this.views.length; i++) {
         this.views[i].setAutoView();
-        this.views[i].createElement();
+        this.views[i].createElements();
     }
     
     this.svgPlot.svg.svgElement.forceRedraw();  // So that all of the tickLabels have bounding boxes for the layout.
@@ -1328,37 +1328,37 @@ SVGPlot.Box.prototype.render = function () {
     }
 }
 
-SVGPlot.View.prototype.createElement = function() {
+SVGPlot.View.prototype.createElements = function() {
     SVGPlot.createGroupIfNeeded(this, 'view');
     
     for (var j=0; j<this.xAxes.length; j++) {
-        this.xAxes[j].createElement();
+        this.xAxes[j].createElements();
     }
     for (var j=0; j<this.yAxes.length; j++) {
-        this.yAxes[j].createElement();
+        this.yAxes[j].createElements();
     }
     for (var j=0; j<this.plots.length; j++) {
-        this.plots[j].createElement();
+        this.plots[j].createElements();
     }
 }
 
-SVGPlot.Axis.prototype.createElement = function() {
+SVGPlot.Axis.prototype.createElements = function() {
     SVGPlot.createGroupIfNeeded(this, 'axis', 'stroke');
     
     for (var k=0; k<this.ticks.length; k++)
-        this.ticks[k].createElement()
+        this.ticks[k].createElements()
     for (var k=0; k<this.tickLabels.length; k++)
-        this.tickLabels[k].createElement()
+        this.tickLabels[k].createElements()
     for (var k=0; k<this.axisTitles.length; k++)
-        this.axisTitles[k].createElement()
+        this.axisTitles[k].createElements()
 }
 
 
-SVGPlot.Ticks.prototype.createElement = function() {
+SVGPlot.Ticks.prototype.createElements = function() {
     SVGPlot.createGroupIfNeeded(this, 'ticks', 'stroke');
 }
 
-SVGPlot.TickLabels.prototype.createElement = function() {
+SVGPlot.TickLabels.prototype.createElements = function() {
     SVGPlot.createGroupIfNeeded(this, 'tickLabels', 'text');
     
     this._locations = this.locations;
@@ -1391,7 +1391,7 @@ SVGPlot.TickLabels.prototype.createElement = function() {
     p.restore();
 }
 
-SVGPlot.AxisTitle.prototype.createElement = function() {
+SVGPlot.AxisTitle.prototype.createElements = function() {
     SVGPlot.createGroupIfNeeded(this, 'axisTitle', 'text');
 
     MochiKit.DOM.replaceChildNodes(this.element);
@@ -1792,7 +1792,7 @@ SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
 	parent.yScale.dataSets.push(ydata)
 }
 
-SVGPlot.LinePlot.prototype.createElement = function () {
+SVGPlot.LinePlot.prototype.createElements = function () {
     SVGPlot.createGroupIfNeeded(this, 'line-plot', 'stroke');
 }
 
@@ -1875,7 +1875,7 @@ SVGPlot.ScatterPlot1D = function(svgPlot, parent, data) {
 	parent.yScale.dataSets.push([0]*data.length)
 }
 
-SVGPlot.ScatterPlot1D.prototype.createElement = function () {
+SVGPlot.ScatterPlot1D.prototype.createElements = function () {
     SVGPlot.createGroupIfNeeded(this, 'scatter1D-plot', 'stroke');
 }
 
@@ -2291,7 +2291,8 @@ SVGPlot.PositionMapper = function() {
     /*** Maps data to x,y location
          common for points, lines, areas, & bars ****/
 }
-SVGPlot.PositionMapper.prototype{
+
+SVGPlot.PositionMapper.prototype = {
     position: function(row, max, min) {},
     x: 'x',
     y: 'y',
@@ -2311,8 +2312,8 @@ SVGPlot.PointMapper.prototype = {
     
     shape: function(row, max, mni) {},
     shape_cycle: false,  // Each plot gets its own shape
-    shape_indexed: null
-    shape_index: {'s':'square', 'c':'circle'}
+    shape_indexed: null,
+    shape_index: {'s':'square', 'c':'circle'},
     
     fill_rgba : function(row, max, min) {},
     fill_alpha: function(row, max, min) {},
