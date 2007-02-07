@@ -261,14 +261,14 @@ var testFunctions = {
         ctx.fill();
     },
     
-    'graphImage' : function(context) {
+    'graphImage' : function(ctx) {
         var image = new Image();
         image.src = '../tests/canvas_tests_images/graphImage.png';
         log("outter image function called for ", image.src);
-        var imageStuff = function(ctx, img) {
+        var imageStuff = function() {
             log("inner imageStuff called for ", image.src);
-            log("drawing image stuff for ctx = ", ctx, "img = ", img, img.width, img.height, img.complete  );
-            ctx.drawImage(img,0,0);
+            log("drawing image stuff for ctx = ", ctx, "image = ", image, image.width, image.height, image.complete  );
+            ctx.drawImage(image,0,0);
             ctx.beginPath();
             ctx.moveTo(30,96);
             ctx.lineTo(70,66);
@@ -276,29 +276,44 @@ var testFunctions = {
             ctx.lineTo(170,15);
             ctx.stroke();
         }
-        if (image.complete)
-            imageStuff(context, image);
-        else
-            addToCallStack(image, 'onload', partial(imageStuff, context, image));
+        if (image.complete) {
+            log('image.complete == true')
+            imageStuff();
+         }
+        else {
+            log('image.complete == false')
+            //image.onload = partial(imageStuff, ctx, image)
+            //image.onload = imageStuff
+            var f = function() {
+                alert("Fuck you")
+            }
+            image.onload = f
+            //addToCallStack(image, 'onload', partial(imageStuff, ctx, image));
+        }
     },
     
-    'scale_image' : function(context) {
+    'scale_image' : function(ctx) {
         var image = new Image();
-        image.src = '../svgplot/canvas_tests_images/rhino.jpg';
+        image.src = '../tests/canvas_tests_images/rhino.jpg';
         log("outter image function called for ", image.src);
-        var innerImage = function(ctx, img) {
+        var imageStuff = function() {
             log("inner imageStuff called for ", image.src);
             var i, j;
             for (i=0;i<4;i++) {
                 for (j=0;j<3;j++) {
-                  ctx.drawImage(img,j*50,i*38,50,38);
+                  ctx.drawImage(image,j*50,i*38,50,38);
                 }
             }
         }
-        if (image.complete)
-            innerImage(context, image);
-        else
-            addToCallStack(image, 'onload', partial(innerImage, context, image));
+        if (image.complete) {
+            log('image.complete == true')
+            imageStuff();
+        }
+        else {
+            log('image.complete == false')
+            image.onload = imageStuff
+            //addToCallStack(image, 'onload', partial(imageStuff, ctx, image));
+        }
     },
     
     'fillstyle' : function(ctx) {
