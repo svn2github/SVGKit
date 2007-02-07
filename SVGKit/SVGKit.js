@@ -80,6 +80,10 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     but it's the only non-proprietary interactive vector graphics format.
     
     Make a MochiMin version as an option for inclusion instaed of full MochiKit.
+    
+    Conform SVG coding and output style to: http://jwatt.org/svg/authoring/
+    specifically look into using name-space aware:
+    getAttribute, removeAttribute, setAttribute
 ***/
 
 
@@ -142,7 +146,12 @@ SVGKit.EXPORT_OK = [
 //SVGKit._defaultType = 'embed';
 //SVGKit._defaultType = 'object';
 SVGKit._defaultType = 'inline';
-SVGKit._svgNS = 'http://www.w3.org/2000/svg';
+SVGKit._namespaces = {
+    'svg': 'http://www.w3.org/2000/svg',
+    'xlink': 'http://www.w3.org/1999/xlink',
+    'ev': 'http://www.w3.org/2001/xml-events',
+    'xmlns': 'http://www.w3.org/2000/xmlns/'
+}
 SVGKit._svgMIME = 'image/svg+xml';
 SVGKit._svgEmptyName = 'empty.svg';
 SVGKit._SVGiKitBaseURI = '';
@@ -355,10 +364,12 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
             xmlns:svg="http://www.w3.org/2000/svg">
     ***/
-    var attrs = {'xmlns:svg': SVGKit._svgNS,  // for <svg:circle ...> type tags with explicit namespace
-        'xmlns': SVGKit._svgNS,      // for <circle> type tags with implicit namespace
+    var attrs = {
+        'xmlns': SVGKit._namespaces['svg'],      // for <circle> type tags with implicit namespace
+        'xmlns:svg': SVGKit._namespaces['svg'],  // for <svg:circle ...> type tags with explicit namespace
         'xmlns:xlink': 'http://www.w3.org/1999/xlink',
         'version': '1.1',
+        'baseProfile': 'full',
         'width': width,
         'height': height 
     };
@@ -378,6 +389,7 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
     }
     else
     {
+        // IE
         log('createInlineSVG with IE.  width:', width, 'height:', height)
         var width = attrs["width"] ? attrs["width"] : "100";
         var height = attrs["height"] ? attrs["height"] : "100";
@@ -394,7 +406,7 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
         // create embedded SVG inside SVG.
         this.svgDocument = this.htmlElement.getSVGDocument();
         log('svgDocument:', this.svgDocument)
-        this.svgElement = this.svgDocument.createElementNS(SVGKit._svgNS, 'svg');
+        this.svgElement = this.svgDocument.createElementNS(SVGKit._namespaces['svg'], 'svg');
         log('svgElement:', this.svgElement)
         this.svgElement.setAttribute("width", width);
         this.svgElement.setAttribute("height", height);
@@ -592,6 +604,82 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
 //  Content Manipulation
 ////////////////////////////
 
+
+SVGKit.prototype.updateNodeAttributesSVG = function (node, attrs) {
+    /***
+        Basically copied directly from MochiKit with some namespace stuff.
+    ***/
+    var elem = node;
+    var self = MochiKit.DOM;
+    if (typeof(node) == 'string') {
+        elem = self.getElement(node);
+    }
+    if (attrs) {
+        var updatetree = MochiKit.Base.updatetree;
+        if (self.attributeArray.compliant) {
+            // not IE, good.
+            for (var k in attrs) {
+                var v = attrs[k];
+                if (typeof(v) == 'object' && typeof(elem[k]) == 'object') {
+                    if (k == "style" && MochiKit.Style) {
+                        MochiKit.Style.setStyle(elem, v);
+                    } else {
+                        updatetree(elem[k], v);
+                    }
+                }
+                /* SVGKit Additions START */
+                else if (k == 'xmlns') {
+                    // No prefix
+                    elem.setAttributeNS(SVGKit._namespaces['xmlns'], k, v);
+                }
+                else if (k.search(':') != -1) {
+                    var tmp = k.split(':')
+                    var prefix = tmp[0]
+                    var localName = tmp[1]
+                    //elem.setAttributeNS(SVGKit._namespaces[prefix], localName, v);
+                    elem.setAttributeNS(SVGKit._namespaces[prefix], k, v);  // Second parameter is "qualified name"
+                }
+                /* SVGKit Additions END */
+                else if (k.substring(0, 2) == "on") {
+                    if (typeof(v) == "string") {
+                        v = new Function(v);
+                    }
+                    elem[k] = v;
+                } else {
+                    elem.setAttributeNS(null, k, v);
+                }
+            }
+        } else {
+            // IE is insane in the membrane
+            var renames = self.attributeArray.renames;
+            for (k in attrs) {
+                v = attrs[k];
+                var renamed = renames[k];
+                if (k == "style" && typeof(v) == "string") {
+                    elem.style.cssText = v;
+                } else if (typeof(renamed) == "string") {
+                    elem[renamed] = v;
+                } else if (typeof(elem[k]) == 'object'
+                        && typeof(v) == 'object') {
+                    if (k == "style" && MochiKit.Style) {
+                        MochiKit.Style.setStyle(elem, v);
+                    } else {
+                        updatetree(elem[k], v);
+                    }
+                } else if (k.substring(0, 2) == "on") {
+                    if (typeof(v) == "string") {
+                        v = new Function(v);
+                    }
+                    elem[k] = v;
+                } else {
+                    elem.setAttribute(k, v);
+                }
+            }
+        }
+    }
+    return elem;
+},
+
 SVGKit.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
     /***
         Like MochiKit.createDOM, but with the SVG namespace.
@@ -601,20 +689,20 @@ SVGKit.prototype.createSVGDOM = function (name, attrs/*, nodes... */) {
     if (typeof(name) == 'string') {
         try {
             // W3C Complient
-            elem = this.svgDocument.createElementNS(SVGKit._svgNS, name);
+            elem = this.svgDocument.createElementNS(SVGKit._namespaces['svg'], name);
         }
         catch (e) {
             // IE
             log("Creating element with name=", name, " in SVG namespace for IE");
             elem = this.svgDocument.createElement(name);
-            elem.setAttribute("xmlns", SVGKit._svgNS);
+            elem.setAttribute("xmlns", SVGKit._namespaces['svg']);
             //elem = this.svgDocument.createElement('svg:'+name);
         }
     } else {
         elem = name;  // Parameter "name" was really an object
     }
     if (attrs) {
-        dom.updateNodeAttributes(elem, attrs);
+        this.updateNodeAttributesSVG(elem, attrs);
     }
     if (arguments.length <= 2) {
         return elem;
