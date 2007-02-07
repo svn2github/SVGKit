@@ -104,6 +104,8 @@ Building the SVG DOM from Canvas Calls (Notes):
         fill  // should make <g style="one"> <path/> <path style="two"/> </g>
         fillRect // should make <g style="one"> <path/> <g style="two"> <path/> <rect/> </g> </g>
         
+    BUGS:
+    * image.onload never gets called.  If the image is in the cache, it doesn't need to get called.
 ***/
 
 
@@ -1284,8 +1286,16 @@ SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh)
         drawImage(image, dx, dy) {}
         drawImage(image, dx, dy, dw, dh) {}
     ***/
+    /* The width and height are required elements of the <image> tag.
+       Canvas says those are optional -- if they're not passed in, 
+       assume the width and height of the bitmap.
+       Unfortunately we don't know the width and height of the bitmap until later.
+       
+       Technically this is a constraint on the canvas spec too, but I'm less strict.
+    */
+
     //log("drawImage(", image, sx, sy, sw, sh, dx, dy, dw, dh, ")");
-    //log("  img: ", image.width, image.height, image.src);
+    log("  img: ", image.width, image.height, image.src);
     var x = sx;
     var y = sy;
     var width = MochiKit.Base.isUndefinedOrNull(sw) ? image.width : sw;
@@ -1298,15 +1308,30 @@ SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh)
         width = dw;
         height = dh;
     }
-    var img = this.svg.IMAGE({'x':x, 
-                              'y':y, 
-                              'width':width,
-                              'height':height,
-                              'xlink:href':image.src});
+    var attrs = {'x':x, 'y':y, 'xlink:href': image.src}
     if (viewBox != null)
-        setNodeAttribute(node, 'viewBox', viewBox);
+        attrs['viewBox'] = viewBox
+        
+    var img = this.svg.IMAGE(attrs);
     this._setShapeTransform(img);
     this.svg.append(img);
+    
+    
+    var need_to_wait = (isUndefinedOrNull(sw) || isUndefinedOrNull(sh)) && 
+        (image.width==0 ||  image.height==0)
+    
+    var setWidthHeight = function() {
+        log("Doing setWidthHeight as callback", img, image.width, image.height)
+        img.setAttributeNS(null, 'width', image.width)
+        img.setAttributeNS(null, 'height', image.height)
+    }
+    
+    if (need_to_wait)
+        addToCallStack(image, 'onload', setWidthHeight)
+    else {
+        img.setAttributeNS(null, 'width', width)
+        img.setAttributeNS(null, 'height', height)
+    }
 }
 
 
