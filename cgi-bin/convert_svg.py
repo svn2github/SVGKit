@@ -20,6 +20,9 @@ import md5
 sys.stderr = sys.stdout
 cgi.maxlen = 1024*1024
 
+java = '/home/jason/local/bin/java'
+batik = '/scratch/jason/local/src/batik-1.6/batik-rasterizer.jar'
+
 mediatypes={
   'pdf':'application/pdf',
   'ps':'application/postscript',
@@ -56,7 +59,7 @@ if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     if type == 'svg':
         outname = svgfile
     else:
-        cmd = '/home/jason/local/bin/java -jar /scratch/jason/local/src/batik-1.6/batik-rasterizer.jar -d files -m '+mime+' '+svgname
+        cmd = java+' -jar ' + batik + ' -d files -m '+mime+' '+svgname
         (child_stdin, child_stdout, child_stderr) = os.popen3(cmd)
         str_stdout = child_stdout.read() # Read until the process quits.
         str_stderr = child_stderr.read() # Read until the process quits.
