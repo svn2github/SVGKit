@@ -27,6 +27,27 @@ var testFunctions = {
         svg.append(rect)
         rect = svg.RECT({x:30, y:30, width:50, height:50, fill:'rgb(0,0,200)', 'fill-opacity':0.5})
         svg.append(rect)
+    },
+    
+    'text' : function(svg) {
+        var attrs = { 
+            'x':15, 
+            'y': 100,
+            'style': "font-size:50px; font-family:Bitstream Vera Sans"};
+        var text = svg.TEXT(attrs, "SVGKit")
+        svg.append(text)
+        //var bbox = text.getBBox()
+        //log('BBox for text', bbox.x, bbox.y, bbox.width, bbox.height)
+    },
+    
+    'path' : function(svg) {
+        var path = svg.PATH({
+            'd':"M30,30 L150,150 Q60,70 70,150 L30,30", 
+            'fill':"#ff0000", 
+            'stroke':"none"});
+        svg.append(path)
+        //var bbox = path.getBBox()
+        //log('BBox for path', bbox.x, bbox.y, bbox.width, bbox.height)
     }
 };
 
