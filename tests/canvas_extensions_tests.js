@@ -218,6 +218,59 @@ var testFunctions = {
         c.svg.rotate(g2 ,-rotate/Math.PI*180)
     },
     
+    'lorentz_transform' : function(ctx) {
+        var v = 3.0/5.0  // Gives nice, round gamma
+        var gamma = 1/Math.sqrt(1-v*v)
+        //  x_lab =  gamma * (       x_rocket  -  v * t_rocket )
+        //  t_lab =  gamma * ( - v * x_rocket  +      t_rocket )
+        
+        with (ctx) {
+            // This function will draw the grid in x and y
+            var grid = function(number, step) {
+                var limit = number*step
+                var old_lineWidth = lineWidth
+                for (var p=-limit; p<=limit; p+=step) {
+                    // TODO: Maybe make the alpha bigger rather than the line
+                    var width_multiplier = (p==0) ? 2 : 1
+                    lineWidth = old_lineWidth * width_multiplier
+                    beginPath();
+                    moveTo(p, -limit);
+                    lineTo(p, limit);
+                    stroke();
+                    beginPath();
+                    moveTo(-limit, p);
+                    lineTo(limit, p);
+                    stroke();
+                    repeat = repeat - 1
+                }
+                lineWidth = old_lineWidth // Just to be sure if only main axis is drawn.
+            }
+            
+            // First, center things
+            translate(100,100)
+            
+            // Draw the lab-frame grid in red
+            save()
+            newGroup()
+            strokeStyle='rgba(255,0,0,.2)'
+            grid(5, 20)
+            restore()
+            
+            // Draw the rocket frame grid in blue
+            save()
+            matrix(  gamma,   -gamma*v, 
+                    -gamma*v,  gamma   )
+            newGroup()
+            strokeStyle='rgba(0,0,255,.2)'
+            grid(5, 20)
+            restore()
+            
+            /* Of course, simultaneously you'll want to show what
+               happens from the rocket perspective where the lab coordinates
+               get lorentz boosted in the opposite direciton */
+        }
+    }
+    
 };
 
 addLoadEvent(partial(addTests, 0, 50, 'canvas'));
