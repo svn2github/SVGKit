@@ -27,6 +27,8 @@ TODO:
    Keeping track of all this and/or doing this check will slow things down.  I added draw() instead.
 * markers work, but SVG output crashes Inkscape when I click on it, get properties, 
     and look at markers.  Could be Inkscape problem.
+* Support embeded image: var img_src = 'data:image/gif;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==';
+* Test image slicing as in  http://developer.mozilla.org/en/docs/Canvas_tutorial:Using_images
 
 Building the SVG DOM from Canvas Calls (Notes):
 * Patters and gradients and other global <defs> that can be used at any time also
@@ -431,7 +433,7 @@ SVGCanvas.prototype.rotate = function(angle) {
 }
 SVGCanvas.prototype.translate = function(tx, ty) {
     /***
-        dd the translation transformation described by the arguments 
+        do the translation transformation described by the arguments 
         to the transformation matrix. The x argument represents the 
         translation distance in the horizontal direction and the y 
         argument represents the translation distance in the vertical 
@@ -445,6 +447,35 @@ SVGCanvas.prototype.translate = function(tx, ty) {
         if (this.currentTransformationMatrix==null)
             this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
         this.currentTransformationMatrix = this.currentTransformationMatrix.translate(tx, ty);
+    }
+}
+SVGCanvas.prototype.matrix = function(a, b, c, d, e, f) {
+    /***
+        SVG ONLY
+        
+        [x_old]     [a c e]  [x_new]
+        [y_old]  =  [b d f]  [y_new]
+        [  1  ]     [0 0 1]  [  1  ]
+        
+    ***/
+    if (this._subpaths.length==1 && this._hasOnlyMoveZero() )
+        this.transformations = this.svg.matrix(this.transformations, a, b, c, d, e, f);
+    else {
+        if (MochiKit.Base.isUndefinedOrNull(e))
+            e = 0;
+        if (MochiKit.Base.isUndefinedOrNull(f))
+            f = 0;
+        if (this.currentTransformationMatrix==null)
+            this.currentTransformationMatrix = this.svg.svgElement.createSVGMatrix()
+        var m = this.svg.svgElement.createSVGMatrix()
+        m.a = a
+        m.b = b
+        m.c = c
+        m.d = d
+        m.e = e
+        m.f = f
+        //log('New matrix that we will multiply', a, b, c, d, e, f)
+        this.currentTransformationMatrix = this.currentTransformationMatrix.multiply(m);
     }
 }
 
@@ -1244,11 +1275,12 @@ SVGCanvas.prototype.drawPolygon = function (points) {
 
 SVGCanvas.prototype.text = function(text, x /* =0 */ , y /* =0 */) {
     //log("text(): this.currentGroup=", this.currentGroup);
-    var text = this.svg.TEXT(null, text);
+    var attrs = {}
     if (!MochiKit.Base.isUndefinedOrNull(x))
-        setNodeAttribute(text, 'x', x);
+        attrs['x'] =  x;
     if (!MochiKit.Base.isUndefinedOrNull(y))
-        setNodeAttribute(text, 'y', y);
+        attrs['y'] =  y;
+    var text = this.svg.TEXT(attrs, text);
     this._setShapeTransform(text);
     this._setGraphicsAttributes(text, 'fill');
     this._setFontAttributes(text);
@@ -1295,7 +1327,7 @@ SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh)
     */
 
     //log("drawImage(", image, sx, sy, sw, sh, dx, dy, dw, dh, ")");
-    log("  img: ", image.width, image.height, image.src);
+    //log("  img: ", image.width, image.height, image.src);
     var x = sx;
     var y = sy;
     var width = MochiKit.Base.isUndefinedOrNull(sw) ? image.width : sw;
@@ -1318,10 +1350,10 @@ SVGCanvas.prototype.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh)
     
     
     var need_to_wait = (isUndefinedOrNull(sw) || isUndefinedOrNull(sh)) && 
-        (image.width==0 ||  image.height==0)
+                        (image.width==0 ||  image.height==0)
     
     var setWidthHeight = function() {
-        log("Doing setWidthHeight as callback", img, image.width, image.height)
+        //log("Doing setWidthHeight as callback", img, image.width, image.height)
         img.setAttributeNS(null, 'width', image.width)
         img.setAttributeNS(null, 'height', image.height)
     }
@@ -1348,7 +1380,7 @@ SVGCanvas.Gradient = function(self, svg) {
     self.need1 = true;
     //log('  id=', self.id);
     self.defs = svg.getDefs(true);
-    log('self.defs=', self.defs);
+    //log('self.defs=', self.defs);
 }
 
 SVGCanvas.LinearGradient = function(svg, x0, y0, x1, y1) {
@@ -1437,13 +1469,14 @@ SVGCanvas.Pattern = function(svg, contents, repetition) {
     var height = null;
     if (contents.constructor == Image) {
         //log("  img: ", contents.width, contents.height, contents.src);
-        width = contents.width;
-        height = contents.height;
-        contents = this.svg.IMAGE({'x':0, 
-                                   'y':0, 
-                                   'width':width,
-                                   'height': height,
-                                   'xlink:href': contents.src});
+        width = 100//contents.width;
+        height = 100//contents.height;
+        attrs = {  'x':0, 
+                   'y':0, 
+                   'width':width,
+                   'height': height,
+                   'xlink:href': contents.src }
+        contents = this.svg.IMAGE(attrs);
     }
     
     this.pattern = this.svg.PATTERN({'patternUnits':'userSpaceOnUse',

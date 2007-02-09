@@ -49,6 +49,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
      * translate(1) and then call translate doesn't detect that this means x=1. 
         Code seems to be there, but regexp doesnt' match.
      * Dragging is sketchy when the mouse leavs the object.
+     * Reading XML should read the namespaces into the SVGKit._namespaces dictionary.
     
     Integration with MochiKit:
      * See if it's any slower using iterators
@@ -84,6 +85,9 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     Conform SVG coding and output style to: http://jwatt.org/svg/authoring/
     specifically look into using name-space aware:
     getAttribute, removeAttribute, setAttribute
+    
+    Embed images where possible -- read binary data, convert to 64, then include directly.
+    href to images don't work very well -- they translate into absolute URIs.
 ***/
 
 
@@ -477,7 +481,7 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
                 /*
                 for (var i=0; i<newElement.childNodes.length; i++) {
                     var clone = newElement.childNodes[i].cloneNode(true);
-                    log("in for loop this.svgElement=",this.svgElement);
+                    //log("in copyXMLtoSVG for loop this.svgElement=",this.svgElement);
                     this.svgElement.appendChild(clone);  // This doesn't work: this.svgElement is [disposed object]
                 }
                 */
@@ -596,7 +600,7 @@ SVGKit.prototype.grabSVG = function (htmlElement) {
         this.svgDocument = this.htmlElement.contentDocument;
         this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
     }
-    log("type=",tagName, "  this.svgDocument = ", this.svgDocument, "  this.svgElement = ", this.svgElement);
+    log("grabSVG: type=",tagName, "  this.svgDocument = ", this.svgDocument, "  this.svgElement = ", this.svgElement);
 }
 
 
@@ -637,7 +641,9 @@ SVGKit.prototype.updateNodeAttributesSVG = function (node, attrs) {
                     var prefix = tmp[0]
                     var localName = tmp[1]
                     //elem.setAttributeNS(SVGKit._namespaces[prefix], localName, v);
-                    elem.setAttributeNS(SVGKit._namespaces[prefix], k, v);  // Second parameter is "qualified name"
+                    var uri = SVGKit._namespaces[prefix]
+                    if (uri != null)
+                        elem.setAttributeNS(uri, k, v);  // Second parameter is "qualified name"
                 }
                 /* SVGKit Additions END */
                 else if (k.substring(0, 2) == "on") {
@@ -792,23 +798,23 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
     ***/
     var defs = this.svgElement.getElementsByTagName("defs");
     if (defs.length>0) {
-        log("getDefs... found defs: defs.length=",defs.length, " defs[0]=",defs[0])
+        //log("getDefs... found defs: defs.length=",defs.length, " defs[0]=",defs[0])
         return defs[0];
     }
     if (!MochiKit.Base.isUndefinedOrNull(createIfNeeded) && !createIfNeeded) {
-        log("getDefs... returning null cuz createIfNeeded=",createIfNeeded)
+        //log("getDefs... returning null cuz createIfNeeded=",createIfNeeded)
         return null;
     }
     defs = this.DEFS(null);
-    log("Created defs", defs, "... going to insert first")
+    //log("Created defs", defs, "... going to insert first")
     this.svgElement.insertBefore(defs, this.svgElement.firstChild);
     //this.append(defs);
-    log("insert first worked")
+    //log("insert first worked")
     
     // Check to see if it actually got appended:
     //var defs2 = this.svgDocument.getElementsByTagName("defs");
     var defs2 = this.svgElement.getElementsByTagName("defs");
-    log("ending getDefs...defs2.length=",defs2.length, " defs2[0]=",defs2[0])
+    //log("ending getDefs...defs2.length=",defs2.length, " defs2[0]=",defs2[0])
     
     return defs;
 }
@@ -910,6 +916,21 @@ SVGKit.prototype.scale = function(elem, sx, sy) {
     return new_transform;
 }
 
+
+SVGKit.matrixRE = null
+SVGKit.prototype.matrix = function(elem, a, b, c, d, e, f) {
+    var element = MochiKit.DOM.getElement(elem);
+    if (MochiKit.Base.isUndefinedOrNull(element)) {
+        return this._sixParameter(elem, a, b, c, d, e, f,
+                                   SVGKit.matrixRE, 'matrix');
+    }
+    var old_transform = element.getAttribute('transform')
+    var new_transform = this._sixParameter(old_transform, a, b, c, d, e, f,
+                                            SVGKit.matrixRE, 'matrix');
+    element.setAttribute('transform', new_transform);
+    return new_transform;
+}
+
 SVGKit.prototype._oneParameter = function(old_transform, degrees, 
                                                  regexp, name) {
     /***
@@ -969,6 +990,18 @@ SVGKit.prototype._twoParameter = function(old_transform, x, y,
     }
     else
         new_transform = old_transform + name+'('+x+','+y+')';
+    return new_transform
+}
+
+SVGKit.prototype._sixParameter = function(old_transform, a, b, c, d, e, f,
+                                                 regexp, name) {
+    if (MochiKit.Base.isUndefinedOrNull(d) || MochiKit.Base.isUndefinedOrNull(name))
+        return old_transform;
+    if (MochiKit.Base.isUndefinedOrNull(e))
+        e = 0;
+    if (MochiKit.Base.isUndefinedOrNull(f))
+        f = 0;
+    var new_transform = name+'('+a+','+b+','+c+','+d+','+e+','+f+')';
     return new_transform
 }
 
