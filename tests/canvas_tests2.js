@@ -378,35 +378,37 @@ var testFunctions = {
     },
     
     'arcTo' :  function(c) {
-        c.beginPath();
-        c.strokeStyle='rgba(0,0,255,.25)'
-        var x0=0, y0=100, x1=200, y1=0, x2=200, y2=200;
-        c.moveTo(x0, y0);
-        c.lineTo(x1, y1);
-        c.lineTo(x2, y2);
-        c.stroke();
-        
-        c.strokeStyle='rgba(255,0,0,.5)'
-        c.beginPath();
-        c.moveTo(x0, y0);
-        c.arcTo(x1, y1, x2, y2,60);
-        c.lineTo(x2, y2);
-        c.stroke();
-        
-        x0=200, y0=200, x1=50, y1=100, x2=0, y2=200;
-        c.strokeStyle='rgba(255,0,0,.2)'
-        c.beginPath();
-        c.moveTo(x0, y0);
-        c.lineTo(x1, y1);
-        c.lineTo(x2, y2);
-        c.stroke();
-        
-        c.strokeStyle='rgba(0,0,255,.2)'
-        for (var r=30; r<300; r+=30) {
-            c.moveTo(x0, y0);
-            c.arcTo(x1, y1, x2, y2, r);
-            c.lineTo(x2, y2);
-            c.stroke();
+        with (c) {
+            beginPath();
+            strokeStyle='rgba(0,0,255,.25)'
+            var x0=0, y0=100, x1=200, y1=0, x2=200, y2=200;
+            moveTo(x0, y0);
+            lineTo(x1, y1);
+            lineTo(x2, y2);
+            stroke();
+            
+            strokeStyle='rgba(255,0,0,.5)'
+            beginPath();
+            moveTo(x0, y0);
+            arcTo(x1, y1, x2, y2,60);
+            lineTo(x2, y2);
+            stroke();
+            
+            x0=200, y0=200, x1=50, y1=100, x2=0, y2=200;
+            strokeStyle='rgba(255,0,0,.2)'
+            beginPath();
+            moveTo(x0, y0);
+            lineTo(x1, y1);
+            lineTo(x2, y2);
+            stroke();
+            
+            strokeStyle='rgba(0,0,255,.2)'
+            for (var r=30; r<300; r+=30) {
+                moveTo(x0, y0);
+                arcTo(x1, y1, x2, y2, r);
+                lineTo(x2, y2);
+                stroke();
+            }
         }
     },
     
