@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+      
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <head>
+    <title>SVGKit Tests</title>
+
+    <!-- START Required for IE to support  inlined SVG -->
+    <object id="AdobeSVG" width="1" height="1" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"></object>
+    <?import namespace="svg" implementation="#AdobeSVG"?>
+    <!-- END   Required for IE to support inlined SVG -->
+
+    <link href="simple.css" rel="stylesheet" type="text/css"></link>
+    <link href="interpreter/interpreter.css" rel="stylesheet" type="text/css"></link>
+
+
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script type="text/javascript" src="../MochiKit/DateTime.js"></script>
+    <script type="text/javascript" src="../MochiKit/Format.js"></script>
+    <script type="text/javascript" src="../MochiKit/Async.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/LoggingPane.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Signal.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Position.js"></script>
+    <script type="text/javascript" src="../MochiKit/Visual.js"></script>
+        
+    <script type="text/javascript" src="interpreter/interpreter.js"></script>
+
+    <script type="text/javascript" src="../SVGKit/datetime.js" ></script>
+
+    <script type="text/javascript" src="datetime_tests.js"></script>
+
+  </head>
+
+  <body>
+
+    <h2>SVGKit Test Suite</h2>
+
+    <div>
+
+    <table border="1">
+    <tbody id="tests">
+    <tr>
+    <td align="center"><strong>Image</strong></td>
+    <td align="center"><strong>Source</strong></td>
+    <td align="center" width="210"><strong>SVG</strong></td>
+    <td align="center"><strong>SVG Source</strong></td>
+    </tr>
+    </tbody>
+    </table>
+
+    </div>
+    
+    <form id="interpreter_form" autocomplete="off" style="font-size: medium">
+    <div id="interpreter_area">
+        <div id="interpreter_output"></div>
+    </div>
+    <div id="oneline">
+        <input id="interpreter_text" name="input_text" type="text" class="textbox" size="100" />
+    </div>
+    <div id="multiline">
+        <textarea id="interpreter_textarea" name="input_textarea" type="text" class="textbox" cols="97" rows="10"></textarea>
+        <br />
+    </div>
+    </form>
+
+  </body>
+</html>
+
