@@ -1,3 +1,6 @@
+AddType image/svg+xml svg
+AddType image/svg+xml svgz 
+
 Options +Includes
 AddType text/html .html
 AddHandler server-parsed .html

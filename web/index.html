@@ -61,7 +61,7 @@ type interface for stars. I started  working on this in January
 <h2>Things I want to do with it</h2>
 <ul>
   <li>SVGWidgets -- Buttons, sliders, textboxes, etc. to make a web app more like a desktop app (or a whole desktop environment), perhaps using GNOME SVG widgets.</li>
-  <li>SVGDraw -- Online SVG Editor (useful for a wiki.) It would be a kind of rudimentary <a href="http://inkscape.org">Inkscape</a>.</li>
+  <li>SVGDraw -- Online SVG Editor (useful for a wiki.) It would be a kind of rudimentary <a href="http://pilat.free.fr/english/svgdraw/index.htm">Inkscape</a>. It appears somebody did an <a href="http://pilat.free.fr/english/svgdraw/index.htm">SVGDraw</a>  already done using SVG, JavaScript, and PHP</li>
   <li>SVGLaTeX -- Math for SVG. LaTeX fonts. Providing a <code>&lt;path&gt;</code> as an alternative to text. MathML would be more appropriate, perhaps, but it just doens't look as good yet. </li>
   <li>Plot Interactivity --  create and edit plots, smarter zooming, selecting data, position legend, click to edit title, select colors with GUI, etc.</li>
   <li>Realtime plots -- stocks, web logs, ... -- add additional data points without undoing changes.</li>
@@ -70,7 +70,8 @@ type interface for stars. I started  working on this in January
   <li>Clean up the SVG that SVGCanvas and SVGPlot generate and make the code run faster. These are sometimes at odds. For example, should it spend time factoring out common styles to an enclosing group?</li>
   <li>Graphics are an excellent way to learn programing. Using client-side JavaScript anybody can instantly learn by modifying and writing examples.</li>
   <li>Web-based X-Windows client (some of this more appropriately done with Canvas, or perhaps embeded Canvases within SVG.) X commands would have to be tunneled through HTTP on the web server because of the JavaScript network security restrictions.</li>
-  </ul>
+  <li>PostScript interpreter in JavaScript that creates SVG DOM nodes, perhaps by calling canvas functions since the state machines are so similar. You could open a .ps file in a text editor, copy everythong to the clip board, paste into an HTML form and hit go. You could also run it server-side using Batik. </li>
+</ul>
 <h2> Requirements</h2>
 <ul>
   <li>
@@ -85,7 +86,15 @@ Licensed under the MIT license (least restrictive of the BSD-style
 licenses). It is <a href="http://www.fsf.org/licensing/licenses/">GPL-compatible</a>.</li>
 </ul>
 <h2>Projects that Use SVGKit</h2>
-StarMap<br />
+<p>StarMap</p>
+<h2>Other Links</h2>
+<ul>
+  <li><a href="http://xmlgraphics.apache.org/batik/">Batik</a> - An excellent and complete Java framework: viewer, rasterizer, font converter </li>
+  <li>Editors: <a href="http://inkscape.org">Inkscape</a>, <a href="http://glipssvgeditor.sourceforge.net/index.html">GLIPS Graffiti</a>, <a href="http://www.sodipodi.com/index.php3">Sodipodi</a>, </li>
+  <li><a href="http://www.flameproject.org/index.php/Main_Page">Flame Project</a> - IDE for making Flash-like multimedia content </li>
+  <li>Toolkits: <a href="http://www.amanith.org">Amanith</a>, Python <a href="http://www2.sfk.nl/svg">SVGDraw</a>, <a href="http://search.cpan.org/dist/SVG/lib/SVG/Manual.pm">Perl SVG</a>, </li>
+<li>W3C's standard <a href="http://www.w3.org/TR/SVGMobile12/python-binding.html">Python Languate Gindings for SVG </a></li>
+</ul>
 <h2>SVG Complaints/Outlook:</h2>
 <p>Adobe's Plugin is way ahead of Firefox in terms of a completeness,
 speed, and interface features (like zooming, viewing the SVG in its own

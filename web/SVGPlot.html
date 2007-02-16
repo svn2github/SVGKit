@@ -15,11 +15,12 @@
 <div id="content">
 <h1>SVGPlot</h1>
 <h2>Introduction</h2>
-<p>SVGPlot will be the combunation of three things:
+<p>SVGPlot will be the combination of three things:
 <ul>
-  <li>JavaScript API for creating plots/graphs/charts from data</li>
-<li>XML file format (PlotXML) that can be modified by hand up to edit plot parameters and re-opened in the GUI. </li>
-<li>Online web service to graphically create and manipulate plots  </li>
+  <li>JavaScript API for creating plots/graphs/charts from data (JSON, XML, CSV, SQL query, HTML <code>&lt;table&gt;</code> element) </li>
+<li>XML file format (PlotXML) that is built up by the JavaScript, but can be modified by hand (to edit plot parameters) and re-opened.</li>
+<li>Online web service to graphically create and manipulate plots and save your work as a JavaScript, PlotXML, pure SVG, PDF, PNG, JPEG, etc. </li>
+<li>Plot interactivity so your plots can be manipulated by end users -- zoom in, drill down, get values of points. </li>
 </ul>
 <p> The goal is to make these three as clean as possible
 <ul>
@@ -29,21 +30,19 @@
 </ul>
 <p>I set out to create a plotting program that:
 <ul>
-  <li>Outputs SVG  that can easily be converted to PDF, PS, PNG, JPEG, LaTeX+PS.</li>
-<li>Works in a client-side browser for real-time manipulation of plots </li>
-<li>Can hook up live data (JSON, XML, CSV, SQL query, HTML <code>&lt;table&gt;</code> element) </li>
-<li>Server-side / command-line rendering through <a href="http://xmlgraphics.apache.org/batik/">Batik</a>, a Java program with an embeded JavaScript interpreter that handles SVG. </li>
+  <li>Server-side command-line rendering through <a href="http://xmlgraphics.apache.org/batik/">Batik</a>, a Java program with an embedded JavaScript interpreter that handles SVG. </li>
 <li>Good features of Matlab, Mathematica, <a href="http://www.gnuplot.info/">GNUPlot</a>, <a href="http://ploticus.sourceforge.net/">Ploticus</a>, <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a>, <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a>. Eventually I'd like to write bridges so people's existing scripts and familiarity can be used to generate interactive web content.</li>
-<li>Can reproduce any plot in journals like Science and Nature as strighforwardly as possible. These tend to convey large amounts of data in a small space. </li>
-<li>Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible. These tend to be more instructive with thick lines and simple axes. </li>
+<li>Can reproduce any plot in journals like Science and Nature as straightforwardly as possible. These tend to convey large amounts of data in a small space. </li>
+<li>Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible. These tend to be more instructive with thick lines, simple axes, and lots of explanation arrows. </li>
+<li>Can reproduce all of the eye catching business graphics of other online charting tools, but this is not the initial focus. </li>
 <li>Client-side features of panning, zooming, and exploring the data.</li>
 <li>Allows raw data to optionally be published inside of PlotXML file along with the &quot;suggested way&quot; of viewing it, but the GUI allows viewer to painlessly explore data (e.g. change scale to log)</li>
 </ul>
 
 <h2>Design/Philosophy</h2>
 <p>Looking around, I found most of the existing plotting APIs lacking and decided to start from scratch. </p>
-<p>The idea is to plot data sets. You can think of data sets as an area in a spreadsheet or a table in a database. Each piece of data (row) has values for attributes (columns). Ploting is the act of mapping one or more of these values to one or more plot characteristics: x-position, y-position, color, shape, size, orientation, pannel-number.</p>
-<table border="0">
+<p>The idea is to plot data sets. You can think of data sets as an area in a spreadsheet or a table in a database. Each piece of data (row) has values for attributes (columns). Plotting is the act of mapping one or more of these attributes to one or more plot characteristics: x-position, y-position, color, shape, size, orientation, panel-number.</p>
+<table width="60%" border="0" align="center">
   <tr>
     <td><table  border="0">
       <tr>
@@ -72,11 +71,11 @@
         <td>&nbsp;</td>
       </tr>
     </table></td>
-    <td>&lt;plot&gt;</td>
+    <td>&lt;plot where the phase of the moon is encoded in little pictures of what the moon would look like in that phase&gt;</td>
   </tr>
 </table>
 <p>The simplest and most common case is plotting one variable against another. </p>
-<table border="0">
+<table border="0" align="center">
   <tr>
     <td><table  border="0">
         <tr>
@@ -99,31 +98,39 @@
           <td>4</td>
           <td>16</td>
           </tr>
+        <tr>
+          <td>5</td>
+          <td>25</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>36</td>
+        </tr>
     </table></td>
-    <td>&lt;plot&gt;</td>
+    <td><img src="squares_plot.png" width="200" height="200" /></td>
   </tr>
 </table>
-<p>There are two main types of data:</p>
+<p>There are two main categories of data, which affect how they are plotted and how ticks and labels are done:</p>
 <ul>
-  <li>Linear -- numbers (real and inegers), dates, times, money</li>
-<li>Category -- names, days of the week, some dates and numbers which you don't want relatively poisitioned. There may or may not be a natural ordering. </li>
+  <li>Continuous -- numbers (real and integers, dates, times, money</li>
+<li>Discrete -- categories, strings, names, days of the week, some dates and numbers which you don't want relatively propositioned. There may or may not be a natural ordering. </li>
 </ul>
 <p>A histogram is a higher-level construct. Here the data isn't directly mapped to the plot, but something is first calculated (how many data points fit into each category) and then the category versus counts are plotted.</p>
 <h2>Plot Features to Support </h2>
 <ul>
-  <li>Auto-scaling axes based on data range. Option to definately include zero. Option to include a little extra padding (go to the nearest integer)</li>
+  <li>Auto-scaling axes based on data range. Option to definitely include zero or a list of important &quot;must haves.&quot; Option to include a little extra padding (go to the nearest integer)</li>
 <li>Tick marks on the axes, explicitly given or auto generated to be reasonably spaced.</li>
   <li>Grid - lines, stripes, checkerboard </li>
   <li>Labels along the axes, explicit or auto</li>
-  <li>Multiple axes referring to the same plot area -- either dependent axes (like Celsius and Fahrenheit) or independent axes for plotting two different types of variables in the same area </li>
+  <li>Multiple axes referring to the same plot area -- either dependent axes (like Celsius and Fahrenheit) or independent axes for plotting two different types of variables in the same area (usually with a common horizontal axis like population and GDP over time) </li>
   <li>Axis titles, plot titles</li>
-  <li>Ledgends </li>
-  <li>Multiple plot pannels, either independent or dependent (sharing axes which must auto-scale together despite different data.) </li>
+  <li>Legends </li>
+  <li>Multiple plot panels either independent or dependent (sharing axes which must auto-scale together despite different data.) </li>
   <li>Annotations
     <ul>
-      <li> labels on each dataset</li>
+      <li> labels on each dataset, which is often much easier to read than a legend. </li>
     <li>arrows with or without labels</li>
-    <li>span indicators of vaious kinds: <code>|---- x ----|</code>  or <code>---&gt; &lt;---</code></li>
+    <li>span indicators of various kinds: <code>|---- x ----|</code>  or <code>---&gt; &lt;--- x</code></li>
     <li>SVG graphics and effects on top of plot, but whose position can be given in terms of plot coordinates.</li>
     </ul>
   </li>
@@ -133,28 +140,29 @@
   <li>Area Charts </li>
   <li>Bar Charts, both horizontal and vertical of many styles and information (absolute, percent of whole, etc) </li>
   <li>Double bar charts where one category is horizontal and within that there are several bars for a second category. </li>
-  <li>Gaps in data which break up lines, areas, stairsteps, etc. These are either unplotable y-values (like infinity or NaN floating point), or a break in the regular progression of x-data. Option to auto-detect either kind. </li>
+  <li>Gaps in data which break up lines, areas, stair steps etc. These are either unplottable y-values (like infinity or NaN floating point), or a break in the regular progression of x-data. Option to auto-detect either kind. </li>
   <li>Histogram (for ranges) and Count (for repeated x-values.) </li>
   <li>Accumulation: accumulate(data) returns for each position the sum of that data point and the previous data points. accumulate([1,2,1]) -&gt; [1,3,4] </li>
   <li>Dates, times, and Date-time stamps. Relative times (durations expressed in seconds, minutes, days, etc.) </li>
 <li> European decimal notation. </li>
 <li> Financial notation. ($2,000), ($1,000), $0, $1000, $2000 and with other currencies. </li>
-<li>Sort data on row: eg. last name, then first name.</li>
-<li>Filter data on a particular set of attributes so only a window is plotted (otherwise all points will be plotted and go beyond the range. (Iterators/generators would be great for this to save time and memory.) </li>
+<li>Sort data on row: e.g.last name, then first name.</li>
+<li>Filter data on a particular set of attributes so, for example, only a window is plotted (otherwise all points will be plotted and go beyond the range. (Iterators/generators would be great for this to save time and memory.) </li>
 <li>Clipping applied to the data area. </li>
 <li>line plot has a &quot;firstpoint&quot; option to add an additional point, usually at (0,0). Alternatively plot( prepend(data, data_point) ) </li>
-<li>Ledgend: auto (how to get the names), add manually, specify symbol and/or line to be shown next to name </li>
+<li>Legend auto (how to get the names), add manually, specify symbol and/or line to be shown next to name </li>
 <li>values: write the value for each point. How to specify style &amp; relative position? How to add extra space or avoid curve? </li>
 </ul>
+<h2>Hand Crafted SVGs to guide Development </h2>
+<p><a href="plot_info.svg"><img src="plot_info.png" width="300" height="221" border="0" /></a><a href="plot_styles.svg"> <img src="plot_styles.png" width="200" height="192" border="0" /> </a><a href="gradients.svg"><img src="gradients.png" width="150" height="221" border="0" /></a></p>
 <h2>Inspiration/Other Programs </h2>
-<p>
 <p><b>Data Plotting </b><a href="http://ploticus.sourceforge.net/">Ploticus</a> / <a href="http://www.gnuplot.info/">GNUPlot</a> / <a href="http://matplotlib.sourceforge.net/">Matplotlib</a> / <a href="http://www.gnu.org/software/plotutils/plotutils.html">GNU PlotUtils</a> / <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a> / <a href="http://www.wavemetrics.com/">Igor Pro Galary</a> / <a href="http://www.originlab.com/">Origin (Comm)</a> / <a href="http://www.mathworks.com/access/helpdesk/help/techdoc/learn_matlab/learn_matlab.html">Matlab Tutorial</a> / <a href="http://www.dplot.com/features.htm">Dplot Galery (Win Trial)</a> / <a href="http://www.kylebank.com/">Graphis</a> / <a href="http://www.kde-apps.org/content/show.php?content=9881">LabPlot KDE</a> / <a href="http://www.jfree.org/jfreechart/">JFreeChart</a> / <a href="http://plasma-gate.weizmann.ac.il/Grace/">Grace for X</a> / <a href="http://nces.ed.gov/nceskids/createagraph/">Create A Graph Website</a> / <a href="http://www.gnu.org/software/octave/">Octave (OSS Matlab)</a> / <a href="http://www.liquidx.net/plotkit/">PlotKit</a> / <a href="http://www.dotnetcharting.com/gallery/">.netCharting</a> /
-  </p>
-<p><b>Function Plotting </b> <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a> / <a href="http://www.nucalc.com/">NuCalc (old Mac)</a> / <a href="http://www.peda.com/grafeq/gallery/rogue.html">GrafEQ Interval</a> / <a href="http://www.mps.mpg.de/dislin/">DLSin</a> / <a href="http://mtac.sourceforge.net/">MTAC Java</a> / <a href="http://gcalc.net/">Java Online</a> / <a href="http://www.graphcalc.com/index.shtml">GraphCalc OSS Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/16712-Graph-Plotter.html">GraphPlotter Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/15448-Fornux-Calculator-Student-Edition.html">Fornux Win</a> / <a href="http://www.teber.biz/">Math 3D Explorer</a> / <a href="http://www.math.tu-berlin.de/geometrie/lab/curvesnsurfaces.shtml">Virtual Labs</a> / </p>
+  <p><b>Function Plotting </b> <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a> / <a href="http://www.nucalc.com/">NuCalc (old Mac)</a> / <a href="http://www.peda.com/grafeq/gallery/rogue.html">GrafEQ Interval</a> / <a href="http://www.mps.mpg.de/dislin/">DLSin</a> / <a href="http://mtac.sourceforge.net/">MTAC Java</a> / <a href="http://gcalc.net/">Java Online</a> / <a href="http://www.graphcalc.com/index.shtml">GraphCalc OSS Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/16712-Graph-Plotter.html">GraphPlotter Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/15448-Fornux-Calculator-Student-Edition.html">Fornux Win</a> / <a href="http://www.teber.biz/">Math 3D Explorer</a> / <a href="http://www.math.tu-berlin.de/geometrie/lab/curvesnsurfaces.shtml">Virtual Labs</a> / </p>
 <p><b>Complex and Vector Plotting</b> <a href="http://www.usfca.edu/vca/websites.html">Visual Complex Analysis Websites</a> / <a href="http://www.sunsite.ubc.ca/LivingMathematics/V001N01/UBCExamples/Flow/flow.html">Draw Rect Vector Flow</a> / <a href="http://math.la.asu.edu/~kawski/vfa2/index.html">Vector Field Analizer (Applet)</a> / <a href="http://www.math.ttu.edu/~pearce/complex/complexviewer.html">Complex Mapping Viewer</a> / <a href="http://www.cs.berkeley.edu/~flab/complex/gallery.html">Complex Functions</a> / </p>
 <p><strong>Visualization </strong><a href="http://public.kitware.com/VTK/">VTK</a> / <a href="http://www.paraview.org/">ParaView</a> / <a href="http://www.llnl.gov/visit/home.html">VisIT</a> / <a href="http://www.opendx.org/">OpenDX (IBM's Viz Data Explorer)</a> / <a href="http://software.sci.utah.edu/scirun.html">SCIRun</a> / <a href="http://www.nag.co.uk/welcome_iec.asp">NAG's Iris Explorer</a> / <a href="http://ltc.smm.org/visualize/">OSS Package</a> / <a href="http://www.math.yorku.ca/SCS/Gallery/">Gallary of Viz</a> / </p>
 <p><strong>Data Analysis</strong> <a href="http://root.cern.ch/">Root</a> / <a href="http://jas.freehep.org/jas3/">Java Analysis Studio (JAS3)</a> / <a href="http://www.slac.stanford.edu/grp/ek/hippodraw/">HippoDraw</a> / <a href="http://aida.freehep.org/">AIDA: Abstract Interfaces for Data Analysis</a></p>
-<p><strong>Computer Algebra Systems</strong> <a href="http://sourceforge.net/projects/maxima">Maxima</a> / <a href="http://yacas.sourceforge.net/">Yacas</a> / <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/euler/">Euler</a> / <a href="http://www.matheclipse.org/">Eclipse</a> / <a href="http://sage.math.washington.edu/sage/">Sage</a> / </p>
+<p><strong>Computer Algebra Systems</strong> <a href="http://sourceforge.net/projects/maxima">Maxima</a> / <a href="http://yacas.sourceforge.net/">Yacas</a> / <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/euler/">Euler</a> / <a href="http://www.matheclipse.org/">Eclipse</a> / <a href="http://sage.math.washington.edu/sage/">Sage</a> /</p>
+<p><strong>Web Charting </strong> <a href="http://flexapps.macromedia.com/flex15/chartexplorer/explorer.mxml?versionChecked=true">Flex Charting</a> &amp; <a href="http://examples.adobe.com/flex2/inproduct/sdk/dashboard/dashboard.html">Dashboard Example</a> / PlotKit / Dojo / <a href="http://www.globfx.com/products/swfchart/samples.php">GlobFX</a> / </p>
 <h2>Live Demos </h2>
 <ul>
   <li><a href="../tests/plot_tests.html">live demo</a> - Table of tests that you can modify and re-run client side.</li>
@@ -162,13 +170,13 @@
 </ul>
 <h2>Design Issues/Tradeoffs </h2>
 <ul>
-  <li>Densly pack information in the available space mimimizing margins and extraneous &quot;ink?&quot; This is good for web viewing. Or shoud it more leasurely arrange things for optimal print viewing?</li>
-<li>Pixel align vertial and horizontal lines to avoid annoying anti-aliasing effects or position ploted object &quot;properly&quot; for accurate printing?</li>
-<li>When the SVG DOM is modified, those changes are reflected in the resulting image. I don't think there's a way to &quot;capture&quot; possible modifications on the PlotXML DOM tree and to change the plot (or other calculated information) accordingly in real time. This means there really needs to be a duplication between the API function calls and the XML representation. Put another way, changing the DOM can't have side effects like calling a function.</li>
+  <li>Densely pack information in the available space minimizing margins and extraneous &quot;ink?&quot; This is good for web viewing. Or should it more liesurely arrange things for optimal print viewing?</li>
+<li>Pixel align vertical and horizontal lines to avoid annoying anti-aliasing effects on screen  or position plotted object &quot;properly&quot; for accurate printing? (see <a href="../tests/canvas_tests_images/linespacing.png">equally_spaced_lines</a> vs <a href="../tests/canvas_tests_images/linespacing_rounded.png">rounded_lines</a>)</li>
+<li>When the SVG DOM is modified, those changes are reflected in the resulting image. I don't think there's a way to &quot;capture&quot; possible modifications on the PlotXML DOM tree and to change the plot (or other calculated information) accordingly in real time. This means there really needs to be a duplication between the API function calls and the XML representation. Put another way, changing the DOM can't have side effects like calling a function, so to actually re-draw stuff, we need getter and setter functions.</li>
 <li>Procedural model (plot function) versus data model (XML/JSON rep).
   <ul>
-    <li>Like Canvas vs SVG.</li>
-  <li>The procedural model makes it easier to crate variables based on the data and use them in other parts without a lotof xrefs. (How to even do in JSON?)</li>
+    <li>This issue is like Canvas vs SVG.</li>
+  <li>The procedural model makes it easier to crate variables based on the data and use them in other parts without a lot of xrefs. (How to even do in JSON?)</li>
   <li>The data model makes it easier to change parameters with a UI, add data, and re-render.</li>
   </ul>
 </li>
@@ -183,7 +191,7 @@
   </ul>
 </li>
 <li>Properties are nice for stack-based, but bad for object-based unless you're in Python where you can capture the setting or you're willing to register callbacks that check if the state is different than it was when it was drawn Periodic updates aren't so bad. Mozilla's native SVG element['width']=10 does it this way.</li>
-<li>Defaults are hard to deal wtih. Should axes, ticks, and labels start up on automatically? Sure. Then there's a difference between setting the ones and adding new ones. When you change a parameter, does it affect the  axes or just the drawing of the new axes? What if you don't want all of the default ticks and stuff - do you have to delete them all explicitly?</li>
+<li>Defaults are hard to deal with. Should axes, ticks, and labels start up on automatically? Sure. Then there's a difference between setting the ones and adding new ones. When you change a parameter, does it affect the  axes or just the drawing of the new axes? What if you don't want all of the default ticks and stuff - do you have to delete them all explicitly?</li>
 <li>Input data:
   <ul>
     <li>Table (2D array) with column headings (most efficient). First row may be heading. Spreadsheet-like.<br />
@@ -194,11 +202,11 @@
       <code>[ {x:7, y:3, a:6}, {x:4, y:2, a:9}, ... ]</code></li>
   </ul>
 </li>
-<li>What about truely 2D or 3D data like an image or height map? Would like to read in PNG/JPEG, etc. Would like to read astronomy's FITS files.</li>
+<li>What about truly 2D or 3D data like an image or height map? Would like to read in PNG/JPEG, etc. Would like to read astronomy's FITS files.</li>
 <li>What about topological information like regular grids, irregular grids, mesh of cells? These can all be described by tables where each datum includes all of this information, but that's not a good way to format or think about the data.</li>
 <li>Should 3D data even be supported by generating one-view SVG, or should this wait until a true web-friendly XML-based 3D data standard like X3D becomes universally adopted?</li>
-<li>Shoud the PlotXML format and JavaScript API be written extensibly to support these kinds of plots once the underlying 3D technology is feasable, or would that make simple things too complicated?</li>
-<li>I'd love to have written this whole thing in Python or a combination of Python and C++ for the low-level stuff, but alas JavaScript is the only supported scripting language on the web and in SVG. Opening and saving files is imposible without going through a server, as is connecting to real-time data aquisition hardware. </li>
+<li>Should the PlotXML format and JavaScript API be written extensiblly to support these kinds of plots once the underlying 3D technology is feasible,  or would that make simple things too complicated?</li>
+<li>I'd love to have written this whole thing in Python or a combination of Python and C++ for the low-level stuff, but alas JavaScript is the only supported scripting language on the web and in SVG. Opening and saving files is impossible without going through a server, as is connecting to real-time data acquisition hardware. </li>
 </ul>
 <h2>Future Plans or Additional Packages </h2>
 <ul>
@@ -208,138 +216,6 @@
 <li>Computer Algebra system for function plotting </li>
 </ul>
 
-<h2>Date, Time, Datetime, Duration (absolute ms), Span/Interval (start&amp;end)</h2>
-<ul>
-  <li>These must be supported seperately. Just having a time means you need a default date assumption. 
-
-
- UNIX and the standard C library assumes January 1, 1970. Microsoft COM system assumes December 30, 1899 C.E. while the .NET Framework assumes January, 1, 0001 C.E.</li>
-<li> <strong>DateTime </strong> represents an instant in time whereas a <strong>TimeSpan </strong> represents a time interval. </li>
-  <li>Additions to a datetime object: isLeapYear, isDaylightSavings </li>
-  <li>Daylight savings time makes some specifications of a local datetime illegal (spring forward) and others ambiguous (fall back) </li>
-<li>Julian Day number. This is the number of days since noon U.T.C. on January 1, 4713 B.C. (Julian calendar). This time scale was originally proposed by John Herschel, and is often used in astronomical calculations. </li>
-<li> TAI64 timescale covers the entire expected lifespan of the universe (at least, if you expect the universe to be closed). </li>
-<li> Excel uses a different system for its dates than most Unix programs. 
-
-
- Excel uses ``number of days since 31 Dec 1899''. Naturally, Microsoft messed this up because they happened to believe that 1900 was a leap year.</li>
-<li> US Geological Survey (USGS) likes midnight to be 24:00:00 of the previous day, not 00:00:00 of the day people expect. </li>
-<li>Incomplete date/times like birthdays where you often only have a month and day. These are different from abstract times since those can be affected by timezone. Of course, the math you can do with these is limited because of things like leapyears.</li>
-<li>Many of the issues of plotting date &amp; stuff are the same as scheduling repeating events, so perhaps some of the iCalendar standard can be used/implimented. <a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a> also has a concept of repatition. </li>
-</ul>
-
-<h2>Plotting Dates &amp; Stuff </h2>
-<ul>
-  <li>These can either be a category type scale or an number type scale. For a histogram of web hits, it's a category. How many hits came all of Monday, how many came all of Tuesday. For a stock price line-graph, it's a number type scale. You have data for the stock price at exactly 2:34:00pm.</li>
-  <li>People see years, months, weeks, and days as being intervals: <em>on</em> March 11 implies anywhere from 00:00:00.00 to 11:59:59.99 on that day. Times are viewed as points: <em>at</em> 3:00. This makes auto-labeling challenging. This means that even if you're ploting things like stock prices, years, months, and days should be treated like categories.What about when you label every 5th day (Dec 20, Dec 25, Jan 1, Jan 5, Jan 10, Jan 15, Jan 20). Where do you put the ticks and the labels? Here you might consider puting them at the start of the day in question. Same problem when you're not labeling ALL of the months. Ploticus seems to only label every individual month or no individual months. </li>
-  <li>Also, &quot;every five days&quot; doesn't really cut it when making ticks and labels for a month or two. Dates don't start at zero, so you'd like to include 1 as the reference start of the next month, but 1, 6, 11, 16, 21, 26, 31 does't look good, nor will there always be a 31. On the other hand 1, 5, 10, 15, 20, 25, 30 is not evenly spaced and again there isn't always a 30, but a bigger problem is that 30 and 1 will end up too close to label. Beginning and middle 1, 15, 1, 15 is pretty good, though not even. Maybe better than 1, 15, 30, 1, 15, 30 when February is included. </li>
-  <li>For Months, multiples of 1, 4 (Mar, Jun, Sep, Dec), 6 (Jan, July or Jun, Dec)</li>
-  <li>For dates, multiples of three and four are not good. Only 1, 2, 5, 10</li>
-  <li>For hours, 1, 2, 3, 4, 6, 8, 12</li>
-  <li>For minutes an seconds, 1, 2, 5, 10, 20, 30 </li>
-</ul>
-<p align="center">How lables on absolute datetime ranges are formatted </p>
-<table width="95%"  border="0">
-  <tr>
-    <th width="10%" scope="col">&nbsp;</th>
-    <th width="30%" scope="col">Few 1-4 <br /> 
-      (most info -- only what changes and one constant) </th>
-    <th width="30%" scope="col">Medium 5-10 (a shortened version of Few) </th>
-    <th width="30%" scope="col">Lots &gt;10 (top of two lines - the largest interval that changes more than 10 or more times in the range) </th>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">Many Years </th>
-    <td width="30%">1980, 1990, 2000, 2010</td>
-    <td width="30%">'80, '85, '90, '95, '00, '05, '10, '15 </td>
-    <td width="30%">80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 00, 02, 04, 06, 08, 10 </td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">Few Years </th>
-    <td width="30%">1998, 1999, 2000, 2001 </td>
-    <td width="30%">&nbsp;</td>
-    <td width="30%">&nbsp;</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">One Or Two Years </th>
-    <td width="30%">January 1999, June 1999, January 2000, June 2000</td>
-    <td width="30%">Oct99, Nov99, Dec99, Jan00, Feb00, Mar00, </td>
-    <td width="30%">JFMAMJJASONDJFMAMJJASONDJFM</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">12 Months</th>
-    <td width="30%">Mar 99, Jun 99, Sep 99, Dec 99, Mar 00, </td>
-    <td width="30%">&nbsp;</td>
-    <td width="30%">&nbsp;</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">Three Months </th>
-    <td width="30%">December 1999, January 2000, February 2000, March 2000 </td>
-    <td width="30%">Dec 15, Jan 1, Jan 15, Feb 1, Feb 15, Mar 1<br />
-      or      <br />
-      1-Jan, 15-Jan, 1-Feb, 15-Feb, 1-Mar<br /></td>
-    <td width="30%">12/15, 12/20, 12/25, 1/1, 1/5, 1/10, 1/15, 1/20, 1/25, 2/1, 2/5, 2/10, 2/15, 2/20, 2/25, 3/1, 3/5 <br />
-      or      <br />
-      15-D, 20-D, 25-D, 1-J, 5-J, 10-J, 15-J, 20-J, 25-J, 1-F, 5-F, 10-F, 15-F, 20-F, 25-F, 1-M, 5-M </td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">30 Days </th>
-    <td width="30%">Dec 20 1999, Jan 1 2000, Jan 10 2000, Jan 20 2000 </td>
-    <td width="30%">Dec 20, Dec 25, Jan 1, Jan 5, Jan 10, Jan 15, Jan 20</td>
-    <td width="30%">dd</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">15 Days </th>
-    <td width="30%">Dec</td>
-    <td width="30%">&nbsp;</td>
-    <td width="30%">dd</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">Few Days </th>
-    <td width="30%">Dec 31 12:00pm, Dec 31 6:00pm, Jan 1 12:00am, Jan 1 6:00am </td>
-    <td width="30%">&nbsp;</td>
-    <td width="30%">&nbsp;</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">Few Hours </th>
-    <td width="30%">&nbsp;</td>
-    <td width="30%">&nbsp;</td>
-    <td width="30%">&nbsp;</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">10-60 Minutes</th>
-    <td width="30%">mm-dd h:mm:ss</td>
-    <td width="30%">h:mm:ss</td>
-    <td width="30%">mm</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">1-10 Minutes </th>
-    <td width="30%">mm-dd h:mm:ss</td>
-    <td width="30%">mm:ss</td>
-    <td width="30%">ss</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">1-60 Seconds</th>
-    <td width="30%">h:mm:ss</td>
-    <td width="30%">mm:ss</td>
-    <td width="30%">ss</td>
-  </tr>
-  <tr>
-    <th width="10%" scope="row">Less than a second </th>
-    <td width="30%">h:mm:ss.u</td>
-    <td width="30%">ss.u</td>
-    <td width="30%">.uu</td>
-  </tr>
-</table>
-<h2>Refererences</h2>
-<ul>
-  <li><a href="http://docs.python.org/lib/module-datetime.html">Python datetime module</a> (includes date, time, datetime, timedelta, and tzinfo) - timedeltas are treated as days, seconds, and miliseconds exactly. This makes it hard to go to the same day on the next year or the next month. </li>
-<li>Perl <a href="http://search.cpan.org/%7Edrolsky/DateTime-0.36/lib/DateTime.pm">DateTime</a>, <a href="http://datetime.perl.org">datetime.perl.org</a> - timedeltas are not converted to absolute miliseconds. You can represent &quot;one year&quot; and add it. This causes some ambiguity.</li>
-  <li><a href="http://www.w3.org/TR/NOTE-datetime">W3C Date and Time Formats</a>, <a href="http://www.w3.org/TR/xmlschema-2/#isoformats">XMLSchema</a></li>
-<li>iCalendar (<a href="http://tools.ietf.org/html/rfc2445">RFC 2445</a>) for scheduling interoperability <a href="http://en.wikipedia.org/wiki/ICalendar">Wikipedia ICalendar</a></li>
-  <li>ISO C <a href="http://www.opengroup.org/onlinepubs/009695399/functions/strftime.html">strftime</a> (used by python and PHP) <a href="http://effbot.org/librarybook/time.htm">strptime</a> python parser </li>
-<li><a href="http://www.w3.org/TR/NOTE-datetime"> ISO 8601</a> datetime format (supported in MochiKit) </li>
-</ul>
-<p>&nbsp;</p>
 <p>Keywords: plot, plotting, graph, graphing, chart, charting</p>
 </div> <!-- content -->
 <!--#include virtual="footer.html" -->
