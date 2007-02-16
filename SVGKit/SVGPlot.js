@@ -148,8 +148,10 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 	-- horizontalLines(data, colors)
     -- horizontalStrip(start, end, color?)  // Draws a rect with given stroke and fill settings  What about stroking ends?
 	-- horizontalStrips([[1,2], [2,3]], ['red', 'green'])  
-    
 	
+    -- When plotting something with too many tick labels, 
+       first go to double row, then to diagonal, then to vertical
+    
     Example:
     with p {
         createBoxes(1,2,2) // One plot on the first line, two on the second, etc.
@@ -372,6 +374,13 @@ Removers remove the object.
 ////////////////////////////
 //  Helper Objects
 ////////////////////////////
+
+/***
+    Should have two classes: continuous and discrete
+    Within each, there are different data types supported: number, real, money, string
+    
+    Should these just map to 0.0 to 1.0, or should
+***/
 
 // Scale -- Mapping from data to a position between 0.0 and 1.0 and back.
 
@@ -1623,7 +1632,8 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom) {
         path = 'M 0,0 h '+(right-left);
     else if (this.type=='y')
         path = 'M 0,'+(bottom-top)+' v '+(top-bottom);
-    var pathElem = this.svgPlot.svg.PATH({'d': path});
+    var pathElem = this.svgPlot.svg.PATH({'d': path, 'stroke-linecap': 'square'});
+    // stroke-linecap:square so there is no corner cut out where two axes meet
     //MochiKit.DOM.replaceChildNodes(this.element);  // TODO Remove the paths.
     this.element.appendChild(pathElem);
     
@@ -2281,6 +2291,30 @@ SVGPlot.prototype.evaluate_item = function(row, key) {
         retrurn hsv(pase, mag, 1.0)
     }
     p.scatterPlot(dataset, pm)
+    
+    // Alternative way to go:
+    var cmap = map('c')
+    scatterplot(datasource1, {x:'x', y,'y', shape:'square',   fill_lightness:cmap})
+    scatterplot(datasource2, {x:'x', y,'y', shape:'triangle', fill_lightness:cmap})
+    //lineplot, areaplot, barplot, ...
+
+    // Discrete variables are easy: just pass in a selector and an explicit map
+    var shapemap = {1:'circle', 2:'square', 3: 'triangle'}
+    scatterplot(datasource, {x:'x', y,'y', shape:['s', shapemap], fill_color:'black'})
+    
+    // Should we use this trick with continuous things?
+    scatterplot(datasource, {x:'x', y,'y',  fill_color:['c', rainbow]})
+    
+    If no map is given, check the datatype and construct a map of the appropriate type
+    going from the data to the appropriate type of thing (position, color, shape, etc.)
+    
+    Before the plot is rendered, this will find the max/min of the datasources
+    and add them to the map.  They share a color map.
+
+    map(name, explicit_min, explicit_max)
+        returns a function that takes the current row, row of mins, row of maxs
+    function(row, max, min)
+        which returns a number from 0.0 to 1.0 (unless it is out of range of explicit min/max.)
 ***/
 
 SVGPlot.PointMapper = function() {
@@ -2306,13 +2340,13 @@ SVGPlot.PanelMapper.prototype = {
 
 SVGPlot.PointMapper.prototype = {
     draw: function(row, max, min) {},
-    orientation: null,
+    rotation: null,
     size: null,
     aspect_ratio: null,
     
-    shape: function(row, max, mni) {},
+    shape: function(row, max, min) {},  // returns 'square' or draws a square?
     shape_cycle: false,  // Each plot gets its own shape
-    shape_indexed: null,
+    shape_indexed: null, // The column that indexes the shapes
     shape_index: {'s':'square', 'c':'circle'},
     
     fill_rgba : function(row, max, min) {},
@@ -2335,9 +2369,9 @@ SVGPlot.PointMapper.prototype = {
     fill_value: null,  // cone
     fill_lightness: null,  // double cone (also called brightness)
     
-    stroke_rgba : function(row, max, min) {},
-    stroke_alpha: function(row, max, min) {},
-    stroke_color: function(row, max, min) {},
+    stroke_rgba : function(row, max, min) {},  // "rgba(100, 0, 200, .5)"
+    stroke_alpha: function(row, max, min) {},  // number 0.0 to 1.0
+    stroke_color: function(row, max, min) {},  // "rgb(100, 0, 200)"
     stroke_color_cycle: false,
     stroke_color_indexed: null,
     stroke_color_index: {'r': 'red', 'g':'green'},
@@ -2356,7 +2390,7 @@ SVGPlot.PointMapper.prototype = {
     
     //'lineCap': "butt", // also "round" and "square"
     //'lineJoin': "miter", // also "round" and "bevel"
-    //'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
+    //'lineWidth': 1.0, // surrounds the center of the path
     //'miterLimit': null, 
     //'dasharray' : null,  // a string list "1,2" to make strokes dashed
     //'dashoffset' : null, // a number like 3 which specifies how to start the dashing
@@ -2365,7 +2399,7 @@ SVGPlot.PointMapper.prototype = {
 
 SVGPlot.LineMapper = function() {
 }
-// Thickness and dashing are included
+// Thickness and dashing are included along with join-type: angle, smooth, etc.
 
 SVGPlot.ShadingMapper = function() {
 }
@@ -2375,9 +2409,35 @@ SVGPlot.LabelMapper = function() {
 }
 // rgba, font, size, position, orientation
 
-SVGPlotBarMapper = function() {
+SVGPlot.BarMapper = function() {
 }
 // stroke, fill, width_percent, location, horizontal/vertical, 
+
+
+// Utility functions for maps
+
+SVGPlot.clamp = function(value, min /* =0.0 */, max /* =1.0 */) {
+    /***
+        Many maps (e.g. color) require inputs be locked between 0.0 and 1.0,
+        so data that's out of range has to be clamped between those values.
+    ***/
+    min = SVGKit.firstNonNull(min, 0.0)
+    max = SVGKit.firstNonNull(max, 1.0)
+    if (value <= min )
+        return min
+    if (value >= max)
+        return max
+    return value
+}
+
+SVGPlot.to255 = function(value) {
+    /***
+        Color components need to be integers between 0 and 255.
+        This takes a real number, clamps it between 0.0 and 1.0,
+        then returns an integer between 0 and 255
+    ***/
+    return Math.round(SVGPlot.clamp(value)*255.0)
+}
 
 
 ////////////////////////////
