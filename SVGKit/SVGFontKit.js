@@ -6,6 +6,25 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
 (c) 2006 Jason Gallicchio.  All rights Reserved.
 
+TODO:
+* PATH parser (by token and by command)
+  - "M30,30 L150,150 Q60,70 70,150 L30,30"
+  - ['M', 30, 30, 'L', 150, 150, 'Q', 60, 70 70, 150, 'L', 30, 30]
+  - [ ['M', 30, 30], 
+      ['L', 150, 150], 
+      ['Q', 60, 70 70, 150], 
+      ['L', 30, 30] ]
+  - calculateBBox(path, stroke_width)  do all control points fall inside BBox? Not arcs
+  - check: http://www.kevlindev.com/dom/path_parser/index.htm
+  - Built in:
+      p = document.getElementsByTagName('path')[13]
+      p.pathSegList.getItem(1).pathSegTypeAsLetter
+      p.pathSegList.getItem(1).angle
+* Font Metrics
+  - layoutText(text, font)  returns a list of starting points and glyphs
+  - calculateBBox(text, font, size, stroke_width)  needs path parser
+  - Looks like you can getBBox as long as it's added to the file (even in the defs), 
+    not just after it's created.
 ***/
 
 ////////////////////////////
@@ -114,7 +133,12 @@ SVGFontKit.do_fonts = function(svg) {
             if (horizontal_adv_x != null)
                 font.horizontal_adv_x[unicode] = parseFloat(horizontal_adv_x)
             attrs['id'] = font.face_attrs['font-family'] + ' _ ' + unicode
-            font_group.appendChild(svg.PATH(attrs))
+            var path = svg.PATH(attrs)
+            font_group.appendChild(path)
+            
+            var bbox = path.getBBox()
+            log('BBox for', unicode, bbox.x, bbox.y, bbox.width, bbox.height)
+            
         }
         
         add_glyph_path(font.missing)
@@ -146,11 +170,11 @@ SVGFontKit.do_text = function(svg) {
         var text_align = getStyle(text, "text-align")  // 'start'
         var text_anchor = getStyle(text, "text-anchor")  // 'start'
         
+        log("getAttributes(text)")
         var attrs = SVGFontKit.getAttributes(text)
         // Give the text element a different id if it has one that a script might reference
         SVGFontKit.fixID(text)
         var group = svg.G(attrs)
-        
         var handle_text_child = function(child) {
             if (child.nodeType == child.TEXT_NODE) {
                 SVGFontKit.string2paths(child.nodeValue, attrs['x'], attrs['y'], font, size, group, svg)
@@ -161,13 +185,11 @@ SVGFontKit.do_text = function(svg) {
         }
         
         forEach(text.childNodes, handle_text_child)
-        
         text.parentNode.appendChild(group)
+        //hideElement(text)
     }
     
     forEach(text_elements, handle_text)
-    
-    hideElement(text)
 }
 
 SVGFontKit.path2text = function() {
@@ -217,8 +239,7 @@ SVGFontKit.string2paths = function(string, x_str, y_str, font, size, outter_grou
     for (var i=0; i<string.length; i++) {
         var unicode = string[i]
         var href = '#' + font + ' _ ' + unicode
-        var use =  svg.USE({'x':x, 'y':y})
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', href)
+        var use =  svg.USE({'x':x, 'y':y, 'xlink:href': href})
         g.appendChild(use)
         x += SVGFontKit.fonts[font].horizontal_adv_x[unicode]
         // TODO:  missing-glyphs
