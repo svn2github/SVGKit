@@ -105,6 +105,7 @@ SVGFontKit.do_fonts = function(svg) {
             hkern_dict : {},   // Dictionary mapping unicode pairs to hkern
             vkern_dict : {},
             name_to_unicode : {},
+            unicodes : [],  // Ordered list of unicodes (possibly multiple characters for ligatures)
             
             font_attrs : SVGFontKit.getAttributes(font_element)
         }
@@ -127,8 +128,10 @@ SVGFontKit.do_fonts = function(svg) {
             var unicode = attrs['unicode']
             if (unicode == null)
                 unicode = 'missing-glyph'
-            else
+            else {
                 font.name_to_unicode[attrs['glyph-name']] = unicode
+                font.unicodes.push(unicode)
+            }
             var horizontal_adv_x = attrs['horiz-adv-x']
             if (horizontal_adv_x != null)
                 font.horizontal_adv_x[unicode] = parseFloat(horizontal_adv_x)
@@ -226,7 +229,7 @@ SVGFontKit.string2paths = function(string, x_str, y_str, font, size, outter_grou
     var x = SVGFontKit.parseDefault(x_str, 0)
     var y = SVGFontKit.parseDefault(y_str, 0)
     
-    var units_per_em = 2048.0
+    var units_per_em = 2048.0  // Should come from font
     var size = 30  // Should be converted from the string "30px"
     var scale = size/units_per_em
     var transform = 'translate('+x+','+y+')scale('+scale+','+(-scale)+')'
@@ -236,12 +239,24 @@ SVGFontKit.string2paths = function(string, x_str, y_str, font, size, outter_grou
     y = 0.0
     
     // For each character in the string, check to see if you need to kern, place the character, update x-position
-    for (var i=0; i<string.length; i++) {
-        var unicode = string[i]
+    for (var i=0; i<string.length; i++) {  // Don't know if a ligature will eat up more than one character.
+        // TODO: Ligatures: Go through all of the glyphs in order to see if they match the first n letters of the string.  (This seems inefficient, but that's how it's defined.)
+        var unicode = 'missing-glyph';
+        var unicodes = SVGFontKit.fonts[font].unicodes
+        var glyph_number = 0;
+        while ( glyph_number < unicodes.length && 
+                 string.substr(i, unicodes[glyph_number].length) != unicodes[glyph_number] )
+            glyph_number++
+        if (glyph_number != unicodes.length) {
+            unicode = unicodes[glyph_number]
+            i += unicode.length - 1;
+        }
+        
         var href = '#' + font + ' _ ' + unicode
         var use =  svg.USE({'x':x, 'y':y, 'xlink:href': href})
         g.appendChild(use)
         x += SVGFontKit.fonts[font].horizontal_adv_x[unicode]
+        // TODO: hkern   How do you kern ligatures?
         // TODO:  missing-glyphs
     }
     outter_group.appendChild(g)
@@ -256,6 +271,11 @@ SVGFontKit.parseDefault = function(string, def) {
 
 SVGFontKit.defaultWhitespace = function(string) {
     /***
-        When xml:space="default", the SVG user agent will do the following using a copy of the original character data content. First, it will remove all newline characters. Then it will convert all tab characters into space characters. Then, it will strip off all leading and trailing space characters. Then, all contiguous space characters will be consolidated.
+        When xml:space="default", the SVG user agent will do the following 
+        using a copy of the original character data content. First, it 
+        will remove all newline characters. Then it will convert all tab 
+        characters into space characters. Then, it will strip off all 
+        leading and trailing space characters. Then, all contiguous 
+        space characters will be consolidated.
     ***/
 }
