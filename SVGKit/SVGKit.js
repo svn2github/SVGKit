@@ -184,9 +184,9 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     //log("SVGKit.__init__(", p1, p2, p3, p4, p5, ")");
     this.setBaseURI();
     if (MochiKit.Base.isUndefinedOrNull(p1)) {
-        /*
         // This JS was included inside of an SVG file, and this was included in the
         // root element's onload event, which you need to to do get a target.
+        /*
         var evt = p1;
         if ( window.svgDocument == null )
             this.svgDocument = evt.target.ownerDocument;
@@ -199,7 +199,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
         if (p1.length>5 && p1.substr(p1.length-4,4).toLowerCase()=='.svg')  // IE doesn't do substr(-4)
             this.loadSVG(p1, p2, p3, p4, p5);
         else
-            this.grabSVG(p1);
+            this.whenReady( bind(this.grabSVG, this, p1) );
     }
     else if (typeof(p1) == 'object') {  // Not <object> but a JS object
         this.grabSVG(p1);
@@ -259,16 +259,22 @@ SVGKit.prototype.isIE = function() {
 }
 
 
-SVGKit.prototype.whenReady = function (func) {
+SVGKit.prototype.whenReady = function (func, every_time /* =false */) {
     /***
         Calls func when the SVG is ready.
         If you create or try to use an SVG inside of <embed> or <object>, the
         SVG file must be loaded.  The browser does this asynchronously, and 
-        you can't do anything to the SVG unti it's been loaded.
-        If the file already loaded or you're working with an imbeded SVG, func
+        you can't do anything to the SVG until it's been loaded.
+        If the file already loaded or you're working with an inline SVG, func
         will get called instantly.
         If it hasn't loaded yet, func will get added to the elemen's onload 
         event callstack.
+        
+        TODO: Should this happen every time the div surrounding the SVG is
+        hidden and shown?  If you just add it to onload, it does.
+        
+        TODO: Fix the loading of SVG from XML file thing -- something more
+        sophistocated than calling 0.5 seconds later.
     ***/
     if (this.svgElement != null && this.svgDocument != null && 
             !MochiKit.Base.isUndefinedOrNull(func) ) {
@@ -276,10 +282,15 @@ SVGKit.prototype.whenReady = function (func) {
         func.call(this);
         //func.apply(this);
         //func();
+        if (every_time)
+            addToCallStack(this.htmlElement, 'onload', func);  // Incompatable with Mochikit.Signal
     }
     else if (this.htmlElement != null) {
         //log("adding to onload event for htmlElement=", this.htmlElement, " the func=", func);
-        addToCallStack(this.htmlElement, 'onload', func);
+        //if (every_time)
+            addToCallStack(this.htmlElement, 'onload', func);  // Incompatable with Mochikit.Signal
+        //else
+        //    addToCallStack(this.htmlElement, 'onload', function() {func(); );
     }
     else {
         // Try again half a second later.  This is only for loaing an SVG from an XML file to an inline element.
