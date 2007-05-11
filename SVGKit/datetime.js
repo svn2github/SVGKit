@@ -9,6 +9,14 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 Utilities for handling dates, times, 
 datetime stamps, and time intervals
 
+Format inspired by ISO 8601 and math by XMLSchema http://www.w3.org/TR/xmlschema-2/#isoformats
+
+Intended to be more generic than JavaScript to be easily ported 
+to Python, C, Java, etc.
+
+Biggest difference between this and JavaScript's Date object is that we allow 
+and handle null in any of the fields.
+
 Some JavaScript Info:
     Date objects internally store the number of milliseconds since 
     the epoc midnight Jan 1, 1970 GMT
@@ -27,9 +35,12 @@ Some JavaScript Info:
     What about daylight savings time?  Repeat the same time-chunk twice?
     American style 1/17/2007 versus european style 17-1-2007 vs ordered 2007-01-17
     d.getTimezoneOffset() difference in minutes between local time and Greenwich Mean Time (GMT)
-    Input timezone: included with each stamp, assume GMT, assume local (what about daylight?)
+    Input timezone: included with each stamp, assume GMT, assume local (what about daylight savings?)
     Output timezone: show as UTC, show as local (what about daylight savings?)
-        
+    What about daylight savings?  Assume that a time without a timezone is in the current timezone or localle?
+    
+    fill_with_defaults(possibly_incomplete, {'year':0000, 'month':1})
+    map_fields(dt, {'year': pad4, 'month', pad2})
 ***/
 
 assert = function(assertion) {
@@ -164,7 +175,7 @@ datetime = {
         		character, use "\\". 
                 
                 
-        GNUPltot format:
+        GNUPltot format:  (is this C's formatter?)
             %f floating point notation
             %e or %E exponential notation; an ”e” or ”E” before the power
             %g or %G the shorter of %e (or %E) and %f
@@ -245,6 +256,20 @@ datetime = {
         'Seconds', 
         'Milliseconds' 
     ],
+    pad : function(number, digits) {
+        // Utility function
+        // Returns a string that represents number, possily padded 
+        // with zeros to make a string of length 'digits'
+        var str = '' + number
+        while (str.length < digits)
+            str = '0' + str
+        return str
+    },
+    toISOTimestamp : function(dt) {
+        var pad = datetime.pad
+        return ''+pad(dt.year,4)+'-'+pad(dt.month,2)+'-'+pad(dt.day,2)+
+            ' '+pad(dt.hour,2)+':'+pad(dt.minute,2)+':'+pad(dt.second,2)
+    },
     format : function(date, code, output_utc /* = false */) {
         /***
             Takes a JavaScript Date object and a format code like 'yyyy-mm-dd'
@@ -272,14 +297,7 @@ datetime = {
         // String to be added to getters and setters if UTC is requested
         var utc = output_utc ? 'UTC' : ''
     
-        var pad = function(number, digits) {
-            // Returns a string that represents number, possily padded 
-            // with zeros to make a string of length digits
-            var str = '' + number
-            while (str.length < digits)
-                str = '0' + str
-            return str
-        }
+        var pad = datetime.pad
         
         // Short names for these items
         var c = code
@@ -479,6 +497,7 @@ datetime = {
     },
     roundDate : function(date, i, round_up /*=false*/) {
         /***
+            DEPRICATED
             Copy the date and round the date to the nearest 
             year/month/etc as defined by i.
             
@@ -874,12 +893,285 @@ datetime = {
     	datetime.normalize_pair(dt, 'day', 'hour', 24);
     	return datetime.normalize_date(dt);
     },
-
-
     /*************************************
-    End of the brutal Python ripping
+        End of the brutal Python ripping
     *************************************/
     
+    /****
+        Basic Stuff
+    *****/
+    
+    now : function() {
+        // Returns a datetime object for now.
+        d = new Date()
+        return {
+            'year': d.getFullYear(), 
+            'month': d.getMonth()+1,  // JavaScript reports January as year 0
+            'day': d.getDate(), 
+            'hour': d.getHours(), 
+            'minute': d.getMinutes(), 
+            'second': d.getSeconds(), 
+            'microsecond': d.getMilliseconds()*1000,
+            'tz_hour': d.getTimezoneOffset()/60,
+            'tz_minute': d.getTimezoneOffset()%60
+        }
+    },
+    
+    /***
+        MATH
+    ***/
+    
+    min : {year:1,    month:1,  day:1,  hour:0,  minute:0,  second:0,  microsecond:0},
+    max : {year:9999, month:12, day:31, hour:23, minute:59, second:59, microsecond:999999},
+    keys : ['year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond'],
+    // Number of days for each item
+    days : {
+        year: 365.25,
+        month: 365.25/12,
+        day: 1, 
+        hour: 1.0/24,
+        minute: 1.0/(24*60), 
+        second: 1.0/(24*60*60), 
+        microsecond: 1.0/(24*60*60*1000000)
+    },
+    
+    addUpToDay : function(dt1, dt2, result) {
+        /***
+            Modifies result in place and returns the number of days
+            that got rolled over from adding the other quantities.
+        ***/
+        var microsecond = dt1.microsecond + dt2.microsecond
+        p.microsecond = microsecond%1000000
+        var second = dt1.second + dt2.second + Math.floor(microsecond/1000000)
+        p.second = second%60
+        var minute = dt1.minute + dt2.minute + Math.floor(second/60)
+        p.minute = minute%60
+        var hour = dt1.hour + dt2.hour + Math.floor(minute/60)
+        p.hour = hour%24
+        var day = Math.floor(hour/24)
+        return day
+    },
+    
+    addPeriods : function(p1, p2) {
+        // Don't attempt to roll over anything
+        // Assume any unspecified fields are zero.
+        var result = {}
+        for (key in datetime.min) {
+            if (isUndefinedOrNull(p1[key]) )
+                result[key] = 0
+            else
+                result[key] = p1[key]
+            if (!isUndefinedOrNull(p2[key]) )
+                result[key] += p2[key]
+        }
+        return p2
+    },
+    negatePeriod : function(p) {
+        var result = {}
+        for (key in datetime.min) {
+            if (!isUndefinedOrNull(p[key]) )
+                result[key] = -p[key]
+        }
+        return result
+    },
+    addPeriod : function(dt, p) {
+        // Here's where you have to worry about days in month and leap years
+        // Worry about negative years?
+        /*
+           What about order of ops: If month rolls over, it makes a difference
+           if you do month first or rollover first?
+           The python code (and this this code) does it differently than 
+           xmlschema for better or worse -- we start adding microseconds and
+           keep rolling over up to years.
+           They add years, then add months. If the day doesn't exist in the new
+           month, it is cliped down, so March 31 + 1M -> April 30.
+           Then they add microseconds up to days rolling over, possibly rolling
+           months and years again at the end.
+        */
+        /*
+            If a field in p is not specified, it is treated as if it were zero.
+            If a field in dt is not specified, it is treated in the calculation
+            as if it were the minimum allowed value in that field, however, 
+            after the calculation is concluded, the corresponding field 
+            in result is removed (set to unspecified).
+        */
+        
+        var result = {}
+        
+        for (key in datetime.min) {
+            if ( isUndefinedOrNull(dt[key]) )
+                result[key] = datetime.min[key]
+            else
+                result[key] = dt[key]
+                
+            if ( !isUndefinedOrNull(p[key]) )
+                result[key] += p[key]
+        }
+        
+        datetime.normalize_datetime(result);
+        
+        for (key in datetime.min) {
+            if ( isUndefinedOrNull(dt[key]) )
+                result[key] = null
+        }
+        
+        // Keep the timezone, possibly undefined
+        result.tz_hour = dt.tz_hour
+        result.tz_minute = dt.tz_minute
+        
+        return result
+    },
+    subPeriod : function(timestamp, period) {
+        return addPeriod(timestamp, negatePeriod(period))
+    },
+    subDatetimes : function(dt1, dt2) {
+        // Convert ts2 to the same timezone as ts1 before the subtraction is done
+        // If one has a timezone and the other doesn't, assume it has the same timezone
+        // Unless both datetimes have a value in a field, the result field in the period is null
+        // This gives a difference in years, months, and days, not some absolute number of days.
+        var dt2mod = copy(dt2)
+        
+        if ( !isUndefinedOrNull(dt1.tz_hour) && !isUndefinedOrNull(dt2.tz_hour) )
+            datetime.convertTimezone(dt2mod, dt1)
+        
+        var result = {}
+        for (key in datetime.min) {
+            if ( !isUndefinedOrNull(dt1[key]) && !isUndefinedOrNull(dt2[key]) )
+                result[key] = dt1[key] - dt2[key]
+        }
+        return restult
+    },
+    convertTimezone : function(dt, new_timezone) {
+        // Only alter hour and minute if both have a timezone.
+        // Set dt's timezone to the new timezone even if that timezone is null
+        if ( !isUndefinedOrNull(dt.tz_hour) && !isUndefinedOrNull(new_timezone.tz_hour) )
+            dt.hour += dt.tz_hour - new_timezone.tz_hour
+        if ( !isUndefinedOrNull(dt.tz_minute) && !isUndefinedOrNull(new_timezone.tz_minute) )
+            dt.minute += dt.tz_minute - new_timezone.tz_minute
+        dt.tz_minute = new_timezone.tz_minute
+        dt.tz_hour = new_timezone.tz_hour
+    },
+    comparePeriods : function(p1, p2) {
+        // Not comparable if they don't have the same fields defined
+        // There is a partial ordering that's complicated where 
+        //  1Y > 364D and 1Y < 367D, but you can't say in between.
+        // http://www.w3.org/TR/xmlschema-2/#duration
+        /*
+            P1Y:   > P364D  <> P365D                         <> P366D   < P367D
+            P1M:   > P27D   <> P28D    <> P29D    <> P30D    <> P31D    < P32D
+            P5M:   > P149D  <> P150D   <> P151D   <> P152D   <> P153D   < P154D
+            
+            Implementations are free to optimize the computation of the ordering 
+            relationship. For example, the following table can be used to compare 
+            durations of a small number of months against days.
+            Months	1	2	3	4	5	6	7	8	9	10	11	12	13	...
+            Days	Minimum	28	59	89	120	150	181	212	242	273	303	334	365	393	...
+            Maximum	31	62	92	123	153	184	215	245	276	306	337	366	397	...
+        */
+        for (var i=0; i<datetime.keys.length; i++) {
+            var key = datetime.keys[i]
+            if ( !isUndefinedOrNull(p1[key]) && !isUndefinedOrNull(p2[key]) ) {
+                var comp = compare(p1[key], p2[key])
+                if (comp != 0)
+                    return comp;
+            }
+            if ( !isUndefinedOrNull(p1[key]) && isUndefinedOrNull(p2[key]) ||
+                  isUndefinedOrNull(p1[key]) && !isUndefinedOrNull(p2[key])) {
+                return 2;  // Only one has this biggest field defined
+            }
+        }
+        return 0;
+    },
+    compareDatetimes : function(dt1, dt2) {
+        // Not comparable if they don't have the same fields defined
+        // Convert them to the same timezone.  If only one has a timezone, they are not comparable.
+        /*
+            2000-01-15T00:00:00 < 2000-02-15T00:00:00
+            2000-01-15T12:00:00 < 2000-01-16T12:00:00Z
+            but
+            2000-01-01T12:00:00 <>  1999-12-31T23:00:00Z
+            2000-01-16T12:00:00 <> 2000-01-16T12:00:00Z
+            2000-01-16T00:00:00 <> 2000-01-16T12:00:00Z
+        */
+        for (var i=0; i<datetime.keys.length; i++) {
+            var key = datetime.keys[i]
+            if ( !isUndefinedOrNull(dt1[key]) && !isUndefinedOrNull(dt2[key]) ) {
+                var comp = compare(dt1[key], dt2[key])
+                if (comp != 0)
+                    return comp;
+            }
+            if ( !isUndefinedOrNull(dt1[key]) && isUndefinedOrNull(dt2[key]) ||
+                  isUndefinedOrNull(dt1[key]) && !isUndefinedOrNull(dt2[key])) {
+                return 2;  // Only one has this biggest field defined
+            }
+        }
+        return 0;
+    },
+    
+    round : function(dt, key, direction /*='nearest'*/, multiple /* =1 */) {
+        /***
+            @param dt - the datetime to round
+            @param key - a string to indicate the field to start rounding
+            @param direction - 'up', 'down', or 'nearest'
+            @retrurns a new datetime object that is rounded
+            
+            TODO:  How to handle months days and years that start at 1?
+            TODO:  Normalize days?  What if Feb gets rounded up to 30?  Clip it to 28?
+            a = {year:2007, month:4, day:21, hour:23, minute:53, second:6}
+            datetime.round(a, 'hour', 'up', 1)
+        ***/
+        // Zero out all fields smaller than the key given
+        direction = SVGKit.firstNonNull(direction, 'nearest');
+        multiple = SVGKit.firstNonNull(multiple, 1);
+        var keys = datetime.keys
+        var field = 999  // Eventually set to the index of key in keys (1 for months)
+        var rounded = {}
+        var remainder_days = 0
+        for (i=0; i<keys.length; i++) {
+            // If the i'th key doesn't appear in dt, keep it out of the rounded
+            var k = keys[i]
+            if (k == key)
+                field = i
+            if (i<=field)  // A larger time-chunk
+                rounded[k] = dt[k]
+            else {
+                if (dt[k])
+                    remainder_days += dt[k] * datetime.days[k]
+                rounded[k] = datetime.min[k]
+            }
+        }
+        
+        // Copy the timezone if it exists
+        if (dt.tz_hour != null)
+            rounded.tz_hour = dt.tz_hour
+        if (dt.tz_minute != null)
+            rounded.tz_minute = dt.tz_minute
+        
+        // Add the remainder before we round
+        rounded[key] += remainder_days / datetime.days[key]
+        
+        var round = { nearest: Math.round, 
+                       up:      Math.ceil, 
+                       down:    Math.floor }[direction]
+        rounded[key] = multiple*round(rounded[key]/multiple)
+        
+        // If you pass the max (like round to 24 hours) you should roll over
+        datetime.normalize_datetime(rounded)
+        
+        // If fields were null origionally, make them null now.
+        for (i=0; i<keys.length; i++) {
+            // If the i'th key doesn't appear in dt, keep it out of the rounded
+            var k = keys[i]
+            if ( dt[k] == null )
+                rounded[k] = null
+        }
+        
+        return rounded
+    },
+    
+    /***
+        PARSING
+    ***/
     
     _timestampRegexp : /(\d{4,})(?:-(\d{1,2})(?:-(\d{1,2})(?:[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2})(?:\.(\d+))?)?(?:(Z)|([+-])(\d{1,2})(?::(\d{1,2}))?)?)?)?)?/,
     _periodRegexp :  /^P(?:([+-]?\d+)Y)?(?:([+-]?\d+)M)?(?:([+-]?\d*\.?\d*)D)?(?:[T ](?:([+-]?\d*\.?\d*)H)?(?:([+-]?\d*\.?\d*)M)?(?:([+-]?\d*\.?\d*)S)?)?$/,
@@ -890,6 +1182,7 @@ datetime = {
     //_intervalRegexp3 : period+'/'+timestamp,
     
     
+    
     parse : function(str) {
         /***
             isTimeStamp?
@@ -898,6 +1191,53 @@ datetime = {
             isIncomplete?
             (year, month, day, hour, minute, second, microseconds, timezone_offset, location, system)
         ***/
+        str = str + "";  // In case you pass in an integer?
+        if (typeof(str) != "string" || str.length === 0) {
+            return null;
+        }
+        var res = str.match(datetime._timestampRegexp);
+        if (typeof(res) == "undefined" || res === null) {
+            return null;
+        }
+        //var year, month, day, hour, min, sec, msec;
+        var dt = {}
+        dt.year = parseInt(res[1], 10);
+        if (typeof(res[2]) == "undefined" || res[2] === '') {
+            return new dt;
+        }
+        dt.month = parseInt(res[2], 10);
+        dt.day = parseInt(res[3], 10);
+        if (typeof(res[4]) == "undefined" || res[4] === '') {
+            return dt;
+        }
+        dt.hour = parseInt(res[4], 10);
+        dt.minute = parseInt(res[5], 10);
+        dt.second = (typeof(res[6]) != "undefined" && res[6] !== '') ? parseInt(res[6], 10) : 0;
+        if (typeof(res[7]) != "undefined" && res[7] !== '') {
+            dt.microsecond = Math.round(1000000.0 * parseFloat("0." + res[7]));
+        } else {
+            dt.microsecond = 0;
+        }
+        if ((typeof(res[8]) == "undefined" || res[8] === '') && (typeof(res[9]) == "undefined" || res[9] === '')) {
+            return dt;
+        }
+        if (typeof(res[9]) != "undefined" && res[9] !== '') {
+            dt.tz_hour = parseInt(res[10], 10);
+            if (typeof(res[11]) != "undefined" && res[11] !== '') {
+                dt.tz_minute = parseInt(res[11], 10) * 60000;
+            }
+            if (res[9] == "-") {
+                dt.tz_hour = -dt.tz_hour;
+                dt.tz_minute = -dt.tz_minute;
+            }
+        } else {
+                dt.tz_hour = 0;
+                dt.tz_minute = 0;
+        }
+        return dt;
+    },
+    /*
+    parse : function(str) {
         str = str + "";
         if (typeof(str) != "string" || str.length === 0) {
             return null;
@@ -941,80 +1281,10 @@ datetime = {
         }
         return new Date(Date.UTC(year, month, day, hour, min, sec, msec) - ofs);
     },
-    
-    addUpToDay : function(t1, t2, result) {
-        /***
-            Modifies result in place and returns the number of days
-            that got rolled over from adding the other quantities.
-        ***/
-        var microseconds = t1.microseconds + t2.microseconds
-        p.microseconds = microseconds%1000000
-        var seconds = t1.seconds + t2.seconds + Math.floor(microseconds/1000000)
-        p.seconds = seconds%60
-        var minutes = t1.minutes + t2.minutes + Math.floor(seconds/60)
-        p.minutes = minutes%60
-        var hours = t1.hours + t2.hours + Math.floor(minutes/60)
-        p.hours = hours%24
-        var days = Math.floor(hours/24)
-        return days
-    },
-    
-    addPeriods : function(p1, p2) {
-        // TODO: Check all of these for null
-        var p = {}
-        // Don't attempt to roll over days, years, or months.
-        p.days = p1.days + p2.days + datetime.addUpToDay(p1, p2, p)
-        p.months = p1.months + p2.months
-        p.years = p1.years + p2.years
-        return p
-    },
-    negatePeriod : function(p) {
-        // TODO: Check all of these for null
-        var p2 = {}
-        p2.microseconds = -p.microseconds
-        p2.seconds = -p.seconds
-        p2.minutes = -p.minutes
-        p2.hours = -p.hours
-        p2.days = -p.days
-        p2.months = -p.months
-        p2.years = -p.years
-        return p2
-    },
-    addPeriod : function(ts, p) {
-        // Here's where you have to worry about days in month and leap years
-        // Worry about negative years?
-        // What about order of ops: If month rolls over, it makes a difference if you do month first or rollover first.
-        // TODO: Check all of these for null
-        var result = {}
-        
-        // Here's where the shit hits the fan with 28/29/30/31 days/month and leapyears
-        var days = datetime.addUpToDay(ts, p, result)
-        result.month = ts.month
-        result.year = ts.year
-        addDays(result, p.days + days)  // Magic Function
-        
-        var months = ts.months-1 + p.months
-        result.month = (months)%12 + 1
-        result.year = ts.year + p.years + Math.floor(months/12)
-        
-        // Skip over year zero
-        if (ts.year > 0 && result.year <= 0)
-            result.year -= 1
-        if (ts.year < 0 && result.year >= 0)
-            result.year += 1
-        
-        return result
-    },
-    subPeriod : function(timestamp, period) {
-        return addPeriod(timestamp, negatePeriod(period))
-    },
-    subTimestamps : function(ts1, ts2) {
-        // Convert ts2 to the same timezone as ts1 before the subtraction is done
-        var p = {}
-        return p
-    },
-    
-    
+    */
+    /***
+        OTHER TIME SYSTEMS
+    ***/
     
     julianDay : function(dt) {
         /* Note, this assumes the Gregorian was in effect since 0001-01-01,
@@ -1030,7 +1300,7 @@ datetime = {
         var ord = datetime.ymd_to_ord(dt.year, dt.month, dt.day)
         var epoc2400000 = datetime.ymd_to_ord(1858, 11, 16)
         var jd =  2400000 + ord - epoc2400000
-        //var jd = ord + 1721424.5
+        //var jd = ord + 1721424.5  // Alternative calculation
         // If no time is given, assume you've given a date that starts at noon
         if (typeof(dt.hour) != 'undefined')
             jd += (dt.hour-12)/24
@@ -1092,6 +1362,7 @@ datetime = {
     DMSToDegrees : function(DMS) {
         return DMS.degrees + DMS.minutes/60.0 + DMS.seconds/(60.0*60.0)
     }
+    
 }
 
 
