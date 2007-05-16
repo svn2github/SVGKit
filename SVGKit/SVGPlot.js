@@ -151,6 +151,14 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 	
     -- When plotting something with too many tick labels, 
        first go to double row, then to diagonal, then to vertical
+       when text is rotated (up to 90 deg) have it non-centered
+    
+    Things to get done with dates
+    -- Get comparisons to work
+    -- Get max/min to work
+    -- Pass in formatting string
+    -- Auto-generate appropriate formatting string
+    -- Two-row labeling
     
     Example:
     with p {
@@ -185,6 +193,13 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     * Angle 1, angle 2, right angle
     * line 1, similar to line 2, etc.
     * Speudo shading (hash marks on one side of curve) Maybe with soft gradient
+    
+    Function Plotting:
+    * Special cases for sin(x)/x
+    
+    Different Defaults:
+    * Textbook functions (arrows on the axes, thick lines, no ticks or stubs)
+    * Data plotting (box/frame with ticks, stubs, grid)
 ***/
 
 
@@ -223,7 +238,7 @@ if (typeof(SVGPlot) == 'undefined' || SVGCanvas == null) {
     };
 }
 
-// In order for forceRedraw and getBBox to work, you need to have an object type.
+// In order for forceRedraw and getBBox to work, you need to have an object type.  TODO: get rid of this when working
 SVGKit._defaultType = 'object';
 
 // Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
@@ -396,15 +411,25 @@ SVGPlot.Scale = function(min /* ='auto' */,
 }
 
 SVGPlot.Scale.prototype = {
-    _min: null,  // Calculated _min if min is 'auto'
+    type: "Scale",
+    _min: null,  // Calculated if min is 'auto'
     _max: null,
-    set: function(min, max, interpolation, reversed, required) { // Constructor
-		this.dataSets = [];  // Lists of data, each in form [1,7,4,6]
-        this.min = SVGKit.firstNonNull(min, 'auto');
-        this.max = SVGKit.firstNonNull(max, 'auto');
-        this.interpolation = SVGKit.firstNonNull(interpolation, 'linear');  // 'log', 'ln', 'lg', 'sqrt', 'atan'
-        this.reversed = SVGKit.firstNonNull(reversed, false);
-        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+    set: function(min, max, interpolation, reversed, required) {
+        /***
+            Constructor.
+            If a parameter is not specified, AND it's not already set, 
+            set it to a default
+        ***/
+		this.dataSets = []  // Lists of data, each in form [1,7,4,6]
+        this.min = SVGKit.firstNonNull(min, this.min, 'auto')
+        this.max = SVGKit.firstNonNull(max, this.max, 'auto')
+        if (this.min != 'auto')
+            this._min = this.min
+        if (this.max != 'auto')
+            this._max = this.max
+        this.interpolation = SVGKit.firstNonNull(interpolation, this.interpolation, 'linear')  // 'log', 'ln', 'lg', 'sqrt', 'atan'
+        this.reversed = SVGKit.firstNonNull(reversed, this.reversed, false)
+        this.required = SVGKit.firstNonNull(required, this.required, []) // list of values that must be included when min or max are 'auto'
     },
     position: function(value) {
         /*** 
@@ -413,10 +438,10 @@ SVGPlot.Scale.prototype = {
               If _max or _min have not yet been set or set illegally, this returns null.
         ***/
         if (this._min==null || this._max==null || this._min > this._max)
-            return null;
+            return null
         var interpolation_function = this.interpolation_functions[this.interpolation]
-        var position = interpolation_function.call(this, value);
-        return position;
+        var position = interpolation_function.call(this, value)
+        return position
     },
     interpolation_functions: {
         linear: function(value) {
@@ -425,10 +450,10 @@ SVGPlot.Scale.prototype = {
         log: function(value) {
             if (this._min <= 0.0)
                 return null;
-            return (Math.log(value)-Math.log(this._min))/(Math.log(this._max)-Math.log(this._min));
+            return (Math.log(value)-Math.log(this._min))/(Math.log(this._max)-Math.log(this._min))
         },
         sqrt: function(value) {
-            return (Math.sqrt(value)-Math.sqrt(this._min))/(Math.sqrt(this._max)-Math.sqrt(this._min));
+            return (Math.sqrt(value)-Math.sqrt(this._min))/(Math.sqrt(this._max)-Math.sqrt(this._min))
         },
         atan: function(value) {
             var middle = (this._max-this._min)/2.0
@@ -444,16 +469,18 @@ SVGPlot.Scale.prototype = {
 			
             If there are no plots, or the plots are flat,
 			make sure _max and _min have a reasonable value.
+            
+            @returns a dictionary containing {'min', 'max'}
         ***/
         
         if (this.min != 'auto' && this.max != 'auto') {
 			// Bypass calculating the min and max
-            this._min = this.min;
-            this._max = this.max;
-			return extents = {'min':this.min, 'max':this.max};
+            this._min = this.min
+            this._max = this.max
+			return {'min':this.min, 'max':this.max}
         }
 		var extents = {'min':Number.MAX_VALUE,
-                    'max':-Number.MAX_VALUE };
+                    'max':-Number.MAX_VALUE }
 		
 		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
 		// TODO:  Remove duplicates so we only to expensive calculation of min/max once.
@@ -489,21 +516,21 @@ SVGPlot.Scale.prototype = {
         */
         
         if (extents.max<extents.min) {  // Shouldn't happen unless there were no datasets
-            extents = {'min':-10, 'max':10 };
+            extents = {'min':-10, 'max':10 }
         }
         if (extents.max==extents.min) {  // Happens if data is all the same.
-            extents.min -= 1;
-            extents.max += 1;
+            extents.min -= 1
+            extents.max += 1
         }
         
-        this._min = (this.min!='auto') ? this.min : extents.min;
-        this._max = (this.max!='auto') ? this.max : extents.max;
+        this._min = (this.min!='auto') ? this.min : extents.min
+        this._max = (this.max!='auto') ? this.max : extents.max
 		return extents
     },
     defaultLocations : function(/* arguments to be passed on to location_function */) {
         var location_function = this.location_functions[this.interpolation]
-        var locations = location_function.apply(this, arguments);
-        return locations;
+        var locations = location_function.apply(this, arguments)
+        return locations
     },
     location_functions: {
         linear: function(type, 
@@ -513,14 +540,13 @@ SVGPlot.Scale.prototype = {
                             offset /* = 0*/) {
             /***
                 Come up with locations for the ticks/grids/tickLabels, etc.
-                @param min -- the actual start of the scale (can be some non-round number)
-                @param max -- the actual end of the scale (can be some non-round number)
+                @param type -- 'ticks' or 'tickLabels' can be used to decide 'between' or 'on'
                 @param interval -- the interval at which you want the ticks, usually 1, 2, 3, 5, 10, 20, etc.
+                @param number -- the number of locations to return
                 @param avoid -- an array of locations to avoid putting a mark (usually the axes and endpoints.)
                 @param offset -- the ticks start counting around here (defaults to zero)
                 
                 @returns an array of floats which list the tick locations.
-                
             ***/
             var min = this._min
             var max = this._max
@@ -533,13 +559,13 @@ SVGPlot.Scale.prototype = {
                 interval = this.defaultInterval(number)
             
             // Make sure we won't loop forever:
-            interval = Math.abs(interval);
+            interval = Math.abs(interval)
             if (interval==0)
                 interval = 1;
             
             var locations = [];
-            var avoidance = (max-min)*SVGPlot.autoViewMarginFactor;
-            var mark = Math.ceil( (min-offset)/interval ) * interval + offset;
+            var avoidance = (max-min)*SVGPlot.autoViewMarginFactor
+            var mark = Math.ceil( (min-offset)/interval ) * interval + offset
             while (mark < max) {
                 var reject = false;
                 for (var i=0; i<avoid.length; i++)
@@ -547,7 +573,7 @@ SVGPlot.Scale.prototype = {
                         reject = true;
                 if ( reject==false )
                     locations.push(mark)
-                mark += interval;
+                mark += interval
             }
             return locations;
         },
@@ -556,6 +582,8 @@ SVGPlot.Scale.prototype = {
                         sub_marks /*= false*/) {
             /***
                 Locations for ticks/trids/tickLabels for log scale
+                @param sub_marks adds nine marks between each decade
+                making the familiar "log scale"
             ***/
             var min = this._min
             var max = this._max
@@ -589,7 +617,7 @@ SVGPlot.Scale.prototype = {
             return []
         },
         atan: function() {
-            []
+            return []
         }
     },
     defaultInterval : function(number /* =7 */) {
@@ -626,6 +654,9 @@ SVGPlot.Scale.prototype = {
         // Finally find the round multiple to get closest.
         var increment = power_of_ten * log_closest_to(increment_multiple, [1, 2, 3, 5, 10]);
         return increment;
+    },
+    defaultLabels : function(locations) {
+        return map(SVGPlot.prettyNumber, locations)
     }
 }
 
@@ -648,9 +679,12 @@ SVGPlot.ScaleDateTime = function(min, max, interval, reversed, required) {
 }
 //SVGPlot.inherit(SVGPlot.ScaleDateTime, SVGPlot.Scale);
 SVGPlot.ScaleDateTime.prototype = {
+    type: "ScaleDateTime",
     _min: null,
     _max: null,
     _realScale: null,
+    
+    /*
     milliseconds : function(value) {
         // Can be used in map()
         // value can either be an ISO timestamp string or a Date object
@@ -659,43 +693,241 @@ SVGPlot.ScaleDateTime.prototype = {
         if ( typeof(value) == "object" && value.constructor == Date )
             return value.getTime()
     },
+    */
     set: function(min, max, interval, reversed, required) {
-        this.min = SVGKit.firstNonNull(min, 'auto');
-        this.max = SVGKit.firstNonNull(max, 'auto');
-        this.interval = SVGKit.firstNonNull(interval, 'auto');
-        this.reversed = SVGKit.firstNonNull(reversed, false);
-        this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
+        /*** Sets defaults ***/
+		this.dataSets = [];
+        this.min = SVGKit.firstNonNull(min, this.min, 'auto');
+        this.max = SVGKit.firstNonNull(max, this.max, 'auto');
+        if (this.min != 'auto')
+            this._min = this.min
+        if (this.max != 'auto')
+            this._max = this.max
+        // TODO: Convert min and max from JavaScript Date or ISO strings to datetime
+        this.interval = SVGKit.firstNonNull(interval, this.interval, 'auto');
+        this.reversed = SVGKit.firstNonNull(reversed, this.reversed, false);
+        this.required = SVGKit.firstNonNull(required, this.required, []); // list of values that must be included when min or max are 'auto'
         
         // Convert min, max, and required into miliseconds since 1970 
         // to pass to the underlying _realScale
-        var min_ms = this.min;
-        var max_ms = this.max;
-        var required_ms = [];
+        
+        var min_ord = this.min;  // Could be 'auto', or a datetime that will get converted to an ordinal
+        var max_ord = this.max;
+        var required_ord = [];
         if (this.min != 'auto')
-            min_ms = this.milliseconds(min)
+            min_ord = datetime.ordinalDay( datetime.datetime(min) )
         if (this.max != 'auto')
-            max_ms = this.milliseconds(max)
-        if ( compare(this.required,[]) != 0 )
-            required_ms = map(this.milliseconds, this.required)
-        this._realScale = new SVGPlot.Scale(min_ms, max_ms, 'linear', reversed, required_ms)
+            max_ord = datetime.ordinalDay( datetime.datetime(max) )
+        if ( this.required.length != 0 )
+            required_ord = map(datetime.ordinalDay, map(datetime.datetime, this.required))
+        this._realScale = new SVGPlot.Scale(min_ord, max_ord, 'linear', reversed, required_ord)
     },
     position: function(value) {
-        value_ms = this.milliseconds(value)
-        return this._realScale.position(value_ms)
+        if (typeof(value) == 'string')
+            value = datetime.parse(value)
+        // TODO:  Check if it's  a Date() object
+        var ord = datetime.ordinalDay(value)
+        var position = this._realScale.position(ord)
+        //log(value, datetime.toISOTimestamp(value), ord, position)
+        return position
     },
     setAuto: function() {
-        var milliseconds_array = function(array) {
-            return map(this.milliseconds, array)
+        /***
+        ***/
+        
+        extents = null
+        
+        if (this.min != 'auto' && this.max != 'auto') {
+			// Bypass calculating the min and max
+			extents = {'min':this.min, 'max':this.max};
+            extents.min_ord = datetime.ordinalDay(extents.min)
+            extents.max_ord = datetime.ordinalDay(extents.max)
         }
-        this._realScale.dataSets = map(milliseconds_array, this.dataSets)
-        this._realScale.setAuto()
+        else {
+            var datetime_array_map = function(str_array) {
+                return map(datetime.datetime, str_array)
+            }
+            
+    		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+            var datetimes = map(datetime_array_map, this.dataSets)
+            this.dataSets.pop()
+            
+            // Some default extents that go one day before to one day after now
+            var now = datetime.now()
+            var now_ord = datetime.ordinalDay(now)
+            var extents = {min:now,         max:now, 
+                           min_ord:now_ord, max_ord:now_ord}  // Some default where they're equal to pass test below if left unchanged
+            
+            // Concat all of the datasets together and find the min/max of the whole list
+            var all = []
+            for (i in datetimes)
+                all = all.concat(datetimes[i])
+            if (all.length > 0)
+                extents = datetime.minmax(all)
+        }
+        if (extents.min_ord == extents.max_ord) { // Happens if max and min are the same or all.length == 0
+            extents.min = datetime.subPeriod(extents.min, {day:1})
+            extents.max = datetime.addPeriod(extents.max, {day:1})
+            extents.min_ord = datetime.ordinalDay(extents.min)
+            extents.max_ord = datetime.ordinalDay(extents.max)
+        }
+        
+        this._min = extents.min
+        this._max = extents.max
+        this._realScale.set(extents.min_ord, extents.max_ord)
+        
+        this._min = (this.min!='auto') ? this.min : extents.min;
+        this._max = (this.max!='auto') ? this.max : extents.max;
+		return extents
     },
-    defaultLocations : function() {
-        // Should this return a list of strings or milliseconds or what
-        return []
+    intervals: {
+        year: [1, 2, 4, 5, 10, 20, 40, 50, 100, 200, 400, 500, 1000],  // No 3s because 1995,1998,2001,2004 looks dumb
+        month: [1, 2, 3, 4, 6],
+        day: [1, 2, 3, 5, 10],
+        hour: [1, 2, 3, 4, 6, 12],
+        minute: [1, 2, 3, 5, 10, 15, 20, 30],
+        second: [1, 2, 3, 5, 10, 15, 20, 30],
+        microsecond: [1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000]
     },
+    approxDiffDays : function(min, max) {
+        var diff_days = 0
+        var days = datetime.days
+        forEach(datetime.keys, function(key) {
+            if (max[key] != null)
+                diff_days += max[key] * days[key]
+            if (min[key] != null)
+                diff_days -= min[key] * days[key]
+        })
+        return diff_days
+    },
+        
+    /***
+        Special cases:
+        weeks
+        days in year
+        days, hours, minutes, seconds that go forever just use the real-scale algorithm
+        (same for years and miliseconds. If the interval is too long or too short, just
+        the real algorithm.)
+        
+        Algorithm takes start, end, and goal number of intervals
+        Returns the interval that comes cloest to dividing the 
+        time into goal number of intervals
+    ***/
+    defaultInterval : function(number /* 7 */) {
+        /***
+            var s = new SVGPlot.ScaleDateTime({year:1980}, {year:2010})
+            s.defaultInterval()
+            @returns an array like ['month', 2]
+        ***/
+        number = SVGKit.firstNonNull(number, 7);
+        var min = this._min
+        var max = this._max
+        //var diff = datetime.subtract(max, min)
+        //var diff_ord = datetime.ordinalDay(max) - datetime.ordinalDay(min)
+        
+        var diff_days = this.approxDiffDays(min, max)
+        var days = datetime.days
+        var intervals = this.intervals
+        
+        // Go through to find interval that would give closest to number spacings
+        var best_score = 999999 
+        var best_interval = []  // Eventually set to something like ['month', 2]
+        forEach(datetime.keys, function(key) {
+            forEach(intervals[key], function(interval) {
+                var interval_count = diff_days / (days[key]*interval)
+                var score = Math.abs(Math.log(number/interval_count))
+                //log(key, interval, score)
+                if (score < best_score) {
+                    best_score = score
+                    best_interval =  {}
+                    best_interval[key] = interval
+                }
+            })
+        })
+        return best_interval
+    },
+    
+    defaultLocations : function(type, 
+                                 interval /* defaultInterval */, 
+                                 number /* =7 */, 
+                                 avoid /* = [min, max] */, 
+                                 offset /* = 0*/) {
+        /***
+            function(type, number / =7 /, extend_to_nearest / =false /) 
+            var s = new SVGPlot.ScaleDateTime({year:1980}, {year:2010})
+            s.defaultLocations()
+        ***/
+        number = SVGKit.firstNonNull(number, 7);
+        var min = this._min
+        var max = this._max
+        //var diff = datetime.subtract(max, min)
+        //var diff_days = datetime.ordinalDay(max) - datetime.ordinalDay(min)
+        
+        
+        // If there are many years, return evenly spaced years
+        /*
+        if (diff.year >= number) {
+            var s = new SVGPlot.Scale(this._min, this._max)
+            var years = s.defaultLocations(number)
+            return map(function(year) {return {year:year}} , years)
+        }
+        */
+        var interval = this.defaultInterval(number)
+        // Unpack the interval
+        var pair = items(interval)[0]
+        var key = pair[0]
+        var length = pair[1]
+        var locations = []  // Start with an empty array
+        // Now find the nearest datetime that is an even multiple of the interval
+        var start = datetime.round(min, key, 'down', length)
+        var end = datetime.round(max, key, 'up', length)
+        var current = start
+        var count = 0
+        while (datetime.compareDatetimes(current, end) == -1 && count <= number+1) {
+            count += 1
+            locations.push(current)
+            current = datetime.addPeriod(current, interval)
+            // Have to round each one.  This applies almost exclusively 
+            // to adding some number of days and having the month roll over
+            current = datetime.round(current, key, 'nearest', length)
+        }
+        return locations
+    },
+    
+    defaultLabels : function(locations) {
+        if (locations.length <= 1)
+            return map(datetime.toISOTimestamp, locations)
+        
+        var smallest_difference = '';
+        var keys = datetime.keys
+        for (var i=keys.length-1; i>=0; i--) {
+            var l0 = locations[0][keys[i]]
+            var l1 = locations[1][keys[i]]
+            if ( typeof(l0) != 'undefined' && l0 != null &&
+                   typeof(l1) != 'undefined' && l1 != null &&
+                   l0 != l1 )
+                smallest_difference = keys[i]
+        }
+        var formats = {
+            'year': 'yyyy',
+            'month': 'yyyy-mm',
+            'day': 'mm-dd',
+            'hour': 'hh:mm',
+            'minute': 'hh:mm',
+            'second': 'hh:mm:ss',
+            'microsecond': 'ss.uu'
+        }
+        var code = formats[smallest_difference]
+        var disp = function(dt) {
+            return datetime.format(dt, code)
+        }
+        return map(disp, locations)
+        //return map(datetime.toISOTimestamp, locations)
+    },
+    
     oneRow : function(start, end, extend_to_nearest) {
         /***
+            DEFUNCT
             Returns a list of pairs [date Object, field]
             in evenly spaced intervals of the biggest change.
             If you go from 1:00 to 1:59, it will return 60 pairs spaced by one minute
@@ -711,6 +943,7 @@ SVGPlot.ScaleDateTime.prototype = {
             If extend_to_nearestis set, the plot has to be re-auto-ranged to include
             these possible new endpoints, otherwise they'll print off the scale.
         ***/
+        /*
         if (start.getTime() >= end.getTime())
             return null
         
@@ -728,30 +961,10 @@ SVGPlot.ScaleDateTime.prototype = {
             result.push( [iter, field] )
         }
         return result
+        */
     },
     twoRows : function() {
     }
-    /***
-        Reasonable intervals:
-        years: 1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000
-        months: 1, 2, 3, 4, 6
-        days: 1, 2, 3, 5, 10
-        hours: 1, 2, 3, 4, 6, 12
-        minutes: 1, 2, 3, 5, 10, 15, 20, 30
-        seconds: 1, 2, 3, 5, 10, 20, 30 (same as minutes)
-        miliseconds: 1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000 (same as years)
-        
-        Special cases:
-        weeks
-        days in year
-        days, hours, minutes, seconds that go forever just use the real-scale algorithm
-        (same for years and miliseconds. If the interval is too long or too short, just
-        the real algorithm.)
-        
-        Algorithm takes start, end, and goal number of intervals
-        Returns the interval that comes cloest to dividing the 
-        time into goal number of intervals
-    ***/
 }
 
 test = function() {
@@ -799,6 +1012,7 @@ SVGPlot.ScaleDiscrete = function(min, max, interval, placement, reversed, requir
     this.set(min, max, interval, placement, reversed, required)
 }
 SVGPlot.ScaleDiscrete.prototype = {
+    type: "ScaleDiscrete",
     _min: null,
     _max: null,
     set: function(min, max, interval, placement, reversed, required) {
@@ -832,6 +1046,7 @@ SVGPlot.ScaleCategory = function(categories, placement, reversed, required) {
     this.set(categories, placement, reversed, required)
 }
 SVGPlot.ScaleCategory.prototype = {
+    type: "ScaleCategory",
     _categories: [],  // of the form ['bob', 'jim']
     set: function(categories, placement, reversed, required) {
         this.categories = SVGKit.firstNonNull(categories, 'auto');
@@ -864,15 +1079,15 @@ SVGPlot.newScaleFromType = function(example) {
     // Right now, the only strings that will be recognized as dates 
     // (and therefore not categories) are ISO timestamps: YYYY-MM-DD hh:mm:ss
     var type = typeof(example)
-    if ( type == number )
+    if ( type == 'number' )
         return new SVGPlot.Scale()
-    if ( type == string ) {
-        if ( isoTimestamp(example) != null )
+    if ( type == 'string' ) {
+        if ( isoTimestamp(example) != null || datetime.parse(example) != null)
             return new SVGPlot.ScaleDateTime()
         else
             return new SVGPlot.ScaleCategory()
     }
-    if ( type == "object" && example.constructor == Date ) {
+    if ( type == 'object' && example.constructor == Date ) {
         log("Making new ScaleDateTime")
         return new SVGPlot.ScaleDateTime()
     }
@@ -1193,7 +1408,7 @@ SVGPlot.prototype.removeYTicks = function() {
     
 }
 
-// TickLabels -- includes functionality also for TickLabels and TickLines (grid)
+// TickLabels
 
 SVGPlot.TickLabels = function(svgPlot, parent,
                                locations /*='auto'*/, labels /* ='auto' */, position /* ='bottom' or 'left' */) {
@@ -1212,6 +1427,13 @@ SVGPlot.inherit(SVGPlot.TickLabels, SVGPlot.AxisItem)
 SVGPlot.TickLabels.prototype.set = function(locations /*='auto'*/, labels /* ='auto' */, position /* ='bottom' or 'left' */) {
     SVGPlot.AxisItem.prototype.set.call(this, locations, position);
     this.labels = SVGPlot.firstNonNull(labels, 'auto');
+}
+
+SVGPlot.TickLabels.prototype.getDefaultLabels = function(locations) {
+    if (this.parent.type=='x')
+        this._labels = this.parent.parent.xScale.defaultLabels(locations)
+    else if (this.parent.type=='y')
+        this._labels = this.parent.parent.yScale.defaultLabels(locations)
 }
 
 SVGPlot.prototype.addXTickLabels = function(locations /*='auto'*/, labels /* ='auto' */, position /* ='bottom' */) {
@@ -1374,9 +1596,9 @@ SVGPlot.TickLabels.prototype.createElements = function() {
     if (this.locations=='auto')
         this.getDefaultLocations('tickLabels');
     
-    var label_strs = this.labels
+    this._labels = this.labels
     if (this.labels=='auto')
-        label_strs = map(SVGPlot.prettyNumber, this._locations);
+        this.getDefaultLabels(this._locations);
     
     MochiKit.DOM.replaceChildNodes(this.element);
     this._texts = [];
@@ -1392,9 +1614,9 @@ SVGPlot.TickLabels.prototype.createElements = function() {
         this.textAnchor = 'end'
     */
     p.setGroup(this.element);
-    for (var i=0; i<this._locations.length && i<label_strs.length; i++) {
+    for (var i=0; i<this._locations.length && i<this._labels.length; i++) {
         p.applyStyles = false;
-        var text = p.text(label_strs[i]);
+        var text = p.text(this._labels[i]);
         this._texts.push(text);
     }
     p.restore();
@@ -1641,7 +1863,7 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom) {
     
     // Translate and then render ticks, tickLabels, axisTitles
     for (var i=0; i<components.length; i++) {
-        for(var j=0; j<components[i].length; j++) {
+        for (var j=0; j<components[i].length; j++) {
             var offset = components[i][j]._offset;
             if (this.type=='x')
                 components[i][j].element.setAttribute('transform', 'translate(0,'+offset+')');
@@ -1652,6 +1874,16 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom) {
     }
 }
 
+SVGPlot.in_bounds = function(min, max, map, location) {
+    // Do all of the comparisons in plot-coordinates rather than as raw data (eg. dates)
+    // Check if location is within max and min (vertical axis gets mapped backward)
+    var mapped = map(location)
+    var mapped_min = map(min)
+    var mapped_max = map(max)
+    
+    return  mapped>mapped_min && mapped<mapped_max ||
+             mapped<mapped_min && mapped>mapped_max
+}
 
 SVGPlot.Ticks.prototype.render = function(min, max, map) {
     SVGPlot.createGroupIfNeeded(this, 'ticks', 'stroke');
@@ -1663,7 +1895,7 @@ SVGPlot.Ticks.prototype.render = function(min, max, map) {
     var locations = this._locations;
     var path = '';
     for (var k=0; k<locations.length; k++) {
-        if (locations[k]>min && locations[k]<max) {
+        if (SVGPlot.in_bounds(min, max, map, locations[k])) {
             if (this.position=='top')
                 path += ' M '+map(locations[k])+' 0 '+'v '+(-this.length);
             else if (this.position=='bottom')
@@ -1705,12 +1937,17 @@ SVGPlot.translateBottomText = function(component) {
 }
 
 SVGPlot.renderText = function (text, location, bbox, position, min, max, map) {
+    // Check if location is a percent
+    // TODO:  min and max can be dates or other types, so the second line down doesn't work
     if (typeof(location)=='string' && location[location.length-1] == '%')
         location = min + parseFloat(location.substring(0, location.length-1)) / 100 * (max-min)
-    if (location<min || location>max)
-        text.setAttribute('display', 'none');
-    else
+    
+    // Check if location is off the edge (vertical axis gets mapped backward)
+    if (SVGPlot.in_bounds(min, max, map, location))
         text.removeAttribute('display');
+    else
+        text.setAttribute('display', 'none');
+        
     var transform = text.getAttribute('transform');
     if (typeof(transform)=='undefined' || transform == null)
         transform = '';
@@ -1770,6 +2007,8 @@ SVGPlot.prototype.loglogplot = function() {
 ////////////////////////////
 
 
+// TODO: Determine the type of data and create scales appropriatly here, not before.
+
 SVGPlot.prototype.plotLine = function(data /* ydata1, ydata2, ... */) {
 
     if (arguments.length==1) {
@@ -1797,8 +2036,18 @@ SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
     parent.plots.push(this)  // Add this plot to the view
     this.xdata = xdata;
     this.ydata = ydata;
+    
 	// Add this data to the x and y scales for autoScaling
+    
+    var xScaleNew = SVGPlot.newScaleFromType(xdata[0])
+    // TODO: Fix the following... If the default, already created, xScale is wrong, change it.
+    if (parent.xScale.type != xScaleNew.type)
+        parent.xScale = xScaleNew
 	parent.xScale.dataSets.push(xdata)
+    
+    var yScaleNew = SVGPlot.newScaleFromType(ydata[0])
+    if (parent.yScale.type != yScaleNew.type)
+        parent.yScale = yScaleNew
 	parent.yScale.dataSets.push(ydata)
 }
 
