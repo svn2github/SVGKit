@@ -12,7 +12,7 @@
 # Send the result back
 
 import cgi
-#import cgitb; cgitb.enable() # Show errors to browser.
+import cgitb; cgitb.enable() # Show errors to browser.
 import sys
 import os
 import time
@@ -25,9 +25,10 @@ batik = '/scratch/jason/local/src/batik-1.6/batik-rasterizer.jar'
 
 mediatypes={
   'pdf':'application/pdf',
-  'ps':'application/postscript',
+  'ps':'application/pdf',  # Gets converted after
   'jpg':'image/jpeg',
   'png':'image/png',
+  'tiff': 'image/tiff',
   'svg':'image/svg+xml'
 }
 
@@ -52,6 +53,15 @@ md5hex = md5.new(source).hexdigest()
 svgname = 'files/'+md5hex+'.svg'
 outname = 'files/'+md5hex+'.'+type
 
+def execute_cmd(cmd):
+    (child_stdin, child_stdout, child_stderr) = os.popen3(cmd)
+    str_stdout = child_stdout.read() # Read until the process quits.
+    str_stderr = child_stderr.read() # Read until the process quits.
+    if debug:
+        print cmd+'\n'
+        print 'stdout:'+str_stdout+'\n'
+        print 'stderr:'+str_stderr+'\n'
+        
 if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     svgfile = open(svgname, 'w')
     svgfile.write(source)
@@ -59,14 +69,14 @@ if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     if type == 'svg':
         outname = svgfile
     else:
-        cmd = java+' -jar ' + batik + ' -d files -m '+mime+' '+svgname
-        (child_stdin, child_stdout, child_stderr) = os.popen3(cmd)
-        str_stdout = child_stdout.read() # Read until the process quits.
-        str_stderr = child_stderr.read() # Read until the process quits.
-        if debug:
-            print cmd+'\n'
-            print 'stdout:'+str_stdout+'\n'
-            print 'stderr:'+str_stderr+'\n'
+        cmd = java+' -jar ' + batik + ' -d files -m '+mime+' '+svgname # -dpi <resolution>  -q <quality>
+        execute_cmd(cmd)
+        
+        if type=='ps':
+            inname = 'files/'+md5hex+'.pdf'
+            cmd = 'pdf2ps '+inname+' '+outname
+            execute_cmd(cmd)
+
 if redirect:
     print 'Location: '+outname+'\r\n\r\n'
 else:
