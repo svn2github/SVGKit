@@ -24,7 +24,7 @@
   <li>Additions to a datetime object: isLeapYear, isDaylightSavings </li>
   <li>Daylight savings time makes some specifications of a local datetime illegal (spring forward) and others ambiguous (fall back) </li>
 <li>Julian Day number. This is the number of days since noon U.T.C. on January 1, 4713 B.C. (Julian calendar). This time scale was originally proposed by John Herschel, and is often used in astronomical calculations. </li>
-<li> TAI64 timescale covers the entire expected lifespan of the universe (at least, if you expect the universe to be closed). </li>
+<li>You need 50 bits to represent the number of seconds since the big bang 13.6 billion years ago. You need 80 to represent the number of nanoseconds. </li>
 <li> Excel uses a different system for its dates than most Unix programs. 
 
 
@@ -34,7 +34,7 @@
 <li> <a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a> has a concept of repatition period.
   <ul>
     <li>R/P3M means every three months (not absolute ms)  R/P123D means every 123 days and PT12.345S means 12.345 seconds (both of these are an absolute number of ms, but they are defined not to add to a dateTime as milliseconds because of leap seconds).</li>
-  <li>Only if you specify PT12.345S do you get absolute seconds/ms. Thus the addition of either PT1M or PT60S to any dateTime will always produce the same result. This is a special definition of addition which is designed to match common practice, and -- most importantly -- be stable over time.</li>
+  <li>Only if you specify PT12.345S do you get absolute seconds/ms. Thus the addition of either PT1M or PT60S to any dateTime will always produce the same result. This is a special definition of addition which is designed to match common practice witout regard to leap seconds, and -- most importantly -- be stable over time.</li>
   <li>If you really want to add an absolute duration in miliseconds, convert to and from an epoc. This is the difference between UTC, which adjusts itself with leap seconds and International Atomic Time (TAI) which always marches forward. </li>
   <li>You can't specify repeated events of the form &quot;2nd Tuesday of each month/year&quot; or &quot;Evey Mon, Wed, Fri&quot; </li>
   <li>UNIX time defined by POSIX strictly chugs along seconds since Jan 1 1970, like TAI. However, NTP alters this behavior. NTP makes the UNIX clock jump forward or backward to keep in line with UTC.</li>
