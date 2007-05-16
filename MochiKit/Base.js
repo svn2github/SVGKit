@@ -755,10 +755,10 @@ MochiKit.Base.update(MochiKit.Base, {
             return "[" + typeof(o) + "]";
         }
         if (typeof(o) == "function") {
-            o = ostring.replace(/^\s+/, "");
-            var idx = o.indexOf("{");
+            ostring = ostring.replace(/^\s+/, "").replace(/\s+/g, " ");
+            var idx = ostring.indexOf("{");
             if (idx != -1) {
-                o = o.substr(0, idx) + "{...}";
+                ostring = ostring.substr(0, idx) + "{...}";
             }
         }
         return ostring;
@@ -793,7 +793,15 @@ MochiKit.Base.update(MochiKit.Base, {
 
     /** @id MochiKit.Base.evalJSON */
     evalJSON: function () {
-        return eval("(" + arguments[0] + ")");
+        return eval("(" + MochiKit.Base._filterJSON(arguments[0]) + ")");
+    },
+
+    _filterJSON: function (s) {
+        var m = s.match(/^\s*\/\*(.*)\*\/\s*$/);
+        if (m) {
+            return m[1];
+        }
+        return s;
     },
 
     /** @id MochiKit.Base.serializeJSON */
@@ -1103,8 +1111,7 @@ MochiKit.Base.update(MochiKit.Base, {
                 var v = o[k];
                 if (typeof(v) == "function") {
                     continue;
-                } else if (typeof(v) != "string" &&
-                        typeof(v.length) == "number") {
+                } else if (MochiKit.Base.isArrayLike(v)){
                     for (var i = 0; i < v.length; i++) {
                         names.push(k);
                         values.push(v[i]);
@@ -1145,24 +1152,25 @@ MochiKit.Base.update(MochiKit.Base, {
         if (useArrays) {
             for (var i = 0; i < pairs.length; i++) {
                 var pair = pairs[i].split("=");
-                if (pair.length !== 2) {
+                var name = decode(pair.shift());
+                if (!name) {
                     continue;
                 }
-                var name = decode(pair[0]);
                 var arr = o[name];
                 if (!(arr instanceof Array)) {
                     arr = [];
                     o[name] = arr;
                 }
-                arr.push(decode(pair[1]));
+                arr.push(decode(pair.join("=")));
             }
         } else {
             for (i = 0; i < pairs.length; i++) {
                 pair = pairs[i].split("=");
-                if (pair.length !== 2) {
+                var name = pair.shift();
+                if (!name) {
                     continue;
                 }
-                o[decode(pair[0])] = decode(pair[1]);
+                o[decode(name)] = decode(pair.join("="));
             }
         }
         return o;

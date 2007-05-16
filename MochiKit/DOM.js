@@ -457,7 +457,7 @@ MochiKit.Base.update(MochiKit.DOM, {
             } else {
                 // IE is insane in the membrane
                 var renames = self.attributeArray.renames;
-                for (k in attrs) {
+                for (var k in attrs) {
                     v = attrs[k];
                     var renamed = renames[k];
                     if (k == "style" && typeof(v) == "string") {
@@ -1139,7 +1139,9 @@ MochiKit.Base.update(MochiKit.DOM, {
                 "for": "htmlFor",
                 "readonly": "readOnly",
                 "colspan": "colSpan",
-                "bgcolor": "bgColor"
+                "bgcolor": "bgColor",
+                "cellspacing": "cellSpacing",
+                "cellpadding": "cellPadding"
             };
         } else {
             attributeArray = function (node) {

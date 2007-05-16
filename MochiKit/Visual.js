@@ -459,7 +459,7 @@ MochiKit.Visual.toggle = function (element, /* optional */effect, /* optional */
         queue: {position: 'end', scope: (element.id || 'global'), limit: 1}
     }, options || {});
     var v = MochiKit.Visual;
-    v[element.style.display != 'none' ?
+    v[MochiKit.Style.getStyle(element, 'display') != 'none' ?
       v.PAIRS[effect][1] : v.PAIRS[effect][0]](element, options);
 };
 
@@ -497,9 +497,14 @@ MochiKit.Visual.Transitions.wobble = function (pos) {
 };
 
 /** @id MochiKit.Visual.Transitions.pulse */
-MochiKit.Visual.Transitions.pulse = function (pos) {
-    return (Math.floor(pos*10) % 2 === 0 ?
-        (pos*10 - Math.floor(pos*10)) : 1 - (pos*10 - Math.floor(pos*10)));
+MochiKit.Visual.Transitions.pulse = function (pos, pulses) {
+    if (!pulses) {
+        return (Math.floor(pos*10) % 2 === 0 ?
+            (pos*10 - Math.floor(pos*10)) : 1 - (pos*10 - Math.floor(pos*10)));
+    }
+    return (Math.round((pos % (1/pulses)) * pulses) == 0 ?
+            ((pos * pulses * 2) - Math.floor(pos * pulses * 2)) :
+        1 - ((pos * pulses * 2) - Math.floor(pos * pulses * 2)));
 };
 
 /** @id MochiKit.Visual.Transitions.none */
@@ -1874,7 +1879,7 @@ MochiKit.Visual.pulsate = function (element, /* optional */ options) {
     }, options || {});
     var transition = options.transition || v.Transitions.sinoidal;
     var reverser = b.bind(function (pos) {
-        return transition(1 - v.Transitions.pulse(pos));
+        return transition(1 - v.Transitions.pulse(pos, options.pulses));
     }, transition);
     b.bind(reverser, transition);
     return new v.Opacity(element, b.update({

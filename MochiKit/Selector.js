@@ -223,7 +223,7 @@ MochiKit.Selector.Selector.prototype = {
             MochiKit.Base.map(function (attribute) {
                 var value = 'MochiKit.DOM.getNodeAttribute(element, ' + repr(attribute.name) + ')';
                 var splitValueBy = function (delimiter) {
-                    return value + ' && ' + value + '.split(' + repr(delimiter) + ')';
+                    return value + '.split(' + repr(delimiter) + ')';
                 }
 
                 switch (attribute.operator) {
@@ -231,7 +231,7 @@ MochiKit.Selector.Selector.prototype = {
                         conditions.push(value + ' == ' + repr(attribute.value));
                         break;
                     case '~=':
-                        conditions.push('MochiKit.Base.findValue(' + splitValueBy(' ') + ', ' + repr(attribute.value) + ') > -1');
+                        conditions.push(value + ' && MochiKit.Base.findValue(' + splitValueBy(' ') + ', ' + repr(attribute.value) + ') > -1');
                         break;
                     case '^=':
                         conditions.push(value + '.substring(0, ' + attribute.value.length + ') == ' + repr(attribute.value));
@@ -244,7 +244,7 @@ MochiKit.Selector.Selector.prototype = {
                         break;
                     case '|=':
                         conditions.push(
-                            splitValueBy('-') + '[0].toUpperCase() == ' + repr(attribute.value.toUpperCase())
+                            value + ' && ' + splitValueBy('-') + '[0].toUpperCase() == ' + repr(attribute.value.toUpperCase())
                         );
                         break;
                     case '!=':
@@ -292,7 +292,7 @@ MochiKit.Selector.Selector.prototype = {
 
     /** @id MochiKit.Selector.Selector.prototype.isUIElement */
     isUIElement: function (element) {
-        return findValue(['input', 'button', 'select', 'option', 'textarea', 'object'],
+        return MochiKit.Base.findValue(['input', 'button', 'select', 'option', 'textarea', 'object'],
                 element.tagName.toLowerCase()) > -1;
     },
 
@@ -341,7 +341,7 @@ MochiKit.Selector.Selector.prototype = {
         }
 
         if (axis == "") {
-            scope = (scope || currentDocument()).getElementsByTagName(this.params.tagName || '*');
+            scope = (scope || MochiKit.DOM.currentDocument()).getElementsByTagName(this.params.tagName || '*');
         } else if (axis == ">") {
             if (!scope) {
                 throw "> combinator not allowed without preceeding expression";

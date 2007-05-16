@@ -216,8 +216,8 @@ MochiKit.Async.Deferred.prototype = {
 
 MochiKit.Base.update(MochiKit.Async, {
     /** @id MochiKit.Async.evalJSONRequest */
-    evalJSONRequest: function (/* req */) {
-        return eval('(' + arguments[0].responseText + ')');
+    evalJSONRequest: function (req) {
+        return MochiKit.Base.evalJSON(req.responseText);
     },
 
     /** @id MochiKit.Async.succeed */
@@ -345,6 +345,16 @@ MochiKit.Base.update(MochiKit.Async, {
 
     /** @id MochiKit.Async.doXHR */
     doXHR: function (url, opts) {
+        /*
+            Work around a Firefox bug by dealing with XHR during
+            the next event loop iteration. Maybe it's this one:
+            https://bugzilla.mozilla.org/show_bug.cgi?id=249843
+        */
+        var self = MochiKit.Async;
+        return self.callLater(0, self._doXHR, url, opts);
+    },
+
+    _doXHR: function (url, opts) {
         var m = MochiKit.Base;
         opts = m.update({
             method: 'GET',
@@ -375,6 +385,7 @@ MochiKit.Base.update(MochiKit.Async, {
         if (req.overrideMimeType && opts.mimeType) {
             req.overrideMimeType(opts.mimeType);
         }
+        req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         if (opts.headers) {
             var headers = opts.headers;
             if (!m.isArrayLike(headers)) {
