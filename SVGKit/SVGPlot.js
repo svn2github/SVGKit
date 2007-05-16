@@ -817,7 +817,7 @@ SVGPlot.ScaleDateTime.prototype = {
         /***
             var s = new SVGPlot.ScaleDateTime({year:1980}, {year:2010})
             s.defaultInterval()
-            @returns an array like ['month', 2]
+            @returns a datetime interval object like {'month': 2}
         ***/
         number = SVGKit.firstNonNull(number, 7);
         var min = this._min
@@ -831,7 +831,7 @@ SVGPlot.ScaleDateTime.prototype = {
         
         // Go through to find interval that would give closest to number spacings
         var best_score = 999999 
-        var best_interval = []  // Eventually set to something like ['month', 2]
+        var best_interval = {}  // Eventually set to something like {'month': 2}
         forEach(datetime.keys, function(key) {
             forEach(intervals[key], function(interval) {
                 var interval_count = diff_days / (days[key]*interval)
@@ -912,9 +912,9 @@ SVGPlot.ScaleDateTime.prototype = {
             'year': 'yyyy',
             'month': 'yyyy-mm',
             'day': 'mm-dd',
-            'hour': 'hh:mm',
-            'minute': 'hh:mm',
-            'second': 'hh:mm:ss',
+            'hour': 'hh:nn',
+            'minute': 'hh:nn',
+            'second': 'nn:ss',
             'microsecond': 'ss.uu'
         }
         var code = formats[smallest_difference]
