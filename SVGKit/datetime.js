@@ -51,169 +51,10 @@ assert = function(assertion) {
 
 datetime = {
     /***
-        Output formatting:  yyyy-mm-dd hh:nn:ss.uuu
-        These codes are chosen to eliminate ambiguity when parsing a formatting string
-        The thing I don't like about this are the mintes being n's rather than m's,
-        but I don't know how to encode both single-digit months and single-leter months
-        unless I use a different letter for minutes.  Other systems which use
-        capital M for months and lowercase m for minutes can't have single letter months
-        Maybe 'Month' and 'Mon' and 'Mo' cold be the codes for the named months
-        
-        Everything that's not a format code is just passed, but try to use only
-        standard things like '-', '/', ':', ' ', otherwise new formatting codes will break
-        
-        Right now intervals don't work.  There should be a distinction between
-        the interval '12 minutes, 34 seconds, 567 ms' and 
-        the absolute datetime '1970-01-01 00:12:34.567'
-        
-        If there is an 'elapsed time' code like 'dddd', 'hhh', 'nnn', 'sss', or 'uuuuu'
-        The date is treated as an elapsed time and reported as such.
-        
-        yyyy = numeric year
-        yy = numeric year 00-99
-        Mmmm = full month e.g. January (use mmmm for january)
-        Mmm = three-character month e.g. Jan (use MMM for JAN or mmm for jan)
-        mm = numeric month 01-12
-        m = one or two digit month 1/23 or 12/23
-        M = one character month (upper case) : J F M A M J J A S O N D
-        dddd = days of elapsed time (no limit)
-        ddd = days since begining of given year
-        dd = numeric day 01-31
-        d = numeric day 1-31
-        f = fraction of a day. Use ff, fff, or ffff for more digits
-        Wwww = Full weekday
-        Www = three character weekday (use Www or WWW for capitalized)
-        Ww = Two characters (Su, Mo, Tu, We, Th, Fr, Sa)
-        w = single character weekday (use W for capitalized)  (SMTWTFS)
-        r = 1, 2, 3 or 4 (quarter year notations)
-        q = the letter q or Q (quarter year notations)
-        
-        hhh = hours of elapsed time, no upper limit
-        hh = hours, 00 to 24 (00 to 11 for am/pm notation)
-        h = hours, 0 to 24, (0 to 11 for am/pm notation)
-        nnn = minutes of elapsed time  895:43.4
-        nn = minute 00 to 59
-        n = minute 0 to 59
-        sss = seconds of elapsed time
-        ss = second 00 to < 60
-        s = second 0 to < 60
-        uuuuu = total number of miliseconds (since 1970)
-        u = miliseconds use uu, uuu, or uuuu for more digits
-        aa = am/pm  AA for AM/PM  (12AM midnight and 12PM noon)
-        a = a/p  A for A/P (Some formatters use tt or p)
-        
-        zzzz = Time zone offset (returns 0500 for Eastern Standard Time)
-        z = Time Zone offset in minutes
-        zz 	Timezone offset, 2 digits 	{0:zz} 	-05
-        zzz 	Full timezone offset 	{0:zzz} 	-05:00
-        
-        gg = Era with periods (A.D.)
-        g = Era no periods (AD)
-        
-        missing:  week in year (Ambiguity between starting on Sunday or Monday)
-                  and week in month (for 2nd Tuesday in May)
+        months and days are used in formatting.
+        The first three letters can be grabbed and 
+        optionally converted to all lower or all upper case
     ***/
-    
-    /***
-        .NET Formatting Patterns
-
-        The following list shows the various patterns that can be used to
-        convert the datetime object to custom formatted string. The patterns are
-        case-sensitive; for example, "MM" is different from "mm".
-
-        If the custom pattern contains white-space characters or characters
-        enclosed in single quotation marks, the output string will also contain
-        those characters. Characters not part of a format pattern or not format
-        characters are reproduced 'as it is'.
-
-        Pre-defined Format Patterns and Description (From the MSDN Documentation)
-
-
-        d 	The day of the month. Single-digit days will not have a leading  zero. 
-        dd 	The day of the month. Single-digit days will have a leading zero. 
-        ddd 	The abbreviated name of the day of the week, as defined in AbbreviatedDayNames. 
-        dddd 	The full name of the day of the week, as defined in DayNames. 
-        M 	The numeric month. Single-digit months will not have a leading zero. 
-        MM 	The numeric month. Single-digit months will have a leading zero. 
-        MMM 	The abbreviated name of the month, as defined in AbbreviatedMonthNames. 
-        MMMM 	The full name of the month, as defined in MonthNames. 
-        y 	The year without the century. If the year without the century is less than 10, 
-        		the year is displayed with no leading zero. 
-        yy 	The year without the century. If the year without the century is less than 10, 
-        		the year is displayed with a leading zero. 
-        yyyy 	The year in four digits, including the century. 
-        gg 	The period or era. This pattern is ignored if the date to be formatted does 
-        		not have an associated period or era string. 
-        h 	The hour in a 12-hour clock. Single-digit hours will not have a leading zero. 
-        hh 	The hour in a 12-hour clock. Single-digit hours will have a leading zero. 
-        H 	The hour in a 24-hour clock. Single-digit hours will not have a leading zero. 
-        HH 	The hour in a 24-hour clock. Single-digit hours will have a leading zero. 
-        m 	The minute. Single-digit minutes will not have a leading zero. 
-        mm 	The minute. Single-digit minutes will have a leading zero. 
-        s 	The second. Single-digit seconds will not have a leading zero. 
-        ss 	The second. Single-digit seconds will have a leading zero. 
-        f 	The fraction of a second in single-digit precision. The remaining digits are truncated. 
-        ff 	The fraction of a second in double-digit precision. The remaining digits are truncated. 
-        fff 	The fraction of a second in three-digit precision. The remaining digits are truncated. 
-        ffff 	The fraction of a second in four-digit precision. The remaining digits are truncated. 
-        fffff 	The fraction of a second in five-digit precision. The remaining digits are truncated. 
-        ffffff 	The fraction of a second in six-digit precision. The remaining digits are truncated. 
-        fffffff 	The fraction of a second in seven-digit precision. The remaining digits are truncated. 
-        t 	The first character in the AM/PM designator defined in AMDesignator or PMDesignator, if any. 
-        tt 	The AM/PM designator defined in AMDesignator or PMDesignator, if any. 
-        z 	The time zone offset ("+" or "-" followed by the hour only). Single-digit hours will 
-        		not have a leading zero. For example, Pacific Standard Time is "-8". 
-        zz 	The time zone offset ("+" or "-" followed by the hour only). Single-digit hours 
-        		will have a leading zero. For example, Pacific Standard Time is "-08". 
-        zzz 	The full time zone offset ("+" or "-" followed by the hour and minutes). Single-digit 
-        		hours and minutes will have leading zeros. For example, Pacific Standard Time is "-08:00". 
-        : 	The default time separator defined in TimeSeparator. 
-        / 	The default date separator defined in DateSeparator. 
-        % c  	- Where c is a format pattern if used alone. The "%" character can be omitted if the 
-        		format pattern is combined with literal characters or other format patterns. 
-        \ c  	- Where c is any character. Displays the character literally. To display the backslash 
-        		character, use "\\". 
-                
-                
-        GNUPltot format:  (is this C's formatter?)
-            %f floating point notation
-            %e or %E exponential notation; an ”e” or ”E” before the power
-            %g or %G the shorter of %e (or %E) and %f
-            %x or %X hex
-            %o or %O octal
-            %t mantissa to base 10
-            %l mantissa to base of current logscale
-            %s mantissa to base of current logscale; scientific power
-            %T power to base 10
-            %L power to base of current logscale
-            %S scientific power
-            %c character replacement for scientific power
-            %P multiple of pi
-            
-        GNUPlot date/time format:
-            %a abbreviated name of day of the week
-            %A full name of day of the week
-            %b or %h abbreviated name of the month
-            %B full name of the month
-            %d day of the month, 1–31
-            %D shorthand for "%m/%d/%y"
-            %H or %k hour, 0–24
-            %I or %l hour, 0–12
-            %j day of the year, 1–366
-            %m month, 1–12
-            %M minute, 0–60
-            %p ”am” or ”pm”
-            %r shorthand for "%I:%M:%S %p"
-            %R shorthand for %H:%M"
-            %S second, 0–60
-            %T shorthand for "%H:%M:%S"
-            %U week of the year (week starts on Sunday)
-            %w day of the week, 0–6 (Sunday = 0)
-            %W week of the year (week starts on Monday)
-            %y year, 0-99
-            %Y year, 4-digit
-    ***/
-    
     months : [
         'January',
         'February',
@@ -228,14 +69,14 @@ datetime = {
         'November',
         'December'
     ],
-    days : [
-        'Sunday',
+    days_of_week : [  // ISO format where monday is 1
         'Monday',
         'Tuesday',
         'Wednesday',
         'Thursday',
         'Friday',
-        'Saturday'
+        'Saturday',
+        'Sunday'
     ],
     milliseconds : {
         'millisecond' : 1,
@@ -247,15 +88,6 @@ datetime = {
         'month'       : 1000*60*60*24*7*30,
         'year'        : 1000*60*60*24*7*365
     },
-    fields : [ // These are prepended with 'get', 'set', 'getUTC', or 'setUTC' to access JS Date object
-        'FullYear', 
-        'Month', 
-        'Date', 
-        'Hours', 
-        'Minutes' , 
-        'Seconds', 
-        'Milliseconds' 
-    ],
     pad : function(number, digits) {
         // Utility function
         // Returns a string that represents number, possily padded 
@@ -265,287 +97,12 @@ datetime = {
             str = '0' + str
         return str
     },
-    toISOTimestamp : function(dt) {
-        var pad = datetime.pad
-        return ''+pad(dt.year,4)+'-'+pad(dt.month,2)+'-'+pad(dt.day,2)+
-            ' '+pad(dt.hour,2)+':'+pad(dt.minute,2)+':'+pad(dt.second,2)
+    firstNonNull : function() {
+        for (var i=0; i<arguments.length; i++)
+            if ( !MochiKit.Base.isUndefinedOrNull(arguments[i]) )
+                return arguments[i]
+        return null;
     },
-    format : function(date, code, output_utc /* = false */) {
-        /***
-            Takes a JavaScript Date object and a format code like 'yyyy-mm-dd'
-            and returns a string that is a formated version of the information in date
-        
-            If output_utc is set, dates and times will be reported in UTC,
-            otherwise in the local timezone
-            
-            If date is a number, assume it's milliseconds since the epoc GMT
-        ***/
-        if (typeof(date) == "number")
-            date = new Date(date)
-            
-        output_utc = SVGKit.firstNonNull(output_utc, false)
-        
-        // If the format code includes an 'interval' character,
-        // we must treat count hours, days, etc as if they were UTC
-        if ( code.indexOf('dddd') != -1 || 
-             code.indexOf('hhh') != -1 || 
-             code.indexOf('nnn') != -1 || 
-             code.indexOf('sss') != -1 || 
-             code.indexOf('uuuuu') != -1 )
-            output_utc = true
-        
-        // String to be added to getters and setters if UTC is requested
-        var utc = output_utc ? 'UTC' : ''
-    
-        var pad = datetime.pad
-        
-        // Short names for these items
-        var c = code
-        var d = date
-        var ms = this.milliseconds
-        var m = this.months
-        var w = this.days;
-        
-        var year = d['get'+utc+'FullYear']()  // four digit year
-        var mon = d['get'+utc+'Month']()  // from 0-11
-        var date = d['get'+utc+'Date']()  // from 1-31
-        var day = d['get'+utc+'Day']()     // from 0-6
-        var hrs = d['get'+utc+'Hours']()  // from 0-23
-        var min = d['get'+utc+'Minutes']()  // from 0-59
-        var sec = d['get'+utc+'Seconds']()  // from 0-59
-        var ms = d['get'+utc+'Milliseconds']()  // from 0-999
-        var z = d.getTimezoneOffset()
-        
-        var dcpy = new Date(d.getTime()) // A temporary copy to modify
-        dcpy.setFullYear(1970)
-        
-        var f = (d.getTime() % ms['day'])/ms['day']  // Fraction of a day
-        var u = (d.getTime() % ms['second'])/ms['second']  // Fraction of a second
-        
-       
-        // Do the AM/PM thing
-        var aa = hrs < 12 ? 'AM' : 'PM'
-        var a = hrs < 12 ? 'A' : 'P'
-        // If the format code includes an AM/PM designator, the hour must be changed
-        if (c.indexOf('a') >= 0 || c.indexOf('A') >= 0) {
-            if (hrs > 12)
-                hrs = hrs-12;
-            if (hrs == 0)
-                hrs = 12;
-        }
-        
-        var replacements = [
-            // Note that order can't be changed -- longer strings must be replaced first
-            ['yyyy', ''+year ],
-            ['yy', pad(year%100, 2) ],
-        
-            ['Mmmm', m[mon] ],
-            ['mmmm', m[mon].toLowerCase() ],
-            ['MMMM', m[mon].toUpperCase() ],
-            ['Mmm', m[mon].substr(0,3) ],
-            ['mmm', m[mon].substr(0,3).toLowerCase() ],
-            ['MMM', m[mon].substr(0,3).toUpperCase() ],
-            ['mm', pad(mon+1,2)  ],
-            ['m', ''+(mon+1)  ],
-            ['M', m[mon].substr(0,1) ],
-        
-            ['r', ''+(Math.floor(mon/4)+1) ],
-        
-            ['dddd', Math.floor((d.getTime())/ms['day']) ],
-            ['ddd', Math.floor((dcpy.getTime())/ms['day']) ],
-            ['dd', pad(date,2)  ],
-            ['d', ''+date  ],
-            ['ffff', pad(10000*f, 4)  ],
-            ['fff', pad(1000*f, 3)  ],
-            ['ff', pad(100*f, 2)  ],
-            ['f', pad(10*f, 1)  ],
-        
-            ['Wwww', w[day] ],
-            ['wwww', w[day].toLowerCase() ],
-            ['WWWW', w[day].toUpperCase() ],
-            ['Www', w[day].substr(0,3) ],
-            ['www', w[day].substr(0,3).toLowerCase() ],
-            ['WWW', w[day].substr(0,3).toUpperCase() ],
-            ['Ww', w[day].substr(0,2) ],
-            ['ww', w[day].substr(0,2).toLowerCase() ],
-            ['WW', w[day].substr(0,2).toUpperCase() ],
-            ['w', w[day].substr(0,1).toLowerCase()  ],
-            ['W', w[day].substr(0,1) ],
-        
-            ['hhh', Math.floor((dcpy.getTime())/ms['hour']) ],
-            ['hh', pad(hrs,2)  ],
-            ['h', ''+hrs  ],
-        
-            ['nnn', Math.floor((dcpy.getTime())/ms['minute']) ],
-            ['nn', pad(min,2)  ],
-            ['n', ''+min  ],
-        
-            ['sss', Math.floor((dcpy.getTime())/ms['second']) ],
-            ['ss', pad(sec,2)  ],
-            ['s', ''+sec  ],
-      
-            ['uuuuu', ''+d.getTime()  ],
-            ['uuuu', pad(10000*u, 4)  ],
-            ['uuu', pad(1000*u, 3)  ],
-            ['uu', pad(100*u, 2)  ],
-            ['u', pad(10*u, 1)  ],
-        
-            ['zzzz', ''+Math.floor(z/60)+''+(z%60) ],
-            ['z', ''+z ],
-            
-            ['AA', aa ],
-            ['aa', aa.toLowerCase() ],
-            ['A', aa[0] ],
-            ['a', aa[0].toLowerCase() ],
-            
-            ['gg', year >= 1 ? 'A.D.' : 'B.C.'],
-            ['g', year >= 1 ? 'AD' : 'BC'],
-        ]
-        
-        var result = ''
-        // March through the format string.
-        while (c != '') { 
-            var replacement_made = false  // If nothing matches, copy one character
-            for (var i=0; i<replacements.length; i++) {
-                var pattern = replacements[i][0]
-                var len = pattern.length
-                var replacement = replacements[i][1]
-                if (c.substring(0,len) == pattern) {
-                    result = result + replacement
-                    c = c.substring(len)
-                    replacement_made = true
-                }
-            }
-            if (replacement_made == false) {
-                result = result + c[0]
-                c = c.substring(1)
-            }
-        }
-        return result
-    },
-    read : function(string, code) {
-        /***
-            Parse the string, returning a Date() object
-            If no code is passed in, use a list of most likeley heuristics.
-            These differ based on country.
-            This uses the strings stored in months and days, so can be localized
-        ***/
-        formats = [
-            'm/d/yyyy',
-            'm/d/yy',
-            'h:m'
-        ]
-        /*
-            Look for the various items:
-            Words are either weekdays, months, or timezones
-            Things seperated by slashes or dashes are dates
-            Things seperated by colons are times h:m or m:s
-            Use valid ranges to determine month/day/year order ambiguity
-            If ranges fail, favor either month first or day first
-            
-            How to tell intervals versus absolute date/times?
-            Excel cheats and treats "5:04" as "1/0/1900 5:04 AM"
-            using Jan-0 to mean "abstract time" 
-            It treats 1/1 as "1/1/<current year>"
-        */
-        return null
-    },
-    firstDifferent : function(start, end) {
-        /***
-           Pass in two date objects and get back an integer
-           representing where the date objects start to differ
-           as defined by the fields array:
-           0 means FullYear, 1 means Month, ... 6 means Milliseocnds
-        ***/
-        for (var i=0; i<this.fields.length; i++) {
-            var getter = 'get' + this.fields[i]
-            if (start[getter]() != end[getter]()) {
-                return i
-            }
-        }
-        // The dates are the same
-        return null
-    },
-    commonPart : function(start, end) {
-        /***
-        If passed '2006-01-23 8:30' and '2006-01-25 10:55', it will
-        return 2006-01 indicating that the year and the month
-        are the same, but things start to differ at the date
-        
-        If the years differ, this returns an empty string.
-        
-        This is used to label the whole axis with the 
-        common part of a date range
-        ***/
-        // iso looks like "2007-01-27 2:23:36"
-        var seperator = ['', '-', '-', ' ', ':', ':', '.']
-        var result = ''
-        var i = this.firstDifferent(start, end)
-        for (var j=0; j<i; j++) {
-            var getter = 'get' + this.fields[j]
-            result += seperator[j]
-            var value = '' + start[getter]()
-            // Zero pad if necessary
-            if (value.length == 1)
-                result += '0'
-            result += value
-        }
-        // If the common part was an hour, don't leave the hour dangling
-        if (i==4)
-            result += ':00'
-        return result
-    },
-    roundDate : function(date, i, round_up /*=false*/) {
-        /***
-            DEPRICATED
-            Copy the date and round the date to the nearest 
-            year/month/etc as defined by i.
-            
-            Pass it (2006-01-23 8:30, 2 (Date), 'down')
-            and get back 2006-01-23 00:00
-            
-            Pass it (2006-01-23 8:30, 2 (Date), 'up')
-            and get back 2006-01-24 00:00
-        ***/
-        round_up = SVGKit.firstNonNull(round_up, false);
-        
-        var iter = new Date(date.getTime())
-        
-        // Check to see if it's already rounded, in which case return it
-        var rounded = true
-        for (var j=i+1; j<this.fields.length; j++) {
-            var getter = 'get' + this.fields[j]
-            if (getter=='getDate')  // The dates go 1-31, the rest start at 0
-                if (iter[getter]() != 1)
-                    rounded = false
-            else
-                if (iter[getter]() != 0)
-                   rounded = false
-        }
-        if (rounded)
-            return iter
-        
-        // Zero out all shorter interval fields
-        for (var j=i+1; j<this.fields.length; j++) {
-            var setter = 'set' + this.fields[j]
-            if (setter=='setDate')  // The dates go 1-31, the rest start at 0
-                iter[setter](1)
-            else
-                iter[setter](0)
-        }
-        
-        // If we're to round up, increment the i'th field by one 
-        // (this could roll others, but that' okay and works in Firefox)
-        if (round_up) {
-            var getter = 'get' + this.fields[i]
-            var setter = 'set' + this.fields[i]
-            var value = iter[getter]()
-            value += 1
-            iter[setter](value)
-        }
-        return iter
-    },
-    
     
     /********************************************************
        The following are brutally ripped and translated from 
@@ -876,7 +433,7 @@ datetime = {
     	if (datetime.MINYEAR <= dt['year'] && dt['year'] <= datetime.MAXYEAR)
     		result = 0;
     	else {
-    		log("date value out of range");
+    		log("normalize_date: warning... date value out of range:", dt['year']);
     		result = -1;
     	}
     	return result;
@@ -901,9 +458,10 @@ datetime = {
         Basic Stuff
     *****/
     
-    now : function() {
-        // Returns a datetime object for now.
-        d = new Date()
+    fromDate : function(d) {
+        /***
+            Takes a JavaScript Date object and returns a fully-populated datetime.
+        ***/
         return {
             'year': d.getFullYear(), 
             'month': d.getMonth()+1,  // JavaScript reports January as year 0
@@ -917,6 +475,24 @@ datetime = {
         }
     },
     
+    now : function() {
+        // Returns a datetime object for now.
+        d = new Date()
+        return datetime.fromDate(d)
+    },
+    
+    datetime : function(obj) {
+        /***
+            A constructor that takes a string, Date object, or datetime object and
+            returns a datetime object
+        ***/
+        if (typeof(obj) == 'string')
+            return datetime.parse(obj)
+        if (obj.constructor == Date)
+            return datetime.fromDate(obj)
+        else return obj
+    },
+    
     /***
         MATH
     ***/
@@ -924,7 +500,7 @@ datetime = {
     min : {year:1,    month:1,  day:1,  hour:0,  minute:0,  second:0,  microsecond:0},
     max : {year:9999, month:12, day:31, hour:23, minute:59, second:59, microsecond:999999},
     keys : ['year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond'],
-    // Number of days for each item
+    // Number of days for each item, approximate for rounding reasons
     days : {
         year: 365.25,
         month: 365.25/12,
@@ -935,38 +511,28 @@ datetime = {
         microsecond: 1.0/(24*60*60*1000000)
     },
     
-    addUpToDay : function(dt1, dt2, result) {
-        /***
-            Modifies result in place and returns the number of days
-            that got rolled over from adding the other quantities.
-        ***/
-        var microsecond = dt1.microsecond + dt2.microsecond
-        p.microsecond = microsecond%1000000
-        var second = dt1.second + dt2.second + Math.floor(microsecond/1000000)
-        p.second = second%60
-        var minute = dt1.minute + dt2.minute + Math.floor(second/60)
-        p.minute = minute%60
-        var hour = dt1.hour + dt2.hour + Math.floor(minute/60)
-        p.hour = hour%24
-        var day = Math.floor(hour/24)
-        return day
-    },
-    
     addPeriods : function(p1, p2) {
-        // Don't attempt to roll over anything
-        // Assume any unspecified fields are zero.
+        /***
+            Don't attempt to roll over anything
+            If both periods leave something unspecified, the result has it unspecified
+            If only one period has a field specified, assume it's zero
+        ***/
         var result = {}
         for (key in datetime.min) {
-            if (isUndefinedOrNull(p1[key]) )
+            if (!isUndefinedOrNull(p2[key]) || !isUndefinedOrNull(p1[key])) {
                 result[key] = 0
-            else
-                result[key] = p1[key]
-            if (!isUndefinedOrNull(p2[key]) )
-                result[key] += p2[key]
+                if (!isUndefinedOrNull(p1[key]) )
+                    result[key] = p1[key]
+                if (!isUndefinedOrNull(p2[key]) )
+                    result[key] += p2[key]
+            }
         }
-        return p2
+        return result
     },
     negatePeriod : function(p) {
+        /***
+            For all fields that are specified, the result is their negative
+        ***/
         var result = {}
         for (key in datetime.min) {
             if (!isUndefinedOrNull(p[key]) )
@@ -983,7 +549,7 @@ datetime = {
            The python code (and this this code) does it differently than 
            xmlschema for better or worse -- we start adding microseconds and
            keep rolling over up to years.
-           They add years, then add months. If the day doesn't exist in the new
+           xmlschema adds years, then add months. If the day doesn't exist in the new
            month, it is cliped down, so March 31 + 1M -> April 30.
            Then they add microseconds up to days rolling over, possibly rolling
            months and years again at the end.
@@ -1021,14 +587,17 @@ datetime = {
         
         return result
     },
-    subPeriod : function(timestamp, period) {
-        return addPeriod(timestamp, negatePeriod(period))
+    subPeriod : function(dt, period) {
+        return datetime.addPeriod(dt, datetime.negatePeriod(period))
     },
     subDatetimes : function(dt1, dt2) {
-        // Convert ts2 to the same timezone as ts1 before the subtraction is done
-        // If one has a timezone and the other doesn't, assume it has the same timezone
-        // Unless both datetimes have a value in a field, the result field in the period is null
-        // This gives a difference in years, months, and days, not some absolute number of days.
+        /***
+            Convert ts2 to the same timezone as ts1 before the subtraction is done
+            If one has a timezone and the other doesn't, assume it has the same timezone
+            Unless both datetimes have a value in a field, the result field in the period is null
+            This gives a difference in years, months, and days, NOT some absolute number of days.
+            If you want the absolute number of days/seconds/whatever, convert both to julianDays
+        ***/
         var dt2mod = copy(dt2)
         
         if ( !isUndefinedOrNull(dt1.tz_hour) && !isUndefinedOrNull(dt2.tz_hour) )
@@ -1052,6 +621,10 @@ datetime = {
         dt.tz_hour = new_timezone.tz_hour
     },
     comparePeriods : function(p1, p2) {
+        /***
+            Right now the rule is to assume undefined periods have value zero AND that
+            it is in some reduced form where the fields cam be compared by size
+        ***/
         // Not comparable if they don't have the same fields defined
         // There is a partial ordering that's complicated where 
         //  1Y > 364D and 1Y < 367D, but you can't say in between.
@@ -1075,10 +648,10 @@ datetime = {
                 if (comp != 0)
                     return comp;
             }
-            if ( !isUndefinedOrNull(p1[key]) && isUndefinedOrNull(p2[key]) ||
-                  isUndefinedOrNull(p1[key]) && !isUndefinedOrNull(p2[key])) {
-                return 2;  // Only one has this biggest field defined
-            }
+            if ( !isUndefinedOrNull(p1[key]) && isUndefinedOrNull(p2[key]) )
+                return -1
+            else if ( isUndefinedOrNull(p1[key]) && !isUndefinedOrNull(p2[key]) )
+                return 1;
         }
         return 0;
     },
@@ -1121,8 +694,8 @@ datetime = {
             datetime.round(a, 'hour', 'up', 1)
         ***/
         // Zero out all fields smaller than the key given
-        direction = SVGKit.firstNonNull(direction, 'nearest');
-        multiple = SVGKit.firstNonNull(multiple, 1);
+        direction = datetime.firstNonNull(direction, 'nearest');
+        multiple = datetime.firstNonNull(multiple, 1);
         var keys = datetime.keys
         var field = 999  // Eventually set to the index of key in keys (1 for months)
         var rounded = {}
@@ -1168,7 +741,181 @@ datetime = {
         
         return rounded
     },
+
+    minmax : function(dt_list) {
+        /***
+            return {min: smallest_dt, max: biggest_dt,
+                   min_ord: smallest_ord,  max_ord: biggest_ord}
+            by converting each to ordinalDay and comparing the ordinal days
+        ***/
+        var ord_list = map(datetime.ordinalDay, dt_list)
+        var min_index = 0
+        var max_index = 0
+        var min_ord = ord_list[0]
+        var max_ord = ord_list[0]
+        for (var i=1; i<ord_list.length; i++) {
+            var ord = ord_list[i]
+            if (ord < min_ord) {
+                min_ord = ord
+                min_index = i
+            }
+            if (ord > max_ord) {
+                max_ord = ord
+                max_index = i
+            }
+        }
+        log('minmax', datetime.toISOTimestamp(dt_list[min_index]), 
+                datetime.toISOTimestamp(dt_list[max_index]), 
+                min_ord, max_ord)
+        return {min: dt_list[min_index], max: dt_list[max_index],
+                 min_index: min_index, max_index: max_index,
+                 min_ord: min_ord, max_ord: max_ord}
+    },
     
+    /***
+        OTHER TIME SYSTEMS
+    ***/
+    
+    periodToDays : function(p) {
+        /***
+            This is only approximate if the period includes months or years
+        ***/
+        var result = 0
+        for (key in datetime.min) {
+            if (!isUndefinedOrNull(p[key]) )
+                result += p[key]*datetime.days[key]
+        }
+        return result
+    },
+    
+    unixTime : function(dt) {
+        /***
+            Seconds since midnight GMT
+            
+            d = new Date()
+            dt = datetime.fromDate(d)
+            d.getTime() ==  datetime.unixTime(dt)
+        ***/
+        var year = datetime.firstNonNull(dt.year, datetime.min['year'])
+        var month = datetime.firstNonNull(dt.month, datetime.min['month'])
+        var day = datetime.firstNonNull(dt.day, datetime.min['day'])
+        
+        var unixEpoc = 719163 // = datetime.ymd_to_ord(1970, 1, 1)
+        var ord = datetime.ymd_to_ord(year, month, day)
+        var ut = (ord - unixEpoc) * 24*60*60*1000
+        if (dt.hour != null)
+            ut += dt.hour*60*60*1000
+        if (dt.tz_hour != null)
+            ut += dt.tz_hour*60*60*1000
+        if (dt.minute != null)
+            ut += dt.minute*60*1000
+        if (dt.tz_minute != null)
+            ut += dt.tz_minute*60*1000
+        if (dt.second != null)
+            ut += dt.second*1000
+        if (dt.microsecond != null)
+            ut += Math.round(dt.microsecond/1000)
+        return ut
+    },
+    
+    ordinalDay : function(dt, inGMT) {
+        /***
+            Return a floating-point number of days since the year 1
+            Fields not specified are assumed to be their minimum
+            Very similar to UNIX time, but this gets turned into a float
+        ***/
+        var year = datetime.firstNonNull(dt.year, datetime.min['year'])
+        var month = datetime.firstNonNull(dt.month, datetime.min['month'])
+        var day = datetime.firstNonNull(dt.day, datetime.min['day'])
+        
+        var ord = datetime.ymd_to_ord(year, month, day)
+        
+        if (dt.hour != null)
+            ord += dt.hour/24
+        if (inGMT && dt.tz_hour != null)
+            ord += dt.tz_hour/24
+        if (dt.minute != null)
+            ord += dt.minute/(24*60)
+        if (inGMT && dt.tz_minute != null)
+            ord += dt.tz_minute/(24*60)
+        if (dt.second != null)
+            ord += dt.second/(24*60*60)
+        if (dt.microsecond != null)
+            ord += dt.microsecond/(24*60*60*1000000)
+        return ord
+    },
+    
+    julianDay : function(dt) {
+        /* Note, this assumes the Gregorian was in effect since 0001-01-01,
+          so is incorrect before 4 October 1582 in most of Europe or 
+          September 1752 in England and US, up until which they 
+          were using Julian Calendar 
+          There is more complete JavaScript code that handles Julian at
+          http://aa.usno.navy.mil/data/docs/JulianDate.html
+         
+          Also, Julian Day can't be used with leap seconds in the picture.
+          It's really defined to be a count of days and fractions of a day.
+        */
+        
+        var ord = datetime.ordinalDay(dt)
+        //var epoc2400000 = datetime.ymd_to_ord(1858, 11, 16) // This is when the julian date was 2400000
+        //var jd =  2400000 + ord - epoc2400000  +- 0.5 because days started at noon
+        var jd = ord + 1721424.5  // Alternative calculation
+        
+        // If no time is given, assume you've given a date that starts at noon
+        if (typeof(dt.hour) == 'undefined')
+            jd += 0.5
+        return jd
+    },
+    modifiedJulianDay : function(dt) {
+        return datetime.julianDay(dt) - 2400000.5
+    },
+    reducedJulianDay : function(dt) {
+        return datetime.julianDay(dt) - 2400000
+    },
+    siderealTime : function(dt, longitude) {
+        /***
+            Longitude given in degrees, not necessarily an integer.
+            
+            Reference JavaScript Code:
+            http://home.att.net/~srschmitt/script_clock.html
+            
+            Seems different from http://www.freepatentsonline.com/EP1493140.html
+            which uses 2010 as the base and has an extra zero at the end of the cubic term
+            
+            Another textual reference:
+            http://www2.arnes.si/~gljsentvid10/sidereal.htm
+            
+            Astronomical Algorithms  by Jean Meeus
+        ***/
+        //var J2000_0 = datetime.julianDay({year:2000, month:1, day:1})
+        //var J2000_0 = datetime.julianDay({year:2000, month:1, day:1, hour:12})
+        var J2000_0 = 2451545  // Julian day for 2000-01-01 @ noon
+        var jd = datetime.julianDay(dt) - J2000_0
+        var jt = jd/36525.0;  // julian centuries since J2000.0
+        // Greenwich Mean Sidereal Time to third order (don't know what that means yet)
+        var GMST = 280.46061837 + 360.98564736629*jd + 0.000387933*jt*jt - jt*jt*jt/38710000
+        if (GMST < 0) {
+            // Add enough multiples of 360 to make it positive for the mod below.
+            GMST += 360.0*(Math.ceil(-GMST/360.0)+1)
+        }
+        GMST = GMST % 360.0
+        if (typeof(longitude) == 'undefined' || longitude == null)
+            return GMST
+        // Local Mean Sidereal Time
+        var LMST = GMST + Longitude
+        return LMST
+    },
+    degreesToDMS : function(degrees) {
+        return { degrees: degrees%360, 
+                  minutes: (60*degrees/360)%60,
+                  seconds: (60*60*degrees/360.0) }
+    },
+    DMSToDegrees : function(DMS) {
+        return DMS.degrees + DMS.minutes/60.0 + DMS.seconds/(60.0*60.0)
+    },
+    
+        
     /***
         PARSING
     ***/
@@ -1282,87 +1029,357 @@ datetime = {
         return new Date(Date.UTC(year, month, day, hour, min, sec, msec) - ofs);
     },
     */
+    read : function(string, code) {
+        /***
+            // DEPRICATED
+            Parse the string, returning a Date() object
+            If no code is passed in, use a list of most likeley heuristics.
+            These differ based on country.
+            This uses the strings stored in months and days, so can be localized
+        ***/
+        formats = [
+            'm/d/yyyy',
+            'm/d/yy',
+            'h:m'
+        ]
+        /*
+            Look for the various items:
+            Words are either weekdays, months, or timezones
+            Things seperated by slashes or dashes are dates
+            Things seperated by colons are times h:m or m:s
+            Use valid ranges to determine month/day/year order ambiguity
+            If ranges fail, favor either month first or day first
+            
+            How to tell intervals versus absolute date/times?
+            Excel cheats and treats "5:04" as "1/0/1900 5:04 AM"
+            using Jan-0 to mean "abstract time" 
+            It treats 1/1 as "1/1/<current year>"
+        */
+        return null
+    },
+    
     /***
-        OTHER TIME SYSTEMS
+        Output formatting:  yyyy-mm-dd hh:nn:ss.uuu
+        These codes are chosen to eliminate ambiguity when parsing a formatting string
+        The thing I don't like about this are the mintes being n's rather than m's,
+        but I don't know how to encode both single-digit months and single-leter months
+        unless I use a different letter for minutes.  Other systems which use
+        capital M for months and lowercase m for minutes can't have single letter months
+        Maybe 'Month' and 'Mon' and 'Mo' cold be the codes for the named months
+        
+        Everything that's not a format code is just passed, but try to use only
+        standard things like '-', '/', ':', ' ', otherwise new formatting codes will break
+        
+        Right now intervals don't work.  There should be a distinction between
+        the interval '12 minutes, 34 seconds, 567 ms' and 
+        the absolute datetime '1970-01-01 00:12:34.567'
+        
+        If there is an 'elapsed time' code like 'dddd', 'hhh', 'nnn', 'sss', or 'uuuuu'
+        The date is treated as an elapsed time and reported as such.
+        
+        yyyy = numeric year
+        yy = numeric year 00-99
+        Mmmm = full month e.g. January (use mmmm for january)
+        Mmm = three-character month e.g. Jan (use MMM for JAN or mmm for jan)
+        mm = numeric month 01-12
+        m = one or two digit month 1/23 or 12/23
+        M = one character month (upper case) : J F M A M J J A S O N D
+        dddd = days of elapsed time (no limit)
+        ddd = days since begining of given year
+        dd = numeric day 01-31
+        d = numeric day 1-31
+        f = fraction of a day. Use ff, fff, or ffff for more digits
+        Wwww = Full weekday
+        Www = three character weekday (use Www or WWW for capitalized)
+        Ww = Two characters (Su, Mo, Tu, We, Th, Fr, Sa)
+        w = single character weekday (use W for capitalized)  (SMTWTFS)
+        r = 1, 2, 3 or 4 (quarter year notations)
+        q = the letter q or Q (quarter year notations)
+        
+        hhh = hours of elapsed time, no upper limit
+        hh = hours, 00 to 24 (00 to 11 for am/pm notation)
+        h = hours, 0 to 24, (0 to 11 for am/pm notation)
+        nnn = minutes of elapsed time  895:43.4
+        nn = minute 00 to 59
+        n = minute 0 to 59
+        sss = seconds of elapsed time
+        ss = second 00 to < 60
+        s = second 0 to < 60
+        uuuuu = total number of miliseconds (since 1970)
+        u = miliseconds use uu, uuu, or uuuu for more digits
+        aa = am/pm  AA for AM/PM  (12AM midnight and 12PM noon)
+        a = a/p  A for A/P (Some formatters use tt or p)
+        
+        zzzz = Time zone offset (returns 0500 for Eastern Standard Time)
+        z = Time Zone offset in minutes
+        zz 	Timezone offset, 2 digits 	{0:zz} 	-05
+        zzz 	Full timezone offset 	{0:zzz} 	-05:00
+        
+        gg = Era with periods (A.D.)
+        g = Era no periods (AD)
+        
+        missing:  week in year (Ambiguity between starting on Sunday or Monday)
+                  and week in month (for 2nd Tuesday in May)
     ***/
     
-    julianDay : function(dt) {
-        /* Note, this assumes the Gregorian was in effect since 0001-01-01,
-          so is incorrect before 4 October 1582 in most of Europe or 
-          September 1752 in England and US, up until which they 
-          were using Julian Calendar 
-          There is more complete JavaScript code that handles Julian at
-          http://aa.usno.navy.mil/data/docs/JulianDate.html
-         
-          Also, Julian Day can't be used with leap seconds in the picture.
-          It's really defined to be a count of days and fractions of a day.
-        */
-        var ord = datetime.ymd_to_ord(dt.year, dt.month, dt.day)
-        var epoc2400000 = datetime.ymd_to_ord(1858, 11, 16)
-        var jd =  2400000 + ord - epoc2400000
-        //var jd = ord + 1721424.5  // Alternative calculation
-        // If no time is given, assume you've given a date that starts at noon
-        if (typeof(dt.hour) != 'undefined')
-            jd += (dt.hour-12)/24
-        if (typeof(dt.minute) != 'undefined')
-            jd += dt.minute/(24*60)
-        if (typeof(dt.second) != 'undefined')
-            jd += dt.second/(24*60*60)
-        if (typeof(dt.microsecond) != 'undefined')
-            jd += dt.microsecond/(24*60*60*1000000)
-        return jd
+    /***
+        .NET Formatting Patterns
+
+        The following list shows the various patterns that can be used to
+        convert the datetime object to custom formatted string. The patterns are
+        case-sensitive; for example, "MM" is different from "mm".
+
+        If the custom pattern contains white-space characters or characters
+        enclosed in single quotation marks, the output string will also contain
+        those characters. Characters not part of a format pattern or not format
+        characters are reproduced 'as it is'.
+
+        Pre-defined Format Patterns and Description (From the MSDN Documentation)
+
+
+        d 	The day of the month. Single-digit days will not have a leading  zero. 
+        dd 	The day of the month. Single-digit days will have a leading zero. 
+        ddd 	The abbreviated name of the day of the week, as defined in AbbreviatedDayNames. 
+        dddd 	The full name of the day of the week, as defined in DayNames. 
+        M 	The numeric month. Single-digit months will not have a leading zero. 
+        MM 	The numeric month. Single-digit months will have a leading zero. 
+        MMM 	The abbreviated name of the month, as defined in AbbreviatedMonthNames. 
+        MMMM 	The full name of the month, as defined in MonthNames. 
+        y 	The year without the century. If the year without the century is less than 10, 
+        		the year is displayed with no leading zero. 
+        yy 	The year without the century. If the year without the century is less than 10, 
+        		the year is displayed with a leading zero. 
+        yyyy 	The year in four digits, including the century. 
+        gg 	The period or era. This pattern is ignored if the date to be formatted does 
+        		not have an associated period or era string. 
+        h 	The hour in a 12-hour clock. Single-digit hours will not have a leading zero. 
+        hh 	The hour in a 12-hour clock. Single-digit hours will have a leading zero. 
+        H 	The hour in a 24-hour clock. Single-digit hours will not have a leading zero. 
+        HH 	The hour in a 24-hour clock. Single-digit hours will have a leading zero. 
+        m 	The minute. Single-digit minutes will not have a leading zero. 
+        mm 	The minute. Single-digit minutes will have a leading zero. 
+        s 	The second. Single-digit seconds will not have a leading zero. 
+        ss 	The second. Single-digit seconds will have a leading zero. 
+        f 	The fraction of a second in single-digit precision. The remaining digits are truncated. 
+        ff 	The fraction of a second in double-digit precision. The remaining digits are truncated. 
+        fff 	The fraction of a second in three-digit precision. The remaining digits are truncated. 
+        ffff 	The fraction of a second in four-digit precision. The remaining digits are truncated. 
+        fffff 	The fraction of a second in five-digit precision. The remaining digits are truncated. 
+        ffffff 	The fraction of a second in six-digit precision. The remaining digits are truncated. 
+        fffffff 	The fraction of a second in seven-digit precision. The remaining digits are truncated. 
+        t 	The first character in the AM/PM designator defined in AMDesignator or PMDesignator, if any. 
+        tt 	The AM/PM designator defined in AMDesignator or PMDesignator, if any. 
+        z 	The time zone offset ("+" or "-" followed by the hour only). Single-digit hours will 
+        		not have a leading zero. For example, Pacific Standard Time is "-8". 
+        zz 	The time zone offset ("+" or "-" followed by the hour only). Single-digit hours 
+        		will have a leading zero. For example, Pacific Standard Time is "-08". 
+        zzz 	The full time zone offset ("+" or "-" followed by the hour and minutes). Single-digit 
+        		hours and minutes will have leading zeros. For example, Pacific Standard Time is "-08:00". 
+        : 	The default time separator defined in TimeSeparator. 
+        / 	The default date separator defined in DateSeparator. 
+        % c  	- Where c is a format pattern if used alone. The "%" character can be omitted if the 
+        		format pattern is combined with literal characters or other format patterns. 
+        \ c  	- Where c is any character. Displays the character literally. To display the backslash 
+        		character, use "\\". 
+                
+                
+        GNUPltot format:  (is this C's formatter?)
+            %f floating point notation
+            %e or %E exponential notation; an ”e” or ”E” before the power
+            %g or %G the shorter of %e (or %E) and %f
+            %x or %X hex
+            %o or %O octal
+            %t mantissa to base 10
+            %l mantissa to base of current logscale
+            %s mantissa to base of current logscale; scientific power
+            %T power to base 10
+            %L power to base of current logscale
+            %S scientific power
+            %c character replacement for scientific power
+            %P multiple of pi
+            
+        GNUPlot date/time format:
+            %a abbreviated name of day of the week
+            %A full name of day of the week
+            %b or %h abbreviated name of the month
+            %B full name of the month
+            %d day of the month, 1–31
+            %D shorthand for "%m/%d/%y"
+            %H or %k hour, 0–24
+            %I or %l hour, 0–12
+            %j day of the year, 1–366
+            %m month, 1–12
+            %M minute, 0–60
+            %p ”am” or ”pm”
+            %r shorthand for "%I:%M:%S %p"
+            %R shorthand for %H:%M"
+            %S second, 0–60
+            %T shorthand for "%H:%M:%S"
+            %U week of the year (week starts on Sunday)
+            %w day of the week, 0–6 (Sunday = 0)
+            %W week of the year (week starts on Monday)
+            %y year, 0-99
+            %Y year, 4-digit
+    ***/
+        toISOTimestamp : function(dt) {
+        var pad = datetime.pad
+        return ''+pad(dt.year,4)+'-'+pad(dt.month,2)+'-'+pad(dt.day,2)+
+            ' '+pad(dt.hour,2)+':'+pad(dt.minute,2)+':'+pad(dt.second,2)
     },
-    modifiedJulianDay : function(dt) {
-        return datetime.julianDay(dt) - 2400000.5
-    },
-    reducedJulianDay : function(dt) {
-        return datetime.julianDay(dt) - 2400000
-    },
-    unixTime : function(dt) {
-        return (datetime.julianDay(dt) - 2440587.5) * 86400
-    },
-    siderealTime : function(dt, longitude) {
+    format : function(dt, code, output_utc /* = false */) {
         /***
-            Longitude given in degrees, not necessarily an integer.
+            Takes a JavaScript Date object and a format code like 'yyyy-mm-dd'
+            and returns a string that is a formated version of the information in date
+        
+            If output_utc is set, dates and times will be reported in UTC,
+            otherwise in the local timezone
             
-            Reference JavaScript Code:
-            http://home.att.net/~srschmitt/script_clock.html
-            
-            Seems different from http://www.freepatentsonline.com/EP1493140.html
-            which uses 2010 as the base and has an extra zero at the end of the cubic term
-            
-            Another textual reference:
-            http://www2.arnes.si/~gljsentvid10/sidereal.htm
-            
-            Astronomical Algorithms  by Jean Meeus
+            If date is a number, assume it's milliseconds since the epoc GMT
         ***/
-        //var J2000_0 = datetime.julianDay({year:2000, month:1, day:1})
-        //var J2000_0 = datetime.julianDay({year:2000, month:1, day:1, hour:12})
-        var J2000_0 = 2451545  // Julian day for 2000-01-01 @ noon
-        var jd = datetime.julianDay(dt) - J2000_0
-        var jt = jd/36525.0;  // julian centuries since J2000.0
-        // Greenwich Mean Sidereal Time to third order (don't know what that means yet)
-        var GMST = 280.46061837 + 360.98564736629*jd + 0.000387933*jt*jt - jt*jt*jt/38710000
-        if (GMST < 0) {
-            // Add enough multiples of 360 to make it positive for the mod below.
-            GMST += 360.0*(Math.ceil(-GMST/360.0)+1)
-        }
-        GMST = GMST % 360.0
-        if (typeof(longitude) == 'undefined' || longitude == null)
-            return GMST
-        // Local Mean Sidereal Time
-        var LMST = GMST + Longitude
-        return LMST
-    },
-    degreesToDMS : function(degrees) {
-        return { degrees: degrees%360, 
-                  minutes: (60*degrees/360)%60,
-                  seconds: (60*60*degrees/360.0) }
-    },
-    DMSToDegrees : function(DMS) {
-        return DMS.degrees + DMS.minutes/60.0 + DMS.seconds/(60.0*60.0)
-    }
+        output_utc = datetime.firstNonNull(output_utc, false)
+        
+        // If the format code includes an 'interval' character,
+        // we must treat count hours, days, etc as if they were UTC
+        if ( code.indexOf('dddd') != -1 || 
+             code.indexOf('hhh') != -1 || 
+             code.indexOf('nnn') != -1 || 
+             code.indexOf('sss') != -1 || 
+             code.indexOf('uuuuu') != -1 )
+            output_utc = true
+        
+        // String to be added to getters and setters if UTC is requested
+        var utc = output_utc ? 'UTC' : ''
     
+        var pad = datetime.pad
+        
+        // Short names for these items
+        var c = code
+        var m = datetime.months
+        var w = datetime.days_of_week;
+        
+        var ord = datetime.ordinalDay(dt)
+        var sec = ord*24*60*60
+        
+        var f = ord - Math.floor(ord)  // Fraction of a day
+        var u = sec - Math.floor(sec)  // Fraction of a second
+        
+        var year = dt.year
+        var mon = dt.month-1  // From 0 to 11
+        var date = dt.day
+        var day = datetime.weekday(dt.year, dt.month, dt.day)
+        var hrs = dt.hour
+        var min = dt.minute
+        var sec = dt.second
+        
+        var z = 0
+        if (dt.tz_hour != null)
+            z += 60*dt.tz_hour
+        if (dt.tz_minute != null)
+            z += dt.tz_minute
+        
+        var period_days = datetime.periodToDays(dt)
+        var days_since_newyear = ord - datetime.ordinalDay({year: dt.year})
+        
+        // Do the AM/PM thing
+        var aa = hrs < 12 ? 'AM' : 'PM'
+        var a = hrs < 12 ? 'A' : 'P'
+        // If the format code includes an AM/PM designator, the hour must be changed
+        if (c.indexOf('a') >= 0 || c.indexOf('A') >= 0) {
+            if (hrs > 12)
+                hrs = hrs-12;
+            if (hrs == 0)
+                hrs = 12;
+        }
+        
+        var replacements = [
+            // Note that order can't be changed -- longer strings must be replaced first
+            ['yyyy', ''+year ],
+            ['yy', pad(year%100, 2) ],
+        
+            ['Mmmm', m[mon] ],
+            ['mmmm', m[mon].toLowerCase() ],
+            ['MMMM', m[mon].toUpperCase() ],
+            ['Mmm', m[mon].substr(0,3) ],
+            ['mmm', m[mon].substr(0,3).toLowerCase() ],
+            ['MMM', m[mon].substr(0,3).toUpperCase() ],
+            ['mm', pad(mon+1,2)  ],
+            ['m', ''+(mon+1)  ],
+            ['M', m[mon].substr(0,1) ],
+        
+            ['r', ''+(Math.floor(mon/4)+1) ],
+        
+            ['dddd', Math.floor(period_days) ],
+            ['ddd', Math.floor(days_since_newyear) ],
+            ['dd', pad(date,2)  ],
+            ['d', ''+date  ],
+            ['ffff', pad(10000*f, 4)  ],
+            ['fff', pad(1000*f, 3)  ],
+            ['ff', pad(100*f, 2)  ],
+            ['f', pad(10*f, 1)  ],
+        
+            ['Wwww', w[day] ],
+            ['wwww', w[day].toLowerCase() ],
+            ['WWWW', w[day].toUpperCase() ],
+            ['Www', w[day].substr(0,3) ],
+            ['www', w[day].substr(0,3).toLowerCase() ],
+            ['WWW', w[day].substr(0,3).toUpperCase() ],
+            ['Ww', w[day].substr(0,2) ],
+            ['ww', w[day].substr(0,2).toLowerCase() ],
+            ['WW', w[day].substr(0,2).toUpperCase() ],
+            ['w', w[day].substr(0,1).toLowerCase()  ],
+            ['W', w[day].substr(0,1) ],
+        
+            ['hhh', Math.floor(period_days*24) ],
+            ['hh', pad(hrs,2)  ],
+            ['h', ''+hrs  ],
+        
+            ['nnn', Math.floor(period_days*24*60) ],
+            ['nn', pad(min,2)  ],
+            ['n', ''+min  ],
+        
+            ['sss', Math.floor(period_days*24*60*60) ],
+            ['ss', pad(sec,2)  ],
+            ['s', ''+sec  ],
+      
+            ['uuuuu', ''+period_days*24*60*60*1000],
+            ['uuuu', pad(10000*u, 4)  ],
+            ['uuu', pad(1000*u, 3)  ],
+            ['uu', pad(100*u, 2)  ],
+            ['u', pad(10*u, 1)  ],
+        
+            ['zzzz', ''+Math.floor(z/60)+''+(z%60) ],
+            ['z', ''+z ],
+            
+            ['AA', aa ],
+            ['aa', aa.toLowerCase() ],
+            ['A', aa[0] ],
+            ['a', aa[0].toLowerCase() ],
+            
+            ['gg', year >= 1 ? 'A.D.' : 'B.C.'],
+            ['g', year >= 1 ? 'AD' : 'BC'],
+        ]
+        
+        var result = ''
+        // March through the format string.
+        while (c != '') { 
+            var replacement_made = false  // If nothing matches, copy one character
+            for (var i=0; i<replacements.length; i++) {
+                var pattern = replacements[i][0]
+                var len = pattern.length
+                var replacement = replacements[i][1]
+                if (c.substring(0,len) == pattern) {
+                    result = result + replacement
+                    c = c.substring(len)
+                    replacement_made = true
+                }
+            }
+            if (replacement_made == false) {
+                result = result + c[0]
+                c = c.substring(1)
+            }
+        }
+        return result
+    }
 }
 
 
