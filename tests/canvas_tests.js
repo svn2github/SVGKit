@@ -18,20 +18,20 @@ function drawSpirograph(ctx,R,r,O){
 
 var testFunctions = {
     
-    'arctest' : function(c) {
-        log("Doing arctest");
-        //     x, y, radius, startAngle, endAngle, anticlockwise
-        c.rect(95,95,10,10);
-        c.arc(100,100, 25, -0.2 *Math.PI, 0.2 *Math.PI, false);
-        c.stroke();
-    },
-    
     'squares' : function (ctx) {
         ctx.fillStyle = "rgb(200,0,0)";
         ctx.fillRect (10, 10, 50, 50);
 
         ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
         ctx.fillRect (30, 30, 50, 50);
+    },
+    
+    'arctest' : function(c) {
+        log("Doing arctest");
+        //     x, y, radius, startAngle, endAngle, anticlockwise
+        c.rect(95,95,10,10);
+        c.arc(100,100, 25, -0.2 *Math.PI, 0.2 *Math.PI, false);
+        c.stroke();
     },
     
     'bowTies' : function(ctx) {

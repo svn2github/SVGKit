@@ -1,17 +1,34 @@
-converter_url = 'http://brainflux.org/cgi-bin/convert_svg.py'
+type = 'svg'  // Can be overriden by other files.
 
 function setupTopBar() {
-    getElement('start').value = 0
-    var i = 0;
+
+    var count = 0;
     for (var test in testFunctions) {
-        i++
+        count++
     }
-    getElement('end').value = i-1
-    getElement('count').textContent = i-1
+    var max = count-1
+
+    var form = FORM({id:"test_form", action:"javascript: void(0)"},
+            ' starting at ', 
+            INPUT({name:"start", id:"start", type:"text", value:0, 'class':"text", size:5}),
+            ' going to ',
+            INPUT({name:"end", id:"end", type:"text", value:0, 'class':"text", size:5}), 
+            ' / ',
+            SPAN({id:"count"},max),
+            ' ',
+            INPUT({name:"doTests", type:"button", id:"doTests", value:"Do These Tests", 'class':"button", onclick:"runTests()"}),
+            ' ',
+            INPUT({name:"doAllTests", type:"button", id:"doAllTests", value:"Do All Tests", 'class':"button", onclick:"runAllTests()"})
+        )
+    replaceChildNodes('test_bar', form)
 }
 
 function runTests() {
     addTests(getElement('start').value, getElement('end').value)
+}
+
+function runAllTests() {
+    addTests(0,99999)
 }
 
 function doCanvas(canvasTD, testFunction) {
@@ -29,16 +46,20 @@ function doCanvas(canvasTD, testFunction) {
     }
 }
 
-function doTest(canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas) {
+function doTest(canvasTD, svgTD, srcTD, testFunction) {
+    /***
+        Populates the varios <td> elements
+        
+        @global type is a global variable which can get overriden
+    ***/
+    
     var target, svg;
-    var testFunction = eval(functionArea.value);
     if (type=='svg') {
         target = new SVGKit(200, 200);
         svg = target;
     }
     else if (type=='canvas') {
-        if (!isUndefinedOrNull(include_canvas) && include_canvas==true)
-            doCanvas(canvasTD, testFunction)
+        doCanvas(canvasTD, testFunction)  // This may not always work
         target = new SVGCanvas(200, 200);
         svg = target.svg;
     }
@@ -46,12 +67,10 @@ function doTest(canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_ca
         target = new SVGPlot(200, 200);
         svg = target.svg;
     }
-    var setSVGSrc = function (svg, textarea) {
-        replaceChildNodes(textarea, svg.toXML());
-    }
     svg.whenReady( partial(testFunction, target) );
-    svg.whenReady( partial(setSVGSrc, svg, svgSrcArea) );  // Comment out for IE
-    addToCallStack(buttonXML, 'onclick', partial(setSVGSrc, svg, svgSrcArea) );
+    
+    var convert_form = svg.convertForm()
+    replaceChildNodes(srcTD, convert_form)
     replaceChildNodes(svgTD, svg.htmlElement);
 }
 
@@ -61,49 +80,37 @@ function addTests(start, end) {
     var tbody = getElement('tests');
     replaceChildNodes(tbody)
     var i = 0;
-    var buttonDoIt, buttonXML;
     for (var test in testFunctions) {
         if (i>=start && i<=end) {
             log("doing test number ", i, "name ", test);
-            var code = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
-            var functionArea, svgSrcArea, button, svgTD, button, form;
-            var canvasTD = null
-            var tr = TR(null, TD(null, ""+i+": "+test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ) );
-            var include_canvas = (type=='canvas')
-            if (include_canvas)
-                appendChildNodes(tr, canvasTD=TD({width:210}) )
-            var types = ['svg', 'pdf', 'png', 'jpg']
-            appendChildNodes(tr, 
-                              TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off", id:test+'_code'}, code),
-                                       BR(null),
-                                       buttonDoIt=INPUT({type:"button", value:"Do It"}),
-                                       " ",
-                                       buttonXML=INPUT({type:"button", value:"Update XML"}) ),
-                              svgTD=TD({width:210}),
-                              TD(null,  
-                                // Form will open result in new window. 
-                                // target="_blank" is a deprecated feature, but very useful since you can't right click 
-                                // on the submit button to choose if you want to open it in a new window, and going back is SLOW
-                                form=FORM( { name:'form_'+test, method:'post', action:converter_url, id:test+'_form', target:"_blank"}, 
-                                   svgSrcArea=TEXTAREA({rows:"14", cols:"60", wrap:"off", name:'source', id:test+'_src'} ,"SVG Source"),
-                                   BR(null) // Buttons get added below.
-                                )
-                              )
-                        );
+            var testFunction = testFunctions[test]
+            var code = (''+testFunction+'\n').replace(/ +/g, " ");
+            
+            var w = 210
+            var canvasTD = (type=='canvas') ? TD({width:w, id:test+'_canvas'}) : null
+            var codeTD = TD({width:w, id:test+'_code'})
+            var svgTD = TD({width:w, id:test+'_svg'})
+            var srcTD = TD({width:w, id:test+'_src'})
+            
+            var doit = partial(doTest, canvasTD, svgTD, srcTD)
+            
+            doit(testFunction)
+            
+            replaceChildNodes(codeTD, SVGKit.codeContainer(code, doit) )
+            
+            var tr = TR(null, 
+                        TD(null, ""+i+": "+test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ),
+                        canvasTD,
+                        codeTD,
+                        svgTD,
+                        srcTD
+                      );
             appendChildNodes(tbody, tr);
-            var make_input = function(type) {
-                var button=INPUT({type:"submit", name:"type", value:type, id:test+'_'+type})
-                //addToCallStack(button, 'onclick', partial(convert, test, type))  // Doesn't work to external site
-                return SPAN(null, button, " ")  // Put a space after each button
-            }
-            appendChildNodes(form, map(make_input, types))
-            appendChildNodes(form, '(opens in new window)')
-            addToCallStack(buttonDoIt, 'onclick', partial(doTest,canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas) );
-            doTest(canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas);
         }
         i++;
     }
 }
+
 
 /*
 // For security reasons, browsers won't let JavaScript get the converted file - it must be opened in a new window.
@@ -122,6 +129,5 @@ function convert(name, type) {
 }
 */
 
-type = 'svg'  // Can be overriden by other files.
 addLoadEvent(setupTopBar)
 addLoadEvent(partial(addTests, 0, 0))

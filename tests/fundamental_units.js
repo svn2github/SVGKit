@@ -601,20 +601,9 @@ var units = function() {
         })
     }
     
-    var makesource = function() {
-        var form = FORM( { name:'form', method:'post', action:'http://brainflux.org/cgi-bin/convert_svg.py'}, 
-                       svgSrcArea=TEXTAREA({rows:'14', cols:'60', wrap:'off', name:'source'} , p.svg.toXML() ),
-                       BR(null),
-                       buttonSVG=INPUT({type:'submit', name:'type', value:'svg'}), ' ',
-                       buttonPDF=INPUT({type:'submit', name:'type', value:'pdf'}), ' ',
-                       buttonPNG=INPUT({type:'submit', name:'type', value:'png'}), ' ',
-                       buttonJPEG=INPUT({type:'submit', name:'type', value:'jpg'}) )
-        
-        appendChildNodes('form_div', form)
-    }
-    
     p.svg.whenReady(doit)
-    p.svg.whenReady(makesource)
+    var form = p.svg.convertForm()
+    appendChildNodes('form_div', form)
 }
 
 addLoadEvent(units);
