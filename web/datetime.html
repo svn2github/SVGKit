@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>JavaScript datetime Module</title>
+	<link href="./simple.css" rel="stylesheet" type="text/css"></link>
+	<link href="./twocol.css" rel="stylesheet" type="text/css"></link>
+	<!--<link rel="SHORTCUT ICON" href="favicon.ico"></link>-->
+	<meta name="author" content="Jason Gallicchio"></meta>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+
+<div id="container">
+<!--#include virtual="menu.html" -->
+<div id="content">
+<h1>JavaScript DateTime</h1>
+<h2>Date, Time, Datetime, Duration (absolute ms), Span/Interval (start&amp;end)</h2>
+<ul>
+  <li>These must be supported seperately. Just having a time means you need a default date assumption. 
+
+
+ UNIX and the standard C library assumes January 1, 1970. Microsoft COM system assumes December 30, 1899 C.E. while the .NET Framework assumes January, 1, 0001 C.E.</li>
+<li> <strong>DateTime </strong> represents an instant in time whereas a <strong>TimeSpan </strong> represents a time interval. </li>
+  <li>Additions to a datetime object: isLeapYear, isDaylightSavings </li>
+  <li>Daylight savings time makes some specifications of a local datetime illegal (spring forward) and others ambiguous (fall back) </li>
+<li>Julian Day number. This is the number of days since noon U.T.C. on January 1, 4713 B.C. (Julian calendar). This time scale was originally proposed by John Herschel, and is often used in astronomical calculations. </li>
+<li>You need 50 bits to represent the number of seconds since the big bang 13.6 billion years ago. You need 80 to represent the number of nanoseconds. </li>
+<li> Excel uses a different system for its dates than most Unix programs. 
+
+
+ Excel uses ``number of days since 31 Dec 1899''. Naturally, Microsoft messed this up because they happened to believe that 1900 was a leap year.</li>
+<li> US Geological Survey (USGS) likes midnight to be 24:00:00 of the previous day, not 00:00:00 of the day people expect. </li>
+<li>Incomplete date/times like birthdays where you often only have a month and day. Of course, the math you can do with these is limited because of things like leapyears. (These are different from abstract timeswhich can be affected by timezone.) </li>
+<li> <a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a> has a concept of repatition period.
+  <ul>
+    <li>R/P3M means every three months (not absolute ms)  R/P123D means every 123 days and PT12.345S means 12.345 seconds (both of these are an absolute number of ms, but they are defined not to add to a dateTime as milliseconds because of leap seconds).</li>
+  <li>Only if you specify PT12.345S do you get absolute seconds/ms. Thus the addition of either PT1M or PT60S to any dateTime will always produce the same result. This is a special definition of addition which is designed to match common practice witout regard to leap seconds, and -- most importantly -- be stable over time.</li>
+  <li>If you really want to add an absolute duration in miliseconds, convert to and from an epoc. This is the difference between UTC, which adjusts itself with leap seconds and International Atomic Time (TAI) which always marches forward. </li>
+  <li>You can't specify repeated events of the form &quot;2nd Tuesday of each month/year&quot; or &quot;Evey Mon, Wed, Fri&quot; </li>
+  <li>UNIX time defined by POSIX strictly chugs along seconds since Jan 1 1970, like TAI. However, NTP alters this behavior. NTP makes the UNIX clock jump forward or backward to keep in line with UTC.</li>
+  </ul>
+</li>
+<li>Many of the issues of plotting date &amp; stuff are the same as scheduling repeating events, so perhaps some of the iCalendar standard can be used/implimented.</li>
+<li>jsDateTime is somebody's shareware. DateTime.js is MochiKit.</li>
+<li>Everybody cares about <a href="http://en.wikipedia.org/wiki/Coordinated_Universal_Time">Universal Coordinated Time UTC</a> and timezone offsets from it (this is the modern version of GMT.) Scientists and engineers care about <a href="http://en.wikipedia.org/wiki/International_Atomic_Time">International Atomic Time TAI</a> because it chugs along with no leap seconds so absolute differences are easy to calculate. Astronomers care about <a href="http://en.wikipedia.org/wiki/Sidereal_time">Siderial Time</a>, <a href="http://en.wikipedia.org/wiki/Universal_time">Universal Time</a>, <a href="http://en.wikipedia.org/wiki/Julian_day">Julian Days</a>, etc. Historians care about time in other calendars, and times before this was all worked out in the 1970s.</li>
+<li>Leap seonds: If you add P2S (two seconds) to 
+ 1998-12-31 23:59:59.00, what should you get? The next second is a leap second, so one second later is technically
+ 1998-12-31 23:59:60.00 and two seconds later is 
+1999-01-01 00:00:00.00. If you didn't know about leap seconds, you would get  1999-01-01 00:00:01.00. 99.99% of the time, this is what people mean and this is how ISO 8601 defines it.</li>
+<li>If you really want to go out of your way to find the real difference between two UTC timestamps or to add a real difference, you need to have a table of the leapseconds. One way to do this properly would be to convert both to TAI, do your additions or subtractions, and then convert back. </li>
+</ul>
+
+<h2>Refererences</h2>
+<ul>
+  <li><a href="http://docs.python.org/lib/module-datetime.html">Python datetime module</a> (includes date, time, datetime, timedelta, and tzinfo) - timedeltas are treated as days, seconds, and miliseconds exactly. This makes it hard to go to the same day on the next year or the next month. This is what <a href="http://labix.org/python-dateutil">python-dateutil</a> is for. </li>
+  <li>Perl <a href="http://search.cpan.org/%7Edrolsky/DateTime-0.36/lib/DateTime.pm">DateTime</a>, <a href="http://datetime.perl.org">datetime.perl.org</a> - timedeltas are not converted to absolute miliseconds. You can represent &quot;one year&quot; and add it. This causes some ambiguity.</li>
+  <li><a href="http://dojotoolkit.org">Dojo</a> JavaScript library has date stuff. </li>
+  <li>iCalendar (<a href="http://tools.ietf.org/html/rfc2445">RFC 2445</a>) for scheduling interoperability <a href="http://en.wikipedia.org/wiki/ICalendar">Wikipedia ICalendar</a> </li>
+  <li><a href="http://www.w3.org/TR/NOTE-datetime"> ISO 8601</a> datetime format (supported in MochiKit) <a href="http://en.wikipedia.org/wiki/ISO_8601">Wikipedia ISO 8601</a> </li>
+  <li><a href="http://www.w3.org/TR/NOTE-datetime">W3C Date and Time Formats</a> (subset of ISO 8601), <a href="http://www.w3.org/TR/xmlschema-2/#isoformats">XMLSchema</a> with a nice algorithm for addition </li>
+  <li>ISO C <a href="http://www.opengroup.org/onlinepubs/009695399/functions/strftime.html">strftime</a> (used by python and PHP) <a href="http://effbot.org/librarybook/time.htm">strptime</a> python parser </li>
+  <li><a href="ftp://maia.usno.navy.mil/ser7/tai-utc.dat">Table</a> of leap seconds </li>
+</ul>
+
+<h2>Plotting Dates &amp; Times </h2>
+<ul>
+  <li>These can either be a category type scale or an number type scale. For a histogram of web hits, it's a category. How many hits came all of Monday, how many came all of Tuesday. For a stock price line-graph, it's a number type scale. You have data for the stock price at exactly 2:34:00pm.</li>
+  <li>People see years, months, weeks, and days as being intervals: <em>on</em> March 11 implies anywhere from 00:00:00.00 to 11:59:59.99 on that day. Times are viewed as points: <em>at</em> 3:00. This makes auto-labeling challenging. This means that even if you're ploting things like stock prices, years, months, and days should be treated like categories. What about when you label every 5th day (Dec 20, Dec 25, Jan 1, Jan 5, Jan 10, Jan 15, Jan 20) or every 3rd Month (Jan'06, Apr'06, Jul'06, Oct'06, Jan'07)? Here you have to put the label on the tick. Google Finance has an interesting thing of offsetting the times a little to the right so they are against the tick, but under the hour they span. </li>
+  <li>Also, &quot;every five days&quot; doesn't really cut it when making ticks and labels for a month or two. Dates don't start at zero, so you'd like to include 1 as the reference start of the next month, but 1, 6, 11, 16, 21, 26, 31 does't look good, nor will there always be a 31. On the other hand 1, 5, 10, 15, 20, 25, 30 is not evenly spaced and again there isn't always a 30, but a bigger problem is that 30 and 1 will end up too close to label. Beginning and middle 1, 15, 1, 15 is pretty good, though not even. Maybe better than 1, 15, 30, 1, 15, 30 when February is included. </li>
+  <li>Idea of putting higher level information only at beginning and end: (Jan 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 1, 2, 3, 4, 5, 6, 7, 8, 9, Feb 10) </li>
+  <li>For Months, multiples of 1, 4 (Mar, Jun, Sep, Dec) or (Jan, Apr, Jul, Oct), 6 (Jan, July or Jun, Dec)</li>
+  <li>For dates, multiples of three and four are not good. Only 1, 2, 5, 10</li>
+  <li>For hours, 1, 2, 3, 4, 6, 8, 12</li>
+  <li>For minutes an seconds, 1, 2, 5, 10, 20, 30 </li>
+<li>For each possibility see if actual text would overlap and if so, go to the next biggest? (This takes a long time.) </li>
+</ul>
+<p align="center">How lables on absolute datetime ranges are formatted </p>
+<table width="95%"  border="0">
+  <tr>
+    <th width="10%" scope="col">&nbsp;</th>
+    <th width="30%" scope="col">Few 1-4 <br /> 
+      (most info -- only what changes and one constant) </th>
+    <th width="30%" scope="col">Medium 5-10 (a shortened version of Few) </th>
+    <th width="30%" scope="col">Lots &gt;10 (top of two lines - the largest interval that changes more than 10 or more times in the range) </th>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">Many Years </th>
+    <td width="30%">1980, 1990, 2000, 2010</td>
+    <td width="30%">'80, '85, '90, '95, '00, '05, '10, '15 </td>
+    <td width="30%">80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 00, 02, 04, 06, 08, 10 </td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">Few Years </th>
+    <td width="30%">1998, 1999, 2000, 2001 </td>
+    <td width="30%">&nbsp;</td>
+    <td width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">One Or Two Years </th>
+    <td width="30%">January 1999, June 1999, January 2000, June 2000</td>
+    <td width="30%">Oct99, Nov99, Dec99, Jan00, Feb00, Mar00, </td>
+    <td width="30%">JFMAMJJASONDJFMAMJJASONDJFM</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">12 Months</th>
+    <td width="30%">Mar 99, Jun 99, Sep 99, Dec 99, Mar 00, </td>
+    <td width="30%">&nbsp;</td>
+    <td width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">Few Months </th>
+    <td width="30%">December 1999, January 2000, February 2000, March 2000 </td>
+    <td width="30%">Dec 15, Jan 1, Jan 15, Feb 1, Feb 15, Mar 1<br />
+      or      <br />
+      1-Jan, 15-Jan, 1-Feb, 15-Feb, 1-Mar<br /></td>
+    <td width="30%">12/15, 12/20, 12/25, 1/1, 1/5, 1/10, 1/15, 1/20, 1/25, 2/1, 2/5, 2/10, 2/15, 2/20, 2/25, 3/1, 3/5 <br />
+      or      <br />
+      15-D, 20-D, 25-D, 1-J, 5-J, 10-J, 15-J, 20-J, 25-J, 1-F, 5-F, 10-F, 15-F, 20-F, 25-F, 1-M, 5-M </td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">30 Days </th>
+    <td width="30%">Dec 20 1999, Jan 1 2000, Jan 10 2000, Jan 20 2000 </td>
+    <td width="30%">Dec 20, Dec 25, Jan 1, Jan 5, Jan 10, Jan 15, Jan 20</td>
+    <td width="30%">dd</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">15 Days </th>
+    <td width="30%">Dec </td>
+    <td width="30%">&nbsp;</td>
+    <td width="30%">dd</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">Few Days </th>
+    <td width="30%">Dec 31 12:00pm, Dec 31 6:00pm, Jan 1 12:00am, Jan 1 6:00am (every day)</td>
+    <td width="30%">&nbsp;</td>
+    <td width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">Few Hours </th>
+    <td width="30%">&nbsp;</td>
+    <td width="30%">&nbsp;</td>
+    <td width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">10-60 Minutes</th>
+    <td width="30%">mm-dd h:mm:ss</td>
+    <td width="30%">h:mm:ss</td>
+    <td width="30%">mm</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">1-10 Minutes </th>
+    <td width="30%">mm-dd h:mm:ss</td>
+    <td width="30%">mm:ss</td>
+    <td width="30%">ss</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">1-60 Seconds</th>
+    <td width="30%">h:mm:ss</td>
+    <td width="30%">mm:ss</td>
+    <td width="30%">ss</td>
+  </tr>
+  <tr>
+    <th width="10%" scope="row">Less than a second </th>
+    <td width="30%">h:mm:ss.u</td>
+    <td width="30%">ss.u</td>
+    <td width="30%">.uu</td>
+  </tr>
+</table>
+<h2>Calculating Days of Week &amp; Leap Years </h2>
+
+<pre>   char *day_of_week(int day, int month, int year)
+   {
+      int cent;
+      char *dayofweek[] = {
+         "Sunday", "Monday", "Tuesday", "Wednesday",
+         "Thursday", "Friday", "Saturday"
+      };
+
+      /* adjust months so February is the last one */
+      month -= 2;
+      if (month < 1) {
+         month += 12;
+         --year;
+      }
+      /* split by century */
+      cent = year / 100;
+      year %= 100;
+      return (dayofweek[((26 * month - 2) / 10 + day + year
+                        + year / 4 + cent / 4 + 5 * cent) % 7]);
+   }
+
+   int leap_year(int year)
+   {
+       return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+   }</pre>
+<p>&nbsp;</p>
+</div> <!--#include virtual="footer.html" -->
+</div>  <!-- container -->
+
+</body>
+</html>
