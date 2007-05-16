@@ -34,10 +34,11 @@
     <script type="text/javascript" src="../SVGKit/SVGCanvas.js"></script>
     <script type="text/javascript" src="../SVGKit/SVGPlot.js"></script>
     <script type="text/javascript" src="../SVGKit/SVGPlot_CSV.js"></script>
-    <script type="text/javascript" src="../SVGKit/SVGPlot_DateTime.js"></script>
+    <script type="text/javascript" src="../SVGKit/datetime.js"></script>
 
     <script type="text/javascript" src="test_table.js"></script>
     <script type="text/javascript" src="plot_tests.js"></script>
+    <script type="text/javascript" src="data.js"></script>
 
   </head>
 
@@ -45,6 +46,15 @@
 
     <h2>SVGPlot Test Suite</h2>
 
+    <div>
+    <form id="test_form" action="javascript: void(0)">
+        starting at <input name="start" id="start" type="text" value="0"  class="text" size="5"/>
+        going to <input name="end" id="end" type="text" value="0"  class="text" size="5"/> / <span id="count">?</span>
+        &nbsp;
+        <input name="doTests" type="button" id="doTests" value="Do Tests" class="button" onclick="runTests()"/> 
+    </div>
+    <br />
+    
     <div>
 
     <table border="1">

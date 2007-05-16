@@ -10,4 +10,4 @@ var testFunctions = {
     }
 }
 
-addLoadEvent(partial(addTests, 0, 1, 'plot'));
+type = 'plot'

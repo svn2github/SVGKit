@@ -33,3 +33,21 @@ table {
 	width: 100%;
 	margin: 0px auto;
 }
+
+select {
+    font-size: x-small;
+    cursor: pointer}
+input.button{
+    font-size: x-small;
+    margin:  0px;
+    padding: 1px 3px 1px 3px}
+input.checkbox {
+    margin: 0px}
+input.radio {
+    margin: 0px;
+    padding: 0px}
+input.text {
+    padding: 1px 3px 1px 3px;
+    font-size: x-small}
+.invisible {
+    display: none}

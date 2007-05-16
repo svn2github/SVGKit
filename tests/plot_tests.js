@@ -30,6 +30,11 @@ var testFunctions = {
         p.render()
     },
     
+    'simpleSquares' : function(p) {
+        p.plotLine([0,1,2,3,4,5,6], [0,1,4,9,16,25,36]);
+        p.render()
+    },
+    
     'xyLine' : function(p) {
         p.plotLine(trigx, sin)
         p.render()
@@ -84,6 +89,38 @@ var testFunctions = {
         p.fontFamily="Verdana, Arial, Helvetica, Sans"
         p.setXAxisTitle("Time (ns)");
         p.setYAxisTitle("Voltage (V)");
+        p.render();
+    },
+    
+    'seti': function(p) {
+        var voltages = [1.7, 1.5, 1.375, 1.25, 1.1, 0.95, 0.75, 0.5]
+        var time_ns = []
+        var left = []
+        var right = []
+        for (var i=0; i<100; i++) {
+            time_ns[i] = i/3.0
+            var r = Math.floor(Math.random()*voltages.length)
+            right[i] = voltages[r]
+            var l = Math.floor(Math.random()*voltages.length)
+            left[i] = voltages[l]
+        }
+        p.strokeStyle = "#C6C6C6";
+        p.fillStyle   = "#C6C6C6";
+        p.fontSize   = '7px';
+        //p.fontFamily = "Arial, SunSans-Regular, sans-serif"
+        p.addBox();
+        p.box.addDefaults();
+        p.setYScale(voltages[voltages.length-1]-0.1, voltages[0]+0.1);
+        p.setYTicks(voltages);
+        p.setYTickLabels(voltages);
+        p.fontSize   = '10px';
+        p.fontFamily = "Helvetica, Geneva, Arial, SunSans-Regular, sans-serif"
+        p.setXAxisTitle("Time (ns)");
+        p.setYAxisTitle("Voltage (V)");
+        p.strokeStyle = 'rgba(255, 75, 75, 0.9)';
+        p.plotLine(time_ns, left);
+        p.strokeStyle = 'rgba(75, 75, 255, 0.9)';
+        p.plotLine(time_ns, right);
         p.render();
     },
     
@@ -224,21 +261,34 @@ var testFunctions = {
     },
     
     'date_plot' : function(p) {
-        d = new Date()
-        now = d.getTime()
+        d = datetime.now()
         dates = []
         data = []
         for (var i=0; i<20; i++) {
             // Add days
-            date = new Date(now + i*1000*60*60*24)
-            //dates.push( toISOTimestamp(date) )
-            dates.push( date.getTime() )
-            data.push(Math.random())
+            date = datetime.addPeriod(d, {day: i*9})
+            var s = datetime.toISOTimestamp(date)
+            var s2 = datetime.toISOTimestamp(datetime.parse(s))
+            var ord = datetime.ordinalDay(date)
+            log(s, s2, ord)
+            dates.push(s)
+            //data.push(Math.random())
+            data.push(ord)
         }
         p.plot(dates, data)
+        p.render();
+    },
+    
+    'date_plot_temp' : function(p) {
+        var reasonable_temp = function(row) {
+            return row[1] < 40
+        }
+        var tempfilt = filter(reasonable_temp, temp)
+        var cols = SVGPlot.prototype.transpose(tempfilt)
+        p.plot(cols[0], cols[1])
         p.render();
     }
     
 };
 
-addLoadEvent(partial(addTests, 0, 30, 'plot'));
+type = 'plot'

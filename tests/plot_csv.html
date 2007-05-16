@@ -45,6 +45,15 @@
     <h2>SVGPlot CSV Plotter</h2>
 
     <div>
+    <form id="test_form" action="javascript: void(0)">
+        starting at <input name="start" id="start" type="text" value="0"  class="text" size="5"/>
+        going to <input name="end" id="end" type="text" value="0"  class="text" size="5"/> / <span id="count">?</span>
+        &nbsp;
+        <input name="doTests" type="button" id="doTests" value="Do Tests" class="button" onclick="runTests()"/> 
+    </div>
+    <br />
+    
+    <div>
     <form name="form1" id="form1" method="post" action="">
 		<p>CSV Input with comma, tab, and | as delimiters (you can paste from Excel):<br/>
           <textarea name="textarea" id="csv_input" cols="80" rows="8">0,   0.00

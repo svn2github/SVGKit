@@ -298,5 +298,5 @@ var testFunctions = {
     
 };
 
-addLoadEvent(partial(addTests, 0, 50, 'canvas'));
 
+type = 'canvas'

@@ -1,3 +1,17 @@
+function setupTopBar() {
+    getElement('start').value = 0
+    var i = 0;
+    for (var test in testFunctions) {
+        i++
+    }
+    getElement('end').value = i-1
+    getElement('count').textContent = i-1
+}
+
+function runTests() {
+    addTests(getElement('start').value, getElement('end').value)
+}
+
 function doCanvas(canvasTD, testFunction) {
     var canvas = CANVAS({'width':200, 'height':200});
     replaceChildNodes(canvasTD, canvas);
@@ -13,7 +27,7 @@ function doCanvas(canvasTD, testFunction) {
     }
 }
 
-function doTest(type, canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas) {
+function doTest(canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas) {
     var target, svg;
     var testFunction = eval(functionArea.value);
     if (type=='svg') {
@@ -40,19 +54,21 @@ function doTest(type, canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, incl
 }
 
 
-function addTests(start, number, type, include_canvas) {
+function addTests(start, end) {
     log("getting table");
-    var table = MochiKit.DOM.getElement('tests');
+    var tbody = getElement('tests');
+    replaceChildNodes(tbody)
     var i = 0;
     var buttonDoIt, buttonXML;
     for (var test in testFunctions) {
-        if (i>=start && i-start<number) {
+        if (i>=start && i<=end) {
             log("doing test number ", i, "name ", test);
             var code = (''+testFunctions[test]+'\n').replace(/ +/g, " ");
             var functionArea, svgSrcArea, button, svgTD, button;
             var canvasTD = null
             var tr = TR(null, TD(null, ""+i+": "+test, BR(null), IMG({'src':'canvas_tests_images/'+test+'.png'}) ) );
-            if (!isUndefinedOrNull(include_canvas) && include_canvas==true)
+            var include_canvas = (type=='canvas')
+            if (include_canvas)
                 appendChildNodes(tr, canvasTD=TD({width:210}) )
             appendChildNodes(tr, 
                               TD(null, functionArea=TEXTAREA({'rows':"14", 'cols':"40", 'wrap':"off"}, code),
@@ -71,10 +87,14 @@ function addTests(start, number, type, include_canvas) {
                                    buttonJPEG=INPUT({type:"submit", name:"type", value:"jpg"}) )
                                 )
                         );
-            appendChildNodes(table, tr);
-            addToCallStack(buttonDoIt, 'onclick', partial(doTest, type, canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas) );
-            doTest(type, canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas);
+            appendChildNodes(tbody, tr);
+            addToCallStack(buttonDoIt, 'onclick', partial(doTest,canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas) );
+            doTest(canvasTD, svgTD, functionArea, svgSrcArea, buttonXML, include_canvas);
         }
         i++;
     }
 }
+
+type = 'svg'  // Can be overriden by other files.
+addLoadEvent(setupTopBar)
+addLoadEvent(partial(addTests, 0, 0))

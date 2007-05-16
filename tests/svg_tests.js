@@ -51,4 +51,4 @@ var testFunctions = {
     }
 };
 
-addLoadEvent(partial(addTests, 1, 50, 'svg'));
+type = 'svg'

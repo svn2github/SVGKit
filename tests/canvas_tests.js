@@ -261,6 +261,34 @@ var testFunctions = {
         ctx.fill();
     },
     
+    'graphImage_test' : function(ctx) {
+        var img = new Image();
+        img.src = '../tests/canvas_tests_images/graphImage.png';
+        img.onload = function(){
+          ctx.drawImage(img,0,0);
+          ctx.beginPath();
+          ctx.moveTo(30,96);
+          ctx.lineTo(70,66);
+          ctx.lineTo(103,76);
+          ctx.lineTo(170,15);
+          ctx.stroke();
+        }
+    },
+    
+    'graphImage_test' : function(ctx) {
+        var img = new Image();
+        img.src = '../tests/canvas_tests_images/graphImage.png';
+        img.onload = function(){
+          ctx.drawImage(img,0,0);
+          ctx.beginPath();
+          ctx.moveTo(30,96);
+          ctx.lineTo(70,66);
+          ctx.lineTo(103,76);
+          ctx.lineTo(170,15);
+          ctx.stroke();
+        }
+    },
+    
     'graphImage' : function(ctx) {
         var image = new Image();
         image.src = '../tests/canvas_tests_images/graphImage.png';
@@ -285,7 +313,7 @@ var testFunctions = {
             //image.onload = partial(imageStuff, ctx, image)
             //image.onload = imageStuff
             var f = function() {
-                alert("Fuck you")
+                //alert("Image Loading Complete")
             }
             image.onload = f
             //addToCallStack(image, 'onload', partial(imageStuff, ctx, image));
@@ -487,4 +515,5 @@ function compositeTests() {
     //draw()
 }
 
-addLoadEvent(partial(addTests, 0, 50, 'canvas', true));
+type = 'canvas'
+
