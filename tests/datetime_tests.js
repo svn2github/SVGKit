@@ -89,8 +89,8 @@ format_test = function() {
         for (var i=0; i<tests.length; i++) {
             var code = tests[i][0]
             var goal = tests[i][1]
-            var result = datetime.format(date, code)
-            log("'"+code+"'", "want: '"+goal+"'", "got: '"+result+"'", goal==result)
+            var result = datetime.format(datetime.datetime(date), code)
+            log('match?',goal==result,"code: '"+code+"'", "want: '"+goal+"'", "got: '"+result+"'")
         }
     }
     var date;
@@ -162,4 +162,4 @@ format_test = function() {
     
     // Test the absolute days, hours, minutes, seconds, etc.  (the four letter codes)
 }
-//format_test()
+format_test()
