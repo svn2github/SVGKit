@@ -226,37 +226,33 @@
   
       <text
        style="font-size:30px; font-family:Bitstream Vera Sans"
-       x="21.349619"
-       y="263.3316"
+       x="20"
+       y="250"
        id="text187298"
        sodipodi:linespacing="125%"
        transform="matrix(0.866025,-0.5,0.5,0.866025,0,0)">Jason was here</text>
-
+<!--
          <text
        xml:space="preserve"
        style="font-size:10.0000035;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-       x="50.349619"
-       y="263.3316"
+       x="100"
+       y="350"
        id="text1872"
        sodipodi:linespacing="125%"
        transform="matrix(0.866025,-0.5,0.5,0.866025,0,0)">Before<tspan
          sodipodi:role="line"
-         x="21.349619"
-         y="263.3316"
          id="tspan1876">Jason was here</tspan>After</text>
      
     <text
        xml:space="preserve"
        style="font-size:10.0000035;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-       x="21.349619"
-       y="263.3316"
+       x="200"
+       y="450"
        id="text1872"
        sodipodi:linespacing="125%"
        transform="matrix(0.866025,-0.5,0.5,0.866025,0,0)"><tspan
          sodipodi:role="line"
-         x="21.349619"
-         y="263.3316"
          id="tspan1876">Jason was here</tspan></text>
-
+-->
 
 </svg>
