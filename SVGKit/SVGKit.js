@@ -160,6 +160,7 @@ SVGKit._svgMIME = 'image/svg+xml';
 SVGKit._svgEmptyName = 'empty.svg';
 SVGKit._SVGiKitBaseURI = '';
 SVGKit._errorText = "You can't display SVG. Download Firefox 1.5." ;
+SVGKit._convert_url = 'http://brainflux.org/cgi-bin/convert_svg.py'  // Should be customized to your own server
 
 
 ////////////////////////////
@@ -212,7 +213,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     //log("Done creating/grabing svg.");
     this._addDOMFunctions();
     //log("Done with _addDOMFunctions");
-    document.svgkit = this;  // For debugging, especially in IE
+    window.svgkit = this;  // For debugging, especially in IE
 }
 
 
@@ -380,9 +381,11 @@ SVGKit.prototype.createInlineSVG = function(width, height, id) {
             xmlns:svg="http://www.w3.org/2000/svg">
     ***/
     var attrs = {
+        // Make sure this matches what's in empty.svg
         'xmlns': SVGKit._namespaces['svg'],      // for <circle> type tags with implicit namespace
         'xmlns:svg': SVGKit._namespaces['svg'],  // for <svg:circle ...> type tags with explicit namespace
         'xmlns:xlink': 'http://www.w3.org/1999/xlink',
+        'xmlns:ev': 'http://www.w3.org/2001/xml-events',
         'version': '1.1',
         'baseProfile': 'full',
         'width': width,
@@ -451,9 +454,9 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
 
         @param type: The tag that we will create
 
-        @param width: default 100
+        @param width: default from file or 100
 
-        @param height: default 100
+        @param height: default from file or 100
         
         @param id: Optionally assign the HTML element an id.
 
@@ -503,7 +506,8 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
     else if (type=='object') {  // IE:  Cannot support
         attrs['data'] = SVGKit._SVGiKitBaseURI + filename;
         attrs['type'] = SVGKit._svgMIME;
-        this.htmlElement = createDOM('object', attrs, SVGKit._errorText);
+        //log('loadSVG, data =', attrs['data'], '  type =', attrs['type'])
+        this.htmlElement = MochiKit.DOM.createDOM('object', attrs, SVGKit._errorText);
         //var svg = this;  // Define svg in context of function below.
         function finishObject(width, height, event) {
             // IE doesn't have contentDocument
@@ -511,7 +515,8 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
             // that add themselves to a list uppon load.
             this.svgDocument = this.htmlElement.contentDocument;
             this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
-            this.resizeHTMLElement(width, height);
+            this.resize(width, height);
+            //log('this.svgDocument', this.svgDocument, 'this.svgElement', this.svgElement)
         }
         this.whenReady( bind(finishObject, this, width, height) );
     }
@@ -520,7 +525,7 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
         attrs['type'] = SVGKit._svgMIME;
         attrs['pluginspage'] = 'http://www.adobe.com/svg/viewer/install/';
         log("Going to createDOM('embed')");
-        this.htmlElement = createDOM('embed', attrs );
+        this.htmlElement = MochiKit.DOM.createDOM('embed', attrs );
         function finishEmbed(width, height, event) {
             // IE doesn't load the embed when you include it in the DOM tree.
             // if no real fix, you could create an SVG "pool" of empty width=1, height=1 
@@ -530,7 +535,7 @@ SVGKit.prototype.loadSVG = function (filename, id /* optional */, type /* =defau
             //log("new embed: Going to this.htmlElement.getSVGDocumen() )") ;
             this.svgDocument = this.htmlElement.getSVGDocument();
             this.svgElement = this.svgDocument.rootElement;  // svgDocument.documentElement works too.
-            this.resizeHTMLElement(width, height);
+            this.resize(width, height);
         }
         this.whenReady( bind(finishEmbed, this, width, height) );
     }
@@ -1040,7 +1045,7 @@ SVGKit.prototype.toXML = function (dom /* = this.svgElement */, decorate /* = fa
 }
 
 
-SVGKit.prototype.emitXML = function (dom, /* optional */lst) {
+SVGKit.prototype.emitXML = function(dom, /* optional */lst) {
     /***
         A case insensitive and namespace aware version of MochiKit.DOM's emitHTML.
         My changes are marked with "SVGKit" comments.
@@ -1102,6 +1107,105 @@ SVGKit.prototype.emitXML = function (dom, /* optional */lst) {
     }
     return lst;
 }
+
+////////////////////////////
+// Utilities for HTML
+////////////////////////////
+
+
+SVGKit.prototype.convertForm = function(options) {
+    /***
+        Returns HTML <form> element with a text area 
+        that gets filled with SVG source and buttons
+        The result of the form gets sent to a server for conversion to pdf, png, etc.
+    ***/
+    
+    defaults = {
+        converter_url : SVGKit._convert_url,
+        new_window : true,
+        update_button :  true,
+        hide_textarea :  false,
+        rows : 14,
+        cols : 60,
+        types : ['svg', 'pdf', 'ps', 'png', 'jpg']
+    }
+    var opts = {}
+    if (!MochiKit.Base.isUndefinedOrNull(options))
+        update(opts, options)
+    setdefault(opts, defaults)
+    
+    var target = null
+    if (opts.new_window)
+        target = "_blank"
+    
+    // Form will open result in new window. 
+    // target="_blank" is a deprecated feature, but very useful since you can't right click 
+    // on the submit button to choose if you want to open it in a new window, and going back is SLOW
+    var textArea = TEXTAREA({rows:opts.rows, cols:opts.cols, wrap:"off", name:'source'},
+                                    "SVG Source")
+    var form = FORM({name:'convert', method:'post', action:opts.converter_url, target:target},
+                        textArea)
+    
+    var svg = this
+    var setSrc = function() {
+        // Uses newly created text Area
+        replaceChildNodes(textArea, svg.toXML())
+    }
+    svg.whenReady(setSrc)
+    
+    if (opts.hide_textarea) 
+        hideElement(textArea)
+    else
+        appendChildNodes(form, BR(null)) // Buttons get added below.
+    
+    if (opts.update_button) {
+        var updateButton = INPUT({type:"button", value:"Update"})
+        appendChildNodes(form, updateButton, " ")
+        updateButton['onclick'] = setSrc
+    }
+    
+    var make_convert_button = function(type) {
+        var button=INPUT({type:"submit", name:"type", value:type})
+        //if (!opts.update_button)
+        //    button['onclick'] = setSrc // Happens before conversion?
+        return SPAN(null, button, " ")  // Put a space after each button
+    }
+    appendChildNodes(form, map(make_convert_button, opts.types))
+    return form
+}
+
+SVGKit.codeContainer = function(initial_code, doit, rows /*14*/, cols /*60*/) {
+    /***
+        Returns HTML <div> that contains code that can be 
+        executed when the "Do It" button is pressed.
+        
+        The doit function is expected to take the parsed javascript
+        
+        The doit function is responsible for putting the svg where it belongs in the html page
+        
+        s = getElement('SVGKit_svg').childNodes[0]
+        svg = new SVGKit(s)
+        svg.append(svg.RECT({x:30, y:30, width:500, height:50}) )
+    ***/
+    
+    rows = SVGKit.firstNonNull(rows, 14)
+    cols = SVGKit.firstNonNull(cols, 60)
+    
+    var div, codeArea, buttonDoIt
+    div = DIV(null, codeArea=TEXTAREA({rows:rows, cols:cols, wrap:"off"}, initial_code),
+                BR(null),
+                buttonDoIt=INPUT({type:"button", value:"Do It"}) 
+             )
+    
+    var doit_button_hit = function() {
+        var func = eval(codeArea.value)
+        doit(func)
+    }
+    
+    buttonDoIt['onclick'] = doit_button_hit
+    return div
+}
+
 
 ////////////////////////////
 // Class Utilities
