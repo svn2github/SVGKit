@@ -62,12 +62,13 @@ def execute_cmd(cmd):
         print 'stdout:'+str_stdout+'\n'
         print 'stderr:'+str_stderr+'\n'
         
+# If the result doesn't already exist in cached form, create it
 if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     svgfile = open(svgname, 'w')
     svgfile.write(source)
     svgfile.close()
     if type == 'svg':
-        outname = svgfile
+        outname = svgname
     else:
         cmd = java+' -jar ' + batik + ' -d files -m '+mime+' '+svgname # -dpi <resolution>  -q <quality>
         execute_cmd(cmd)
