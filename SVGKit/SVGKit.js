@@ -179,7 +179,7 @@ SVGKit.prototype.__init__ = function (p1, p2, p3, p4, p5) {
     this.htmlElement = null;   // the <object> or <embed> html element the SVG lives in, otherwise null
     this.svgDocument = null;  // When an 'svg' element is embedded inline this will be document
     this.svgElement = null;   // corresponds to the 'svg' element
-    this._redrawId = null;   // The reference that SVG's suspendRedraw returns.  Needed to cancel suspension.
+    //this._redrawId = null;   // The reference that SVG's suspendRedraw returns.  Needed to cancel suspension.
     //SVGKit._defaultType = // Determine a good default dynamically ('inline' , 'object', or 'embed')
     
     //log("SVGKit.__init__(", p1, p2, p3, p4, p5, ")");
@@ -835,9 +835,17 @@ SVGKit.prototype.getDefs = function(createIfNeeded /* = false */) {
     return defs;
 }
 
-SVGKit.prototype.suspendRedraw = function (miliseconds /* = 1000 */) {
+/*
+// These are pretty redundant.  Use :
+suspend_handle_id = this.svgElement.suspendRedraw(max_wait_milliseconds)
+this.svgElement.unsuspendRedraw(suspend_handle_id)
+this.svgElement.unsuspendRedrawAll()
+
+SVGKit.prototype.suspendRedraw = function (miliseconds) {
     miliseconds = SVGKit.firstNonNull(miliseconds, 1000);
-    this._redrawId = this.svgElement.suspendRedraw(miliseconds);
+    var tempRedrawId = this.svgElement.suspendRedraw(miliseconds);
+    this.unsuspendRedraw()
+    this._redrawId = tempRedrawId
 }
 
 SVGKit.prototype.unsuspendRedraw = function () {
@@ -846,6 +854,7 @@ SVGKit.prototype.unsuspendRedraw = function () {
         this._redrawId = null;
     }
 }
+*/
 
 SVGKit.prototype.deleteContent = function() {
     /***
