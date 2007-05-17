@@ -516,4 +516,4 @@ function compositeTests() {
 }
 
 type = 'canvas'
-
+include_canvas = true

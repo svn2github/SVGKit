@@ -1,4 +1,6 @@
-type = 'svg'  // Can be overriden by other files.
+// Default global variables that can be overriden by other files
+var type = 'svg' 
+var include_canvas = false
 
 function setupTopBar() {
 
@@ -59,7 +61,8 @@ function doTest(canvasTD, svgTD, srcTD, testFunction) {
         svg = target;
     }
     else if (type=='canvas') {
-        doCanvas(canvasTD, testFunction)  // This may not always work
+        if (canvasTD != null)
+            doCanvas(canvasTD, testFunction)
         target = new SVGCanvas(200, 200);
         svg = target.svg;
     }
@@ -86,11 +89,11 @@ function addTests(start, end) {
             var testFunction = testFunctions[test]
             var code = (''+testFunction+'\n').replace(/ +/g, " ");
             
-            var w = 210
-            var canvasTD = (type=='canvas') ? TD({width:w, id:test+'_canvas'}) : null
-            var codeTD = TD({width:w, id:test+'_code'})
-            var svgTD = TD({width:w, id:test+'_svg'})
-            var srcTD = TD({width:w, id:test+'_src'})
+            //var w = 210  used to be {width:w}
+            var canvasTD = (include_canvas) ? TD({id:test+'_canvas'}) : null
+            var codeTD = TD({id:test+'_code'})
+            var svgTD = TD({id:test+'_svg'})
+            var srcTD = TD({id:test+'_src'})
             
             var doit = partial(doTest, canvasTD, svgTD, srcTD)
             
