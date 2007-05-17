@@ -240,6 +240,7 @@ if (typeof(SVGPlot) == 'undefined' || SVGCanvas == null) {
 
 // In order for forceRedraw and getBBox to work, you need to have an object type.  TODO: get rid of this when working
 SVGKit._defaultType = 'object';
+//SVGKit._defaultType = 'inline';  // uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMSVGSVGElement.forceRedraw]"
 
 // Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
 //SVGPlot.prototype = new SVGCanvas();  // TODO: Fix Inheritance
@@ -714,6 +715,7 @@ SVGPlot.ScaleDateTime.prototype = {
         var min_ord = this.min;  // Could be 'auto', or a datetime that will get converted to an ordinal
         var max_ord = this.max;
         var required_ord = [];
+        
         if (this.min != 'auto')
             min_ord = datetime.ordinalDay( datetime.datetime(min) )
         if (this.max != 'auto')
@@ -723,6 +725,7 @@ SVGPlot.ScaleDateTime.prototype = {
         this._realScale = new SVGPlot.Scale(min_ord, max_ord, 'linear', reversed, required_ord)
     },
     position: function(value) {
+        //log('position', value, value.year, value.month, value.day, value.hour, value.minute, value.second)
         if (typeof(value) == 'string')
             value = datetime.parse(value)
         // TODO:  Check if it's  a Date() object
@@ -1478,6 +1481,7 @@ SVGPlot.prototype.render = function () {
         This can be called many times recursively and will just set a flag.
         It ends when a render is complete and there are no pending requests.
     ***/
+    //var suspend_id = this.svg.svgElement.suspendRedraw(100)
     this.layoutBoxes();
     /*
     if ( !this._rendering==true ) {
@@ -1492,6 +1496,7 @@ SVGPlot.prototype.render = function () {
         this._renderAgain = true;
     }
     */
+    //this.svg.svgElement.unsuspendRedraw(suspend_id)
 }
 
 SVGPlot.prototype.layoutBoxes = function () {
@@ -1874,13 +1879,26 @@ SVGPlot.Axis.prototype.render = function(left, right, top, bottom) {
     }
 }
 
-SVGPlot.in_bounds = function(min, max, map, location) {
+SVGPlot.safemap = function(mapped_min, mapped_max, map, location) {
+    /***
+        Handles cases where lcoation is a percent "50%",
+        where mapped_min and mapped_max are the same, etc.
+    ***/
+    var mapped = 0
+    
+    if (mapped_min==mapped_max)
+        return mapped_min
+        
+    // Check if location is a percent
+    if (typeof(location)=='string' && location[location.length-1] == '%')
+        return mapped_min + parseFloat(location.substring(0, location.length-1)) / 100 * (mapped_max-mapped_min)
+    else
+        return map(location)
+}
+
+SVGPlot.inbounds = function(mapped_min, mapped_max, mapped) {
     // Do all of the comparisons in plot-coordinates rather than as raw data (eg. dates)
     // Check if location is within max and min (vertical axis gets mapped backward)
-    var mapped = map(location)
-    var mapped_min = map(min)
-    var mapped_max = map(max)
-    
     return  mapped>mapped_min && mapped<mapped_max ||
              mapped<mapped_min && mapped>mapped_max
 }
@@ -1894,8 +1912,13 @@ SVGPlot.Ticks.prototype.render = function(min, max, map) {
     }
     var locations = this._locations;
     var path = '';
+    
+    var mapped_min = map(min)
+    var mapped_max = map(max)
+    
     for (var k=0; k<locations.length; k++) {
-        if (SVGPlot.in_bounds(min, max, map, locations[k])) {
+        var mapped = SVGPlot.safemap(mapped_min, mapped_max, map, locations[k])
+        if (SVGPlot.inbounds(mapped_min, mapped_max, mapped)) {
             if (this.position=='top')
                 path += ' M '+map(locations[k])+' 0 '+'v '+(-this.length);
             else if (this.position=='bottom')
@@ -1937,13 +1960,17 @@ SVGPlot.translateBottomText = function(component) {
 }
 
 SVGPlot.renderText = function (text, location, bbox, position, min, max, map) {
-    // Check if location is a percent
-    // TODO:  min and max can be dates or other types, so the second line down doesn't work
-    if (typeof(location)=='string' && location[location.length-1] == '%')
-        location = min + parseFloat(location.substring(0, location.length-1)) / 100 * (max-min)
+    /***
+        Render the stubs and axis titles
+        TODO:  Y-Axis titles that are rotated do not get centered properly any more
+    ***/
+    
+    var mapped_min = map(min)
+    var mapped_max = map(max)
+    var mapped = SVGPlot.safemap(mapped_min, mapped_max, map, location)
     
     // Check if location is off the edge (vertical axis gets mapped backward)
-    if (SVGPlot.in_bounds(min, max, map, location))
+    if (SVGPlot.inbounds(mapped_min, mapped_max, mapped))
         text.removeAttribute('display');
     else
         text.setAttribute('display', 'none');
@@ -1952,15 +1979,35 @@ SVGPlot.renderText = function (text, location, bbox, position, min, max, map) {
     if (typeof(transform)=='undefined' || transform == null)
         transform = '';
     //var bbox = text.getBBox(); //{'x':0, 'y':0, 'width':10, 'height':10};
+    
+    var textanchor = 'middle'
+    
+    var rotated = transform.indexOf('rotate') >= 0
+    if (position=='right' && !rotated)
+        textanchor = 'start'
+    else if (position=='left' && !rotated)
+        textanchor = 'end'
+    
+    //log('bbox.height', bbox.height)
+    /* TODO Since only height of text matters, really all we 
+            need is the font size, not the bounding box
+            This is true here, but when you have long labels 
+            on the left side, elsewhere you need to have their 
+            bbox so you can move the axis title over
+    */
+    var vertical_shift = rotated ? 0 : bbox.height/2
+    
     if (position=='top')
-        transform = 'translate('+(map(location)-bbox.width/2)+', 0)' + transform;
+        transform = 'translate('+(mapped)+', 0)' + transform
     else if (position=='bottom')
-        transform = 'translate('+(map(location)-bbox.width/2)+', 0)' + transform;
+        transform = 'translate('+(mapped)+', 0)' + transform
     else if (position=='right')
-        transform = 'translate(0, '+(map(location)+bbox.height/2)+')' + transform;
+        transform = 'translate(0, '+(mapped+vertical_shift)+')' + transform
     else if (position=='left')
-        transform = 'translate('+(-bbox.width-bbox.x)+', '+(map(location)+bbox.height/2)+')' + transform;
-    text.setAttribute('transform', transform);
+        transform = 'translate(0, '+(mapped+vertical_shift)+')' + transform
+        
+    text.setAttribute('transform', transform)
+    text.setAttribute('text-anchor', textanchor)
 }
 
 
@@ -2571,7 +2618,7 @@ SVGPlot.PointMapper = function() {
 
 
 SVGPlot.PositionMapper = function() {
-    /*** Maps data to x,y location
+    /*** Maps data to x,y location (handles percents and other specials?)
          common for points, lines, areas, & bars ****/
 }
 
