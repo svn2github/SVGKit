@@ -279,6 +279,13 @@ var testFunctions = {
         p.render();
     },
     
+    'date_simple' : function(p) {
+        var dates = ['2007-05-01 20:20:30', '2007-05-17 13:47:19']
+        var data = [-1, 1]
+        p.plot(dates, data);
+        p.render();
+    },
+    
     'date_plot_temp' : function(p) {
         var reasonable_temp = function(row) {
             return row[1] < 40

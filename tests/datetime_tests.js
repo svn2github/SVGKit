@@ -76,6 +76,9 @@ with (datetime) {
         ['julianDay({year:2007, month:2, day:16})%7', 4],
         ['julianDay({year:2000, month:12, day:1, hour:0})', 2451879.5],
         ['siderealTime({year:1994, month:6, day:16, hour:18})', 174.77111347427126],
+        ['negatePeriod({year:0, month:0, day:0, hour:1, minute:0, second:0, microsecond:0})', {year:0, month:0, day:0, hour:-1, minute:0, second:0, microsecond:0}],
+        ['negatePeriod({year:1, month:2, day:3, hour:4, minute:-5, second:-6, microsecond:-7})', {year:-1, month:-2, day:-3, hour:-4, minute:5, second:6, microsecond:7}],
+        ['subDatetimes({year:1994, month:6, day:16, hour:18}, {year:1994, month:6, day:16, hour:19})', {year:0, month:0, day:0, hour:-1}],
         
     ]
     forEach(tests, function(row) {

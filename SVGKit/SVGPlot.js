@@ -137,6 +137,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- Strike a balance between ultra-dense plotting and leaving some room for comfort
     -- Strike a balance between optimizing for the screen (pixel alignment) and a printer
     -- xtoi and ytoj should take into account transformation to currentGroup
+    -- for smooth line plots, make stroke-linejoin:round
     
 	-- SQL Injection attacts, strip out
         [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
@@ -152,6 +153,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- When plotting something with too many tick labels, 
        first go to double row, then to diagonal, then to vertical
        when text is rotated (up to 90 deg) have it non-centered
+    
+    -- Filter out invalid data at some point.  Can't pass invalid data to newScaleFromType!
     
     Things to get done with dates
     -- Get comparisons to work
@@ -898,29 +901,36 @@ SVGPlot.ScaleDateTime.prototype = {
     },
     
     defaultLabels : function(locations) {
+        /***
+            datetime.subDatetimes(locations[1], locations[0])
+            doesn't work becuase it doesn't try to roll over months and days
+        ***/
         if (locations.length <= 1)
             return map(datetime.toISOTimestamp, locations)
         
-        var smallest_difference = '';
-        var keys = datetime.keys
-        for (var i=keys.length-1; i>=0; i--) {
-            var l0 = locations[0][keys[i]]
-            var l1 = locations[1][keys[i]]
-            if ( typeof(l0) != 'undefined' && l0 != null &&
-                   typeof(l1) != 'undefined' && l1 != null &&
-                   l0 != l1 )
-                smallest_difference = keys[i]
-        }
-        var formats = {
-            'year': 'yyyy',
-            'month': 'yyyy-mm',
-            'day': 'mm-dd',
-            'hour': 'hh:nn',
-            'minute': 'hh:nn',
-            'second': 'nn:ss',
-            'microsecond': 'ss.uu'
-        }
-        var code = formats[smallest_difference]
+        var smallest_difference = 'month'; // Default to a clear, if useless representation
+        
+        var diff_days = datetime.ordinalDay(locations[1]) - 
+                        datetime.ordinalDay(locations[0])
+        var code = 'yyyy-mm'
+        var days = datetime.days
+        if (diff_days > days['year'])
+            code = 'yyyy'
+        else if (diff_days > days['month'])
+            code = 'yyyy-mm'
+        else if (diff_days > days['day'])
+            code = 'mm-dd'
+        else if (diff_days > days['day'])
+            code = 'mm-dd'
+        else if (diff_days > days['hour'])
+            code = 'hh:nn'
+        else if (diff_days > days['minute'])
+            code = 'hh:nn'
+        else if (diff_days > days['second'])
+            code = 'nn:ss'
+        else
+            code = 'ss.uu'
+        
         var disp = function(dt) {
             return datetime.format(dt, code)
         }
@@ -1081,6 +1091,8 @@ SVGPlot.newScaleFromType = function(example) {
     // Priority to resolve ambiguity: Real, DateTime, category
     // Right now, the only strings that will be recognized as dates 
     // (and therefore not categories) are ISO timestamps: YYYY-MM-DD hh:mm:ss
+    if (example==null)
+        return null
     var type = typeof(example)
     if ( type == 'number' )
         return new SVGPlot.Scale()
@@ -2376,7 +2388,7 @@ SVGPlot.arrayToString = function(array, seperator /* =' '*/) {
 
 SVGPlot.createGroupIfNeeded = function(self, cmd, style_type /* 'stroke' 'fill' or 'text' */) {
     if (self.element == null) {
-        self.element = self.svgPlot.svg.G(null);
+        self.element = self.svgPlot.svg.G();
     }
     self.parent.element.appendChild(self.element);
     
@@ -2392,8 +2404,10 @@ SVGPlot.setPlotAttributes = function(self, cmd) {
     var plotNS = SVGPlot.plotNS
     // Set the command property
     self.element.setAttributeNS(plotNS, 'cmd', cmd)
+    var id = self.svgPlot.svg.createUniqueID(cmd)
+    self.element.setAttribute('id', id)   
     
-    // Set all of the string, number, and arrays
+    // Set all of the string, number, and arrays -- Store the data in the SVG DOM
     var members = keys(self)
     for (var i=0; i<members.length; i++) {
         if (members[i][0] != '_' && self[members[i]] != null && typeof(self[members[i]])!='undefined' ) {

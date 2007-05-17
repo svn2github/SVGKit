@@ -78,16 +78,6 @@ datetime = {
         'Saturday',
         'Sunday'
     ],
-    milliseconds : {
-        'millisecond' : 1,
-        'scond'       : 1000,
-        'minute'      : 1000*60,
-        'hour'        : 1000*60*60,
-        'day'         : 1000*60*60*24,
-        'week'        : 1000*60*60*24*7,
-        'month'       : 1000*60*60*24*7*30,
-        'year'        : 1000*60*60*24*7*365
-    },
     pad : function(number, digits) {
         // Utility function
         // Returns a string that represents number, possily padded 
@@ -510,6 +500,16 @@ datetime = {
         second: 1.0/(24*60*60), 
         microsecond: 1.0/(24*60*60*1000000)
     },
+    milliseconds : {
+        'millisecond' : 1,
+        'scond'       : 1000,
+        'minute'      : 1000*60,
+        'hour'        : 1000*60*60,
+        'day'         : 1000*60*60*24,
+        'week'        : 1000*60*60*24*7,
+        'month'       : 1000*60*60*24*7*30,
+        'year'        : 1000*60*60*24*7*365
+    },
     
     addPeriods : function(p1, p2) {
         /***
@@ -598,17 +598,17 @@ datetime = {
             This gives a difference in years, months, and days, NOT some absolute number of days.
             If you want the absolute number of days/seconds/whatever, convert both to julianDays
         ***/
-        var dt2mod = copy(dt2)
+        var dt2mod = clone(dt2)
         
         if ( !isUndefinedOrNull(dt1.tz_hour) && !isUndefinedOrNull(dt2.tz_hour) )
             datetime.convertTimezone(dt2mod, dt1)
         
         var result = {}
         for (key in datetime.min) {
-            if ( !isUndefinedOrNull(dt1[key]) && !isUndefinedOrNull(dt2[key]) )
-                result[key] = dt1[key] - dt2[key]
+            if ( !isUndefinedOrNull(dt1[key]) && !isUndefinedOrNull(dt2mod[key]) )
+                result[key] = dt1[key] - dt2mod[key]
         }
-        return restult
+        return result
     },
     convertTimezone : function(dt, new_timezone) {
         // Only alter hour and minute if both have a timezone.
