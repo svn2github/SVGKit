@@ -1276,7 +1276,7 @@ datetime = {
             z += 60*dt.tz_hour
         if (dt.tz_minute != null)
             z += dt.tz_minute
-        
+            
         var period_days = datetime.periodToDays(dt)
         var days_since_newyear = ord - datetime.ordinalDay({year: dt.year})
         

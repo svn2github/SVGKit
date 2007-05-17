@@ -38,7 +38,11 @@
 <li>Client-side features of panning, zooming, and exploring the data.</li>
 <li>Allows raw data to optionally be published inside of PlotXML file along with the &quot;suggested way&quot; of viewing it, but the GUI allows viewer to painlessly explore data (e.g. change scale to log)</li>
 </ul>
-
+<h2>Live Demos </h2>
+<ul>
+  <li><a href="../tests/plot_tests.html">live demo</a> - Table of tests that you can modify and re-run client side.</li>
+  <li><a href="../tests/plot_csv.html">csv demo</a> - Type or past in CSV from a spread sheet and plot it. </li>
+</ul>
 <h2>Design/Philosophy</h2>
 <p>Looking around, I found most of the existing plotting APIs lacking and decided to start from scratch. </p>
 <p>The idea is to plot data sets. You can think of data sets as an area in a spreadsheet or a table in a database. Each piece of data (row) has values for attributes (columns). Plotting is the act of mapping one or more of these attributes to one or more plot characteristics: x-position, y-position, color, shape, size, orientation, panel-number.</p>
@@ -164,11 +168,7 @@
 <p><strong>Visualization </strong><a href="http://public.kitware.com/VTK/">VTK</a> / <a href="https://svn.enthought.com/enthought/wiki/TVTK">TVTK</a> / <a href="http://mayavi.sourceforge.net">MayaVi</a> &amp; <a href="https://svn.enthought.com/enthought/wiki/MayaVi">MayaVi2</a> / <a href="http://www.paraview.org/">ParaView</a> / <a href="http://www.llnl.gov/visit/home.html">VisIT</a> / <a href="http://www.opendx.org/">OpenDX (IBM's Viz Data Explorer)</a> / <a href="http://software.sci.utah.edu/scirun.html">SCIRun</a> / <a href="http://www.nag.co.uk/welcome_iec.asp">NAG's Iris Explorer</a> / <a href="http://ltc.smm.org/visualize/">OSS Package</a> / <a href="http://www.math.yorku.ca/SCS/Gallery/">Gallary of Viz</a> / <a href="http://vpython.org/">vpython</a> / </p>
 <p><strong>Data Analysis</strong> <a href="http://root.cern.ch/">Root</a> / <a href="http://jas.freehep.org/jas3/">Java Analysis Studio (JAS3)</a> / <a href="http://www.slac.stanford.edu/grp/ek/hippodraw/">HippoDraw</a> / <a href="http://aida.freehep.org/">AIDA: Abstract Interfaces for Data Analysis</a></p>
 <p><strong>Computer Algebra Systems</strong> <a href="http://sourceforge.net/projects/maxima">Maxima</a> / <a href="http://yacas.sourceforge.net/">Yacas</a> / <a href="http://mathsrv.ku-eichstaett.de/MGF/homes/grothmann/euler/">Euler</a> / <a href="http://www.matheclipse.org/">Eclipse</a> / <a href="http://sage.math.washington.edu/sage/">Sage</a> /</p>
-<h2>Live Demos </h2>
-<ul>
-  <li><a href="../tests/plot_tests.html">live demo</a> - Table of tests that you can modify and re-run client side.</li>
-  <li><a href="../tests/plot_csv.html">csv demo</a> - Type or past in CSV from a spread sheet and plot it. </li>
-</ul>
+
 <h2>Design Issues/Tradeoffs </h2>
 <ul>
   <li>Densely pack information in the available space minimizing margins and extraneous &quot;ink?&quot; This is good for web viewing. Or should it more liesurely arrange things for optimal print viewing?</li>
