@@ -1135,7 +1135,7 @@ SVGKit.prototype.convertForm = function(options) {
         update_button :  true,
         hide_textarea :  false,
         rows : 14,
-        cols : 60,
+        cols : 55,
         types : ['svg', 'pdf', 'ps', 'png', 'jpg']
     }
     var opts = {}
@@ -1198,7 +1198,7 @@ SVGKit.codeContainer = function(initial_code, doit, rows /*14*/, cols /*60*/) {
     ***/
     
     rows = SVGKit.firstNonNull(rows, 14)
-    cols = SVGKit.firstNonNull(cols, 60)
+    cols = SVGKit.firstNonNull(cols, 50)
     
     var div, codeArea, buttonDoIt
     div = DIV(null, codeArea=TEXTAREA({rows:rows, cols:cols, wrap:"off"}, initial_code),
