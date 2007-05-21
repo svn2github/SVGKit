@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>SVG LaTeX</title>
+	<link href="./simple.css" rel="stylesheet" type="text/css"></link>
+	<link href="./twocol.css" rel="stylesheet" type="text/css"></link>
+	<!--<link rel="SHORTCUT ICON" href="favicon.ico"></link>-->
+	<meta name="author" content="Jason Gallicchio"></meta>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+<div id="container">
+
+<!--#include virtual="menu.html" -->
+<div id="content">
+<h1>SVG LaTeX</h1>
+<h2>Introduction</h2>
+<p>The goal is to turn LaTeX into SVG. Right now there's a Python CGI script to do this. Here are some issues:</p>
+<ul>
+  <li>Conversion must be done on server side through cgi</li>
+<li>Must validate the LaTeX for security reasons to prevent cross-site scripting. This means only a small subset of LaTeX is supported, the same as <a href="http://en.wikipedia.org/wiki/Texvc">Texvc</a>. This also spits back MathML , which is the W3C way to include equations in SVG. </li>
+<li>Should the SVG be positioned <code>&lt;text&gt;</code> elements with embeded fonts?
+  <ul>
+    <li>Eventually because this is the correct way, but not for now.</li>
+  <li>This is hard to do with the tools available</li>
+  <li>For a few equations, it will bloat the SVG with lots of fonts unless we only include the characters we need.</li>
+  <li>Our conversion spits back a bunch of <code>&lt;path&gt;</code> and <code>&lt;polyline&gt;</code> elements.</li>
+  <li>A random equation uses a lot of fonts: cmsy6, cmsy8, cmsy10, cmr6, cmr8, cmr12, cmmi8, cmmi12, cmex10</li>
+  </ul>
+</li>
+</ul>
+<h2>Live Demos </h2>
+<ul>
+  <li><a href="../tests/latex_tests.html">latex_live demo</a> - Table of tests that you can modify and re-run client side.</li>
+</ul>
+<h2>Server-Side Software Requirements</h2>
+<ul>
+  <li>latex</li>
+<li>dvips - included in a latex distribution </li>
+  <li>plotutils - needed by pstoedit to generate svg output </li>
+<li>pstoedit</li>
+</ul>
+<h2>Basic Procedure</h2>
+<p>Inspired by Inkscape's eqtexsvg.py. Say you had a file eqn.tex that looked like </p>
+<pre>
+\\documentclass{article}
+\\usepackage{amsmath}
+\\usepackage{amssymb}
+\\usepackage{amsfonts}
+
+\\thispagestyle{empty}
+\\begin{document}
+\[
+2 \pi f t
+\]
+\\end{document}
+</pre>
+<p>Here are the commands you would run: </p>
+<ul>
+  <li><code>latex  eqn.tex</code>
+    <ul>
+      <li>This creates the file eqn.dvi</li>
+    </ul>
+  </li>
+  <li><code>dvips -q -f -e 0 -E -D 10000 -x 100000 -o  eqn.ps eqn.dvi </code>
+    <ul>
+      <li>the <a href="http://www.ma.utexas.edu/cgi-bin/man-cgi?dvips+1">dvips man page</a> </li>
+    <li> [<strong>-q</strong>] Run in quiet mode.</li>
+      <li>[<strong>-f</strong>] (filter) Read the .dvi file from standard input and write the PostScript to standard output. </li>
+      <li>[<strong>-D</strong>] sets the resolution 
+
+
+ between 10 and 10000
+
+(also affects 
+
+
+  positioning of letters)</li>
+      <li> [<strong>-E</strong>] makes dvips attempt to generate an EPSF file with a tight bound-ing box. </li>
+      <li> [<strong>-e num</strong>] Each character is placed at most this many pixels from its `true' resolution-independent position</li>
+      <li> [<strong>-R</strong>] Run in secure mode. </li>
+      <li> [<strong>-x</strong>] num Set the magnification ratio to num/1000 no matter what the dvi file says, between 10 and 100000</li>
+      <li> [<strong>-y</strong>] num Set the magnification ratio to num/1000 times the magnification specified in the .dvi file, 
+
+
+ between 10 and 100000</li>
+      <li>[<strong>-o</strong>] specifies the output file as eqn.ps</li>
+    </ul>
+  </li>
+  <li><code>pstoedit -f plot-svg -dt -ssp eqn.ps eqn.svg</code>
+    <ul>
+      <li>This creates the file eqn.svg</li>
+    <li>[<strong>-f</strong>] specifies the format as plot-svg </li>
+    <li>[<strong>-dt</strong>] Draw text - Text is drawn as polygons.</li>
+    <li> [<strong>-adt</strong>] 
+
+
+ Automatic Draw text - This option turns on the <strong>-dt </strong> option selectively for fonts that seem to be no normal text fonts, e.g. Symbol.</li>
+    <li>[<strong>-ssp</strong>] 
+
+
+ simulate sub path for backends don't support PostScript pathes containing sub pathes, i.e. pathes with intermediate movetos.</li>
+    <li>[<strong>-usebbfrominput</strong>] If specified, pstoedit uses the BoundingBox as is (hopefully) found in the input file instead of one that is calculated by its own. (Doesn't seem to make a difference for plot-svg) </li>
+    <li> [ <strong>-noclip </strong>] don't use clipping (relevant only if backend supports clipping at all) </li>
+    </ul>
+  </li>
+</ul>
+<p>Transformations in the svg group:</p>
+<ul>
+  <li>scale(0.0017361) goes from the font's point coordinates to pixel coordinates. 1/0.0017361 = 576 = 8*72 = 8 inches worth of points </li>
+</ul>
+<h2>Additional Links:</h2>
+<ul>
+  <li>ps to svg through sketch/skencil
+
+: <a href="http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Electronics/How_to_draw_SVG_circuits_using_Xcircuit">Electroncs</a> </li>
+<li>Document Engineering Lab's <a href="http://www.eprg.org/research/SVG/ps2svg/">PostScript to SVG</a> </li>
+  <li>long pdf to read: <a href="http://www.cs.nott.ac.uk/%7Edfb/Publications/Download/2001/Probets01.pdf">Vector Grphics</a> </li>
+<li>DVI2SVG long <a href="http://www.activemath.org/pubs/FrischaufLibbrecht-dvi2svg-TUG2006.pdf">pdf report</a></li>
+<li><a href="http://www.ags.uni-sb.de/%7Eadrianf/dvi2svg/">dvi2svg</a> in germany </li>
+<li><a href="http://wmula.republika.pl/proj/pydvi2svg/index.html">pydvi2svg</a></li>
+</ul>
+<p>&nbsp;</p>
+</div> <!-- content -->
+<!--#include virtual="footer.html" -->
+</div>  <!-- container -->
+
+</body>
+</html>

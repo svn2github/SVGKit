@@ -88,6 +88,9 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     
     Embed images where possible -- read binary data, convert to 64, then include directly.
     href to images don't work very well -- they translate into absolute URIs.
+    
+    TODO:  s.scale(10) should do the right thing.  Right now you NEED scale(10,10)
+            also the scale(1,1)scale(1,1) returns scale(2,2) because right now it's always aditive
 ***/
 
 

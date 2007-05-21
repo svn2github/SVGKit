@@ -30,8 +30,11 @@ table {
 img {
     border: 1px solid
 }
-code {
+code, pre {
 	font-family: Courier, sans-serif;
 	font-size: small;
 	background: #EEE;
+}
+pre {
+    margin-left:20px;
 }

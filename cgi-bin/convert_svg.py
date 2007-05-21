@@ -62,6 +62,8 @@ def execute_cmd(cmd):
         print 'stdout:'+str_stdout+'\n'
         print 'stderr:'+str_stderr+'\n'
         
+#execute_cmd('chown jason users files/*.*')  # Redhat disables chown
+        
 # If the result doesn't already exist in cached form, create it
 if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     svgfile = open(svgname, 'w')

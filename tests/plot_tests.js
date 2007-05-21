@@ -280,7 +280,9 @@ var testFunctions = {
     },
     
     'date_simple' : function(p) {
-        var dates = ['2007-05-01 20:20:30', '2007-05-17 13:47:19']
+        var dates
+        dates = ['2007-05-01 20:20:30', '2007-05-17 13:47:19']
+        dates = ['2007-04-21 13:19:09', '2007-04-27 04:30:16']
         var data = [-1, 1]
         p.plot(dates, data);
         p.render();
