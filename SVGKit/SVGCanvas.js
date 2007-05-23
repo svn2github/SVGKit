@@ -1,6 +1,6 @@
 /***
 
-SVGCanvas 0.1
+SVGCanvas.js 0.1
 
 See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 

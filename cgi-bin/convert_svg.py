@@ -1,6 +1,13 @@
 #!/usr/bin/python2
 #!/home/jason/local/bin/python
 
+"""
+convert_svg.py  0.1
+
+See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
+
+(c) 2006-2007 Jason Gallicchio.  All rights Reserved.
+"""
 
 # Outline of code:
 # Read the SVG

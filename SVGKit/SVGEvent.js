@@ -1,10 +1,10 @@
 /***
 
-SVGKit 0.1
+SVGEvent.js 0.1
 
 See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
-(c) 2006 Jason Gallicchio.  All rights Reserved.
+(c) 2006-2007 Jason Gallicchio.  All rights Reserved.
 
 ***/
 

@@ -1,6 +1,6 @@
 /***
 
-SVGPlot 0.1
+SVGPlot.js 0.1
 
 See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
@@ -58,7 +58,6 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
           * Zoom in around where you first clicked (keeping that point fixed)
             by an amount determined by how much you drag.
     
-   
   Drawing Function can take all of the row and do whatever it wants.
     it draws a shape around the origin given the parameters, 
     which gets translated to the right spot based on the x,y coords.
@@ -72,11 +71,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
   Use this feature to re-impliment the star viewer with displayed coordinates and 
     mouseover star names.
     
-    
-   
   TODO
     -- Make all list parameters both comma or space seperated like in SVG.
-    -- Scatter plot is line plot with transparent stroke, but with markers? No. Can't have data-dependent markers.
     -- Grid lines function like ticks.  Just Extended ticks?  what about checkerboard/stripes?
     -- Tests with multiple boxes and box layout.
     -- Integer-only axis labels/ticks (a parameter of the auto-axis)
@@ -85,26 +81,26 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- You want to draw over a graph.  This means mapping into plot coordinates without distorting your
         line widths and shapes in some crazy way.  You obviously map (x,y) to (i,j) but do you map 
         widths, heights, and radii?  Not if you want to draw a normal looking arrow, but yes if you
-        want to draw a circle or an arc that is in a specific place on the graph.
-    -- When you change scales, you want decorations you've drawn to move too.  Decorations tied to point on plot.
+        want to draw a circle or an arc that is in a specific place on the graph. Things like arrow-heads are
+        problematic -- you want the start and end to be in (x,y) but the size of the arrow head to be the same always.
+    -- When you change scales, you want decorations you've drawn to move too.  Decorations can be tied to point on plot.
     -- CSS Colors and Fonts
     -- For tickLabels at the edge, either move them to fit on plot or make plot bigger to accomodate them.
     -- Check scale for zeros better.  Don't print a zero right over the other axis.
     -- Box background and plot area background.
     -- Axes, ticks, and grids align themselves to nearest pixel.
-    -- Smooth connect plot lines using bezier or quartic
+    -- Smooth connect plot lines using bezier and "stroke-linejoin:round"
     -- Autoscale so that at least the line-width fits.
     -- Plot title
     -- Plot Ledgend, recording attributes of lines and glyphs
-    -- Plot arrows pointing to thd different types (better than a ledgend where appropriate -- look at pre-computer plots)
+    -- Plot arrows pointing to the different types (better than a ledgend where appropriate -- pre-computer plots use this and are more clear)
     -- Exponents 2e12 or 2 10^12 or just 10^12 on log plots, etc.
     -- Pie, optional pullout of wedges, optional 2nd parameter setting slice area "Spie  Chart"
     -- Excel has tick positions 'inside' 'outside' and 'cross'.  This makes more sense when 
           axes are on the sides, but not when it's in the middle.  We should have a 'cross' though.
-    -- Handle axis types: number, log, category, date, time, date-time
     -- Option like Excel to drop grid lines from plot to axis (a partial grid)
     -- Auto ticks works differently for numberical versus category data, at least for bar graphs
-         For categories, often you want ticks/grid in between bars and labels on bars
+         For categories, often you want ticks/grid in between bars and labels on bars. Same with dates, but not times.
     -- How much to mix state-machine vs explicit options.  When you draw a box, do you take the
          current style and transform from the current state, or as a parameter?  Some things only require
          one or two style parameters and it's nicer just to set them.  
@@ -112,7 +108,8 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
          Also, setting the fillStyle instead of the strokeStyle for text is confusing, but Canvas and SVG standard
     -- How to handle polar plots?  Keep (x,y) scale, but just add a polar grid/tickLabels/ticks/etc or
          completely change to a polar scale where (x,y) now mean (r,phi)
-    -- TickLabels appearing over axes or other elements should be somehow avoided -- constrained layout?
+    -- Some general mapping from (p,q) into (x,y) which gets mapped to (i,j)?  Might want both (x,y) ticks and (p,q) ticks
+    -- TickLabels appearing over axes or other elements should be somehow avoided -- constrained layout is hard, though.
     -- Right now if you want to set something, you have to either:
         * Plot a function and get the default stuff
         * Explicitly add a box and it's defaults or whatever you want, then set it
@@ -121,7 +118,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- Plot with both a line and a point component.  options:
         * Have to plot twice to get a drawingFunction for each point.
         * 'connected' is an option of scatter plot, which uses a drawingFunction.  This is easy to do.
-        * 'markers' is an style parameter of line plot (automaticly included by SVGCanvas)
+        * 'markers' is a style parameter of line plot? No. Can't have data-dependent markers.
     -- Must have a way to generate data for line plots at a level so that it's straightforward to shade between two:
             var s = plotFunction(Sin)
             var c = plotFunction(Cos)
@@ -129,37 +126,42 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     -- In above example, should plotFunction return the whole plot, a reference to just
          the function ploted, the SVGElement that corresponds to what was plotted, what?
     -- Plot boxes to show relative scales between plots like in Global Warming example.
-    -- Combeine Ticks with TickLables they come together. Want labels without ticks? set tick-length to zero
-    -- Seperate datetype from the concept of a category scale versus a linear scale.  For example, you might
-       have a bunch of random number that you want to plot values for as a bar chart, not (x,y) points.
+    -- Combeine Ticks with TickLables they come together. Want labels without ticks? Set tick-length to zero
+          what happens with multiple sets of ticks/ tickLabels on the same graph?
+    -- Seperate types from scales.
+        * types: number, datetime, string, money
+        * scales: relative, category
+       For example, you might want to plot a series of numbers as a bar chart where x is just integers
        this is true also for dates.  Hits/day is more of a category thing than a linear scale thing.
-       Histograms are categories, but what happens when the categories are ranges: 10.0-20.0, 20.0-30.0, etc?
+       Histograms are categories, but what happens when the categories are ranges that are real numbers: 10-20, 20-30, etc?
+       Each type has a set of formatting codes that you can specify for tickLabels
+    -- Different Defaults for Plot Styles:
+        * Textbook functions (arrows on the axes, thick lines, no ticks or stubs)
+        * Data plotting (box/frame with ticks, stubs, grid)
+        * Flashy graphics with gradients, shadows, and subdued image background
     -- Strike a balance between ultra-dense plotting and leaving some room for comfort
     -- Strike a balance between optimizing for the screen (pixel alignment) and a printer
     -- xtoi and ytoj should take into account transformation to currentGroup
-    -- for smooth line plots, make stroke-linejoin:round
-    
-	-- SQL Injection attacts, strip out
-        [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
-        
-    -- Margin between ploted data and axes (so zero doesn't lie in corner, there is padding around glyphs, and zero label fits)
-	-- Have the GUI teach about the plotting commands
+    -- When plotting something with too many tick labels,  first go to double row, then to diagonal, then to vertical
+            when text is rotated (up to 90 deg) have it non-centered
+    -- Data Rectangle smaller than plot rectangle by thee methods: 2%, 5px, fixed offset of data
+        (so zero doesn't lie in corner, there is padding around glyphs, and zero label fits)
+	-- Have the GUI teach about the plotting API by having a running script that you add to.
 	
 	-- horizontalLine(value, color)
 	-- horizontalLines(data, colors)
     -- horizontalStrip(start, end, color?)  // Draws a rect with given stroke and fill settings  What about stroking ends?
 	-- horizontalStrips([[1,2], [2,3]], ['red', 'green'])  
 	
-    -- When plotting something with too many tick labels, 
-       first go to double row, then to diagonal, then to vertical
-       when text is rotated (up to 90 deg) have it non-centered
-    
     -- Filter out invalid data at some point.  Can't pass invalid data to newScaleFromType!
     
+	-- SQL Injection attacts, strip out
+        [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
+
     Things to get done with dates
     -- Get comparisons to work
     -- Get max/min to work
-    -- Pass in formatting string
+    -- Pass in formatting string to tickLabels
     -- Auto-generate appropriate formatting string
     -- Two-row labeling
     
@@ -184,9 +186,10 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     * trace real plots to extract data
     * CIA World Factbook
     * US Census data
+    * Starchart
+    * Maps of earth in different projections and GIS overlay
     * real-time mouse movement (distance, location, time spent up/down, correlations)
     * Chromaticity diagram
-    * Maps of earth in different projections
     
     Annotations:
     * Label on plot
@@ -205,9 +208,6 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     Function Plotting:
     * Special cases for sin(x)/x
     
-    Different Defaults:
-    * Textbook functions (arrows on the axes, thick lines, no ticks or stubs)
-    * Data plotting (box/frame with ticks, stubs, grid)
 ***/
 
 
@@ -403,7 +403,8 @@ Removers remove the object.
     Should have two classes: continuous and discrete
     Within each, there are different data types supported: number, real, money, string
     
-    Should these just map to 0.0 to 1.0, or should
+    TODO: Should these just map to 0.0 to 1.0, or should they map to pixels?
+    TODO: Should Scale be a generic parent class from which RealScale, DateTimeScale, and CategoryScale are derived?
 ***/
 
 // Scale -- Mapping from data to a position between 0.0 and 1.0 and back.
@@ -1239,7 +1240,7 @@ SVGPlot.prototype.setYScale = function(
 
 // Axis
 
-SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' or 'left' */, scale_type /* ='lnear' */) {
+SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' or 'left' */, scale_type /* ='linear' */) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
     this.set(type, position, scale_type);
     if (type == 'x') {
@@ -1255,7 +1256,7 @@ SVGPlot.Axis = function(svgPlot, parent, type, position /* = 'bottom' or 'left' 
     this.axisTitles = [];
 }
 
-SVGPlot.Axis.prototype.set = function(type, position /* 'bottom' or 'left' */, scale_type /* ='lnear' */) {
+SVGPlot.Axis.prototype.set = function(type, position /* 'bottom' or 'left' */, scale_type /* ='linear' */) {
     this.type = type
     if (type == 'x')
         this.position = SVGPlot.firstNonNull(position, this.position, 'bottom');
@@ -1694,8 +1695,9 @@ SVGPlot.View.prototype.layout = function (totalXSize, totalYSize) {
         this.yAxes[i].layout(totalXSize, totalYSize);
 }
 
-SVGPlot.axisMargin = 1;
-SVGPlot.componentMargin = 1;
+// TODO: 
+SVGPlot.axisMargin = 1;  // between one axis and a second
+SVGPlot.componentMargin = 1;  // between ticks, tickLabels, and labels
 
 SVGPlot.Axis.prototype.layout = function(totalXSize, totalYSize) {
     var offsets = {'above':0.5, 'below':0.5};  // TODO actually find line-width
