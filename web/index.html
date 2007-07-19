@@ -14,7 +14,6 @@
 
 
 <!--#include virtual="menu.html" -->
-
 <div id="content">
 <h1>Welcome to SVGKit</h1>
 <p>SVGKit is a collection of JavaScript libraries for painless client-side SVG
@@ -24,27 +23,27 @@
 <table>
   <tr>
     <td><a href="SVGKit.html"><strong>SVGKit</strong></a> (<a href="../tests/svg_tests.html">live demo</a>, <a href="../tests/svg_type_tests.xhtml">type tests</a>) -- A low-level JavaScript SVG library. Create a new SVG at runtime. Load SVG data from a URL. Conveniently handle quirks of three ways SVG can be included in browsers: object, embed, and inline. Handle different browsers and different SVG engines. Has convenience functions for DOM manipulation ala MochiKit. It manages the objects: HTMLElement, SVGDocument, SVGElement </td>
-    <td><img src="svgkit.png" width="200" height="200" /></td>
+    <td><img src="svgkit.png" alt="SVGKit" width="200" height="200" /></td>
   </tr>
   <tr>
     <td><a href="SVGEvent.html"><strong>SVGEvent</strong></a> (<a href="../tests/event_tests.html">live demo</a>) -- Additions to the SVGKit object for event handling. In SVG it can be tricky to get from mouse coordinates to local coordinates. SVGEvent has routines to enable draggable items, rotatable items, and to prevent pan and zoom on items. </td>
-    <td><img src="gears.png" width="200" height="193" /></td>
+    <td><img src="gears.png" alt="" width="200" height="193" /></td>
   </tr>
   <tr>
     <td><a href="SVGCanvas.html"><strong>SVGCanvas</strong></a> (<a href="../tests/canvas_tests.html">live demo</a>, <a href="../tests/canvas_tests2.html">live demo 2</a>, <a href="../tests/canvas_extensions_tests.html">canvas extensions</a>) -- Implements most of the Canvas API along with some SVG-specific additions. Allows you to create an SVG more prodecurally rather than building it up with DOM manipulation (one of the disadvantages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vuki&#263;evi&#263;</a>) The unimplimented parts of the Canvas API are things like &quot;take what you've drawn so far, treat it like a bitmap, and run the following filter on it.&quot; Some of these are impossible in SVG, but will get better with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2</a>. </td>
-    <td><img src="bowtie.png" width="200" height="200" /></td>
+    <td><img src="bowtie.png" alt="SVGCanvas" width="200" height="200" /></td>
   </tr>
   <tr>
     <td><a href="SVGPlot.html"><strong>SVGPlot</strong></a> (<a href="../tests/plot_tests.html">live demo</a>, <a href="../tests/plot_csv.html">csv demo</a>) -- A full plotting suite to eventually rival Excel, Matlab, etc. It generates clean SVG in the browser that can be saved, sent back to server for conversion to PDF, PS, PNG, etc. Live updates via AJAX for real-time data like stocks or web stats. Allows multiple plots arranged on an SVG, multiple related or unrelated axes per plot, and control of styles. Originally I was going to write it in pure Canvas code so you could have either underneath, but things like text made it too frustrating. For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more production quality release. </td>
-    <td><img src="plot.png" width="200" height="196" /></td>
+    <td><img src="plot.png" alt="SVGPlot" width="200" height="196" /></td>
   </tr>
   <tr>
     <td><a href="SVGLaTeX.html"><strong>SVGLaTeX</strong></a> (<a href="../tests/latex_tests.html">live demo</a>) -- Generate SVGs from LaTeX equations with a servers-side CGI script. This script can be called from JavaScript to stick the result in a client-side SVG. </td>
-    <td><img src="latexsvg.png" width="200" height="200" /></td>
+    <td><img src="latexsvg.png" alt="SVGLaTeX" width="200" height="200" /></td>
   </tr>
   <tr>
     <td><a href="SVGFontKit.html"><strong>SVGFontKit</strong></a> (<a href="../tests/font_test.svg">font_test.svg</a>) -- This is a hack to replace all SVG &lt;text&gt; and &lt;tspan&gt; elements that reference an embeded SVG font with references to the font's glyphs properly positioned and spaced. This hack is necesary because Firefox lacks support for SVG Fonts, and currently &lt;text&gt; elements are rendered and sized according to the rest of the web pages's fonts rather than pixel-perfectly anti-aliased as demanded the SVG spec seems to require.</td>
-    <td><img src="font.png" width="200" height="196" /></td>
+    <td><img src="font.png" alt="SVGFontKit" width="200" height="196" /></td>
   </tr>
 </table>
 <h2>Getting Started</h2>
@@ -115,8 +114,8 @@ wav or mp3 data programatically and send it to be played (for a Fourier
 synthesis program, for example.)<br />
 </p>
 
-
-</div> <!-- content -->
+</div> 
+<!-- content -->
 <!--#include virtual="footer.html" -->
 </div>  <!-- container -->
 
