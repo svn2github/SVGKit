@@ -9,11 +9,13 @@ TODO:
   * mass of stuff goes like size cubed, so masses are more spread
 - Radius versus diameter
 - More Energies: http://ippex.pppl.gov/interactive/energy/Vast_Scale_of_Energy.HTML
-- Categorize ['Astronomy/Cosmology', 'Particle Physics', 'Biology/Chemistry', 'Human Scale']
-- Check Vac Energy
+- Check Vac Energy 3meV from http://arxiv.org/PS_cache/arxiv/pdf/0706/0706.2186v2.pdf
 - Chemistry reaction energies and time scales
 - At every intersection with the axes, stick a 2 sig fig number like '3.2' whose exponent you can read off.
+- Long timescales like proton decay and black hole decay.
 - Distinguish agrogate versus invividual particles
+- Uncertainties without making things complicated
+- LaTeX formula(s) for each item relating it to other items.
 
 Books:
 Picture book 'orders of magnitude' by Phil Morrison
@@ -53,18 +55,21 @@ Observations:
     
 Please email any corrections, additions, or ideas
 TODO: TeX font, subscripts and superscripts, 
-      color-code categories, background pictures,
+      ledgend for colors
+      human blob
+      background pictures
       small number at every axis intersection
+      Similar things avoid each other horizontally
 ------------------------------------------
 ***/
 
 var units = function() {
     var c = 299792458 // m/s
-    var h = 6.626069311E-34 // J*s
+    var h = 6.6260693e-34 // J*s
     var hbar = h / (2.0 * Math.PI)
-    var eV = 1.6021765314E-19 // J
-    var Gn = 6.67421e-11 // N m^2 / Kg^2
-    var kb = 1.380650524E-23 // J/K
+    var eV = 1.60217653e-19 // J
+    var Gn = 6.6742e-11 // N m^2 / Kg^2
+    var kb = 1.3806505e-23 // J/K
 
     // Where do the 2pi's go?
     // E= h f   (= hbar w)
@@ -122,7 +127,7 @@ var units = function() {
     units['hour'] = {dim:-1, planck: units['min']['planck']*60 }
     units['day'] = {dim:-1, planck: units['hour']['planck']*24 }
     units['month'] = {dim:-1, planck: units['day']['planck']*30 }
-    units['yr'] = {dim:-1, planck: units['s']['planck']*31556926 }
+    units['yr'] = {dim:-1, planck: units['s']['planck']*31556925.2 }
     units['kyr'] = {dim:-1, planck: units['yr']['planck']*1e3 }
     units['Myr'] = {dim:-1, planck: units['yr']['planck']*1e6 }
     units['Gyr'] = {dim:-1, planck: units['yr']['planck']*1e9 }
@@ -143,14 +148,14 @@ var units = function() {
     units['A'] = {dim:-1, planck:   units['m']['planck']/1e10 }
     units['km'] = {dim:-1, planck:  units['m']['planck']*1e3 }
     units['ly'] = {dim:-1, planck:  units['m']['planck']*9.4605284e15 }
-    units['pc'] = {dim:-1, planck:  units['m']['planck']*3.08568025e16  }
+    units['pc'] = {dim:-1, planck:  units['m']['planck']*3.0856775807e16  }
     units['kpc'] = {dim:-1, planck:  units['pc']['planck']*1e3 }
     units['Mpc'] = {dim:-1, planck:  units['pc']['planck']*1e6 }
     addUnits('Distance')
     // Mass
     units['Kg'] = {dim:1, planck: 1/planck_mass }
     units['g'] = {dim:1, planck: units['Kg']['planck'] / 1000 }
-    units['M_sun'] = {dim:1, planck: units['Kg']['planck'] * 1.988443E+30 }
+    units['M_sun'] = {dim:1, planck: units['Kg']['planck'] * 1.98844E+30 }
     units['M_pl'] = {dim:1, planck: 1 }
     addUnits('Mass')
     // Energy
@@ -183,6 +188,18 @@ var units = function() {
     
     var displayCategories = ['Mass', 'Energy', 'Temperature', 'Distance', 'Time']
     
+    var colors = {
+        'particle': '#aa0000',
+        'nuclear': '#aa0000', 
+        'human': '#aa4400',
+        'planetary': '#aa8800',
+        'bio': '#338000',
+        'chem': '#008066',
+        'tech': '#0044aa',
+        'astro': '#4400aa',
+        'unit': 'black',
+    }
+    
     var whichType = function(unit) {
         for (type in unit_types) {
             if (unit_types[type].indexOf(unit) > -1)
@@ -196,199 +213,208 @@ var units = function() {
     // Find: ('.*')
     // Replace: [\1],
     var data = [
-    ['sec',1,'s'],
-    ['min',1,'min'],
-    ['hour',1,'hour'],
-    ['day', 1, 'day'],
-    ['year', 1, 'yr'],
-    ['m',1,'m'],
-    //['1cm',1,'cm'],  // Close to Earth Schwarzschild
-    ['mm',1,'mm'],
-    ['J',1,'J'],
-    ['Kg',1,'Kg'],
-    ['g',1,'g'],
-    ['K',1,'K'],
-    ['eV',1,'eV'],
-    //['1u',1.66054021E-027,'Kg'],
-    ['Gravitational Constant (Plank Mass)',1.22089836113838e+19,'GeV'],
-    ['Reduced Planck Mass',2.44e+18,'GeV'],
-    ['Electron Mass',0.51,'MeV'],
-    ['Proton Mass',0.93827,'GeV'],
-    //['Deuteron mass',1875.61,'MeV'],
-    //['W Mass',80.43,'GeV'],
-    ['Z Mass',91.19,'GeV'],
-    ['Higgs vev (electroweak scale)',246.2,'GeV'],
-    ['GUT Scale',1.00E+016,'GeV'],
-    ['Electron Radius',2.82E-15,'m'],
-    ['Compton Wavelength',3.86E-13,'m'],
-    ['Bohr Radius',5.29E-11,'m'],
-    //['parsec',3.09E+16,'m'],
-    //['Year',3.16E+07,'s'],
-    //['sidereal year (fixed star)',31558149.8,'s'],
-    ['Hubble Length',1.20E+26,'m'],
-    ['Solar Mass',1.99E+30,'Kg'],
-    ['Solar Radius',6.96E+08,'m'],
-    //['Solar Luminosity',3.85E+26,'W'],
-    ['Sun Schwarzschild radius',2.95,'km'],
-    ['Earth Mass',5.97E+24,'Kg'],
-    ['Earth Radius',6380,'km'],
-    ['Earth Sun Distance (au)',1.50E+11,'m'],
-    ['Earth Moon Distance',3.84400000E+08,'m'],
-    ['Earth Schwarzschild radius',8.87,'mm'],
-    //['Radius of white dwarf with solar mass',5000,'km'],  // Too close to earth radius
-    //['Radius of neutron star with solar mass',10,'km'],  // Too close to Height of Everest
-    ['Moon Mass',7.35E+22,'Kg'],  // earth = 81.3 moons
-    ['Jupiter Mass',1.90E+27,'Kg'],
-    ['Jupiter Distance',7.79E+11,'m'],
-    ['Nearest star (Proxima Centauri) Distance',4,'ly'],
-    ['Galactic Center to Sun',8.05,'kpc'],
-    ['Galactic disk of Milky Way Diameter',100000,'ly'],  // 33.3 kpc
-    //['SN 1987A and LMC Distance',50,'kpc'],  // Too close to Galaxy Diameter
-    ['Andromeda (nearest) Galaxy Distance',725,'kpc'],
-    ['Local Group of galaxies Diameter',1.6,'Mpc'],
-    ['Virgo cluster of galaxies Distance',14,'Mpc'],
-    ['Local Supercluster Diameter',60,'Mpc'],
-    //['Distance to certain quasars',1.0E+26,'m'],  // Too close to Hubble length
-    //['Chandrasakhar (white dwarf limit)',1.5,'M_sun'],
-    //['Oppenheimer-Volkov (neutron star limit)',2.0,'M_sun'],
-    ['Visible Mass in Galaxy',2.00E+11,'M_sun'],
-    ['All Mass in Galaxy',6.00E+11,'M_sun'],
-    ['Black hole at center of our galaxy', 5.2e36, 'Kg'], // Taylor & Wheeler
-    ['Black hole in center of Virgo cluster', 6e39, 'Kg'], // Taylor & Wheeler
-    ['Mass in Universe',2.06E+55,'g'],
-    ['Age of Universe',13.7,'Gyr'],
-    //['Critical Density per cm^3',9.5E-30,'g'],  // These are all too close to Cosmological Constant
-    //['Critical Density',9.5E-30,'g/cm^3'],
-    //['Critical Density',5.3,'GeV/m^3'],
-    //['Critical Density',2.55,'meV'],
-    ['Cosmological Constant (Vac Energy)',1.86,'meV'],
-    ['CMB Temperature',2.7,'K'],
-    //['Sky Brightness Temp (Synchrotron)',200,'K'],
-    ['Room Temperature',300,'K'],
-    //['Earth Highest Temperature',58+273.15,'K'],
-    //['Earth Lowest Temperature',89.2+273.15,'K'],
-    //['Boiling',373.15,'K'],   // Boiling and freezing are too close
-    //['Freezing Water',273.15,'K'],
-    //['Neutrino Temp',1.9,'K'],
-    ['Tallest Building height',508.0,'m'],
-    ['Tallest Building mass',700000000,'Kg'],
+    ['1 sec',1,'s', 'unit', true],
+    ['1 min',1,'min', 'unit', false],
+    ['1 hour',1,'hour', 'unit', false],
+    ['1 day', 1, 'day', 'unit', false],
+    ['1 year', 1, 'yr', 'unit', true],
+    ['1 m',1,'m', 'unit', true],
+    //['1cm',1,'cm', 'unit', true],  // Close to Earth Schwarzschild
+    ['1 mm',1,'mm', 'unit', false],
+    ['1 J',1,'J', 'unit', true],
+    ['1 Kg',1,'Kg', 'unit', true],
+    ['1 g',1,'g', 'unit', false],
+    ['1 K',1,'K', 'unit', true],
+    ['1 eV',1,'eV', 'unit', true],
+    //['1u',1.66054021E-027,'Kg', 'unit', false],
+    ['Gravitational Constant (Plank Mass)',1.22090e+19,'GeV', 'particle', true],
+    ['Reduced Planck Mass',2.44e+18,'GeV', 'particle', false],
+    ['Electron Mass',0.510998918,'MeV', 'particle', true],
+    ['Proton Mass',.938272029,'GeV', 'particle', true],
+    //['Deuteron mass',1875.61,'MeV', 'particle', false],
+    //['W Boson Mass',80.425,'GeV', 'particle', false],
+    ['Z Boson Mass',91.1876,'GeV', 'particle', true],
+    ['Higgs vev (electroweak scale)',246.2,'GeV', 'particle', false],
+    ['GUT Scale',1.00E+016,'GeV', 'particle', true],
+    ['Electron Radius',2.82E-15,'m', 'particle', false],
+    ['Compton Wavelength',3.86E-13,'m', 'particle', false],
+    ['Bohr Radius',5.29E-11,'m', 'particle', false],
+    //['parsec',3.09E+16,'m', 'astro', true],  // Too close to distance to nearest star
+    //['Year',3.16E+07,'s', 'unit', false],
+    //['sidereal year (fixed star)',31558149.8,'s', 'unit', false],
+    ['Hubble Length',1.20E+26,'m', 'astro', false],
+    ['Solar Mass',1.99E+30,'Kg', 'astro', true],
+    ['Solar Radius',6.961E+08,'m', 'astro', false],
+    //['Solar Luminosity',3.85E+26,'W', 'astro', false],
+    ['Sun Schwarzschild radius',2.95325008,'km', 'astro', false],
+    ['Earth Mass',5.9723E+24,'Kg', 'planetary', false],
+    ['Earth Radius',6378.140,'km', 'planetary', false],
+    ['Earth Sun Distance (au)',149597870660,'m', 'astro', true],
+    ['Earth Moon Distance',3.84400000E+08,'m', 'astro', false],
+    ['Earth Schwarzschild radius',8.87005622,'mm', 'astro', false],
+    //['Radius of white dwarf with solar mass',5000,'km', 'astro', false],  // Too close to earth radius
+    //['Radius of neutron star with solar mass',10,'km', 'astro', false],  // Too close to Height of Everest
+    ['Moon Mass',7.35E+22,'Kg', 'planetary', false],  // earth = 81.3 moons
+    ['Jupiter Mass',1.90E+27,'Kg', 'planetary', false],
+    ['Jupiter Distance',7.79E+11,'m', 'astro', false],
+    ['Nearest star (Proxima Centauri) Distance',4,'ly', 'astro', true],
+    ['Galactic Center to Sun',8.0,'kpc', 'astro', false],
+    ['Galactic disk of Milky Way Diameter',100000,'ly', 'astro', false],  // 33.3 kpc
+    //['SN 1987A and LMC Distance',50,'kpc', 'astro', false],  // Too close to Galaxy Diameter
+    ['Andromeda (nearest) Galaxy Distance',725,'kpc', 'astro', false],
+    ['Local Group of galaxies Diameter',1.6,'Mpc', 'astro', false],
+    ['Virgo cluster of galaxies Distance',14,'Mpc', 'astro', false],
+    ['Local Supercluster Diameter',60,'Mpc', 'astro', false],
+    //['Distance to certain quasars',1.0E+26,'m', 'astro', false],  // Too close to Hubble length
+    //['Chandrasakhar (white dwarf limit)',1.5,'M_sun', 'astro', false],
+    //['Oppenheimer-Volkov (neutron star limit)',2.0,'M_sun', 'astro', false],
+    ['Visible Mass in Galaxy',2.00E+11,'M_sun', 'astro', false],
+    ['All Mass in Galaxy',6.00E+11,'M_sun', 'astro', false],
+    ['Black hole at center of our galaxy', 5.2e36, 'Kg', 'astro', false], // Taylor & Wheeler
+    ['Black hole in center of Virgo cluster', 6e39, 'Kg', 'astro', false], // Taylor & Wheeler
+    ['Mass in Universe',2.06E+55,'g', 'astro', true],
+    ['Age of Universe',13.7,'Gyr', 'astro', true],
+    //['Critical Density per cm^3',9.5E-30,'g', 'astro', false],  // These are all too close to Cosmological Constant
+    //['Critical Density',9.5E-30,'g/cm^3', 'astro', false],
+    ['Critical Density',1.05369e-5*(.71)*(.71)*1e6,'GeV/m^3', 'astro', false],  // 5.3  http://pdg.lbl.gov/2004/reviews/astrorpp.pdf
+    //['Critical Density',2.55,'meV', 'astro', false],
+    ['Cosmological Constant (Vac Energy Density)',Math.pow(.73,0.25)*2.55,'meV', 'particle', false],  // 3meV from http://arxiv.org/PS_cache/arxiv/pdf/0706/0706.2186v2.pdf
+    //['Density of Dark Matter',Math.pow(0.22,0.25)*2.55,'meV', 'particle', false],  // 3meV from http://arxiv.org/PS_cache/arxiv/pdf/0706/0706.2186v2.pdf
+
+    ['CMB Temperature',2.7,'K', 'astro', true],
+    //['Sky Brightness Temp (Synchrotron)',200,'K', 'astro', false],
+    ['Room Temperature',300,'K', 'human', false],
+    //['Earth Highest Temperature',58+273.15,'K', 'planetary', false],
+    //['Earth Lowest Temperature',89.2+273.15,'K', 'planetary', false],
+    //['Boiling',373.15,'K', 'human', false],   // Boiling and freezing are too close
+    //['Freezing Water',273.15,'K', 'human', false],
+    //['Neutrino Temp',1.9,'K', 'astro', false],
+    ['Tallest Building height',508.0,'m', 'human', false],
+    ['Tallest Building mass',700000000,'Kg', 'human', false],
     
-    //['Lowest temp reached',2.17e-8,'K'], //3.0E-31,'J'], 
-    //['Lowest temp for nuclear magnetic ordering', 100e-12,'K'], //3.0E-31,'J'],  //  at Helsinki
-    //['KE of molecule at room temp',4.4E-21,'J'],
-    ['Lowest temp for helium dilution fridge', 1.7e-3,'K'], //3.0E-31,'J'], 
-    //['Boiling point of bound helium', 4.22, 'K'],  // Too close to CMB
-    //['Temp on Pluto', 44, 'K'],  // Too close to liquid nitrogen temp
-    ['Liquid Nitrogen temp', 77.35, 'K'],
-    //['Melting point of tungsten', 3683, 'K'],  // Too close to Sun surface temp
-    ['Temp in supernova explosions', 10e9, 'K'],
-    ['Temperature on Venus', 737, 'K'],
-    //['Melting point of aluminum', 933.47, 'K'],  // Too close to temp of Venus
+    //['Lowest temp reached',2.17e-8,'K'], //3.0E-31,'J', 'tech', false], 
+    //['Lowest temp for nuclear magnetic ordering', 100e-12,'K', 'tech', false], //3.0E-31,'J'],  //  at Helsinki
+    //['KE of molecule at room temp',4.4E-21,'J', 'planetary', false],
+    ['Lowest temp for helium dilution fridge', 1.7e-3,'K', 'tech', false], //3.0E-31,'J'], 
+    //['Boiling point of bound helium', 4.22, 'K', 'tech', false],  // Too close to CMB
+    //['Temp on Pluto', 44, 'K', 'astro', false],  // Too close to liquid nitrogen temp
+    ['Liquid Nitrogen temp', 77.35, 'K', 'tech', false],
+    //['Melting point of tungsten', 3683, 'K', 'tech', false],  // Too close to Sun surface temp
+    ['Temp in supernova explosions', 10e9, 'K', 'astro', false],
+    ['Temperature on Venus', 737, 'K', 'astro', false],
+    //['Melting point of aluminum', 933.47, 'K', 'tech', false],  // Too close to temp of Venus
     
     
-    ['Neutrino mass upper bound',50,'eV'],
-    ['Fission of one U-235',200,'MeV'],
-    ['Flying mosquito kinetic energy',1.0001,'TeV'],
-    ['LHC p-p collisions',15,'TeV'],
-    ['LHC Pb-Pb collisions',1250,'TeV'],
-    ['GZK limit for energy of a cosmic ray', 5e19, 'eV'],
-    ['Most energetic cosmic ray ever detected',3.0E+20,'eV'],
-    //['Average person using a baseball bat', 80, 'J'],  // Too close to most energetic cosmic ray
-    ['Bullet Kinetic Energy (AK74 at 900 m/s)', 14203,'J'],
-    ['Energy in 1g of sugar or protein', 3.8e4, 'J'],
-    ['Car Kinetic Energy',3.0E+05,'J'],
-    //['typical serving of staple food', 1e6, 'J'], // Close to GUT Scale
-    ['Food energy a human consumes in a day',8.4E+06,'J'],  // 2000 Kcal
-    //['Exploding 1Kg of TNT',4.184e+06,'J'],  // To close to Food energy a human consumes and NIF laser
-    ['Lightning bolt energy',1.5E+09,'J'],
-    ['Exploding 1 ton of TNT',4.184e9,'J'],
-    ['Largest conventional bomb (MOAB)',4.184e9*11,'J'], // http://en.wikipedia.org/wiki/MOAB
-    ['Largest conventional bomb test (600 ton TNT)',4.184e9*600,'J'],  // http://www.washingtonpost.com/wp-dyn/content/article/2006/03/30/AR2006033001735.html
-    ['Hiroshima blast',4.2E+06*1000*13000,'J'], // http://en.wikipedia.org/wiki/MOAB
-    ['Largest nuclear weapon tested energy',2.5E+17,'J'],
-    ['Energy consumed by the world in one year (2001)',4.3E+20,'J'],
-    ["Energy in world's fossil fuel reserves (2003)",3.9E+22,'J'],
-    ['Energy output of the Sun in one second',3.8E+26,'J'],
-    ['Energy output of the Sun in one year',3.8E+26*31556926,'J'],
-    ["Energy in world's U-238 reserves (2003)",3.0E+31,'J'],
-    ['Earth gravitational binding energy',2.4E+32,'J'],
-    ['Sun gravitational binding energy',6.9E+41,'J'],
-    ['Energy released in a gamma ray burst',1.0E+47,'J'],
+    ['Neutrino mass upper bound',2,'eV', 'particle', false],  // http://pdglive.lbl.gov/Rsummary.brl?nodein=S066&fsizein=1
+    ['Neutrino mass cosmology upper bound',0.4,'eV', 'particle', false],  // http://pdg.lbl.gov/2007/reviews/numixrpp.pdf
+    ['Neutrino mass difference solar delta m_21', Math.sqrt(8e-5) *1000, 'meV', 'particle', false],
+    ['Neutrino mass difference atmosphere delta m_32', Math.sqrt(2.5e-3) *1000, 'meV', 'particle', false],  // 1.9-3.0 is the range http://pdg.lbl.gov/2007/reviews/numixrpp.pdf
     
-    ['Gamma Rays',1.001,'pm'],
-    ['X-Rays',100,'pm'],
-    //['Visible Light',400,'nm'],
-    ['Violet Light',400,'nm'],
-    ['Red Light',750,'nm'],
-    //['hc=1240 nm eV',1240,'nm'],  // Just a check to make sure 1240nm lines up with 1eV
-    ['DNA helix diameter',2,'nm'],
-    ['HIV (average size) virus size',90,'nm'],
-    ['Bacteria diameter',3.2,'um'],
-    ['Blood cell / Spider web / Eukaryotic nucleus',7,'um'],
-    ['Human Hair width',80,'um'],
-    ['Height of Everest',8.848,'km'],
-    //['Mean depth of Ocean', 3.600, 'km'],
-    //['deepest ocean trench',10.911,'km'],
-    ['Height of Olympus Mons on Mars', 27.000, 'km'],
-    ['Geosynch Orbit Distance', 3.6e7, 'm'],
-    //['length of the Great Wall of China',6.4e6,'m'],  // Same as Earth Radius and not sure if it's right
-    ['Lead-208 atom mass',3.5E-25,'Kg'],
-    ['Small virus mass',1.0E-20,'Kg'],
-    ['E. coli bacterium mass',7.0E-16,'Kg'],
-    ['Avg. human cell mass',1.0E-12,'Kg'],
-    ['Mosquito mass',1.5E-03,'g'],
-    ['Blue whale mass',1.0E+05,'Kg'],
-    ['Human mass',100,'Kg'],
-    ['Titanic mass',2.6E+07,'Kg'],
-    ["Earth's oceans mass",1.4E+21,'Kg'],
-    ['Virgo Supercluster mass',2.0E+46,'Kg'],
-    //['Time left for Sun',9,'Gyr'],
-    ['WiFi and Microwave ovens', 2.4, 'GHz'],
-    ['FM Radio and TV', 100, 'MHz'],
-    ['AM Radio', 1.0001, 'MHz'],
-    ['Human Hearing upper limit', 20, 'kHz'],
-    ['Human Hearing lower limit', 20, 'Hz'],
-    ['Density of Water', 1.0001, 'g/cm^3'],
-    ['Hydrogen hyperfine splitting of spins', 21, 'cm'],
-    ['Sun surface temp', 5785, 'K'],
-    ['Sun core temp', 13.6, 'MK'],
-    ['Local Disk Density', 1.0001e-23, 'g/cm^3'],
-    ['Local Halo Density', 1.0001e-24, 'g/cm^3'],
-    ['Age of Earth, Sun, and Life', 4.5, 'Gyr'],
-    //['Age of Life on Earth', 4, 'Gyr'],
-    //['Age of Cells on Earth', 3.5, 'Gyr'],
-    //['Age of Photosynthesis on Earth', 3, 'Gyr'],
-    ['Age of Eukaryotic cells on Earth', 2, 'Gyr'],
-    ['Age of Multicellular life on Earth', 1.00001, 'Gyr'],
-    ['Age of Life on Land', 500, 'Myr'],
-    ['Age of Dinosaur Extinction', 65, 'Myr'],
-    //['Age of genus Homo', 2, 'Myr'],
-    ['Age of control of fire', 1.0001, 'Myr'],
-    ['Age of Homo sapiens', 200, 'kyr'],
-    //['Age of Humans living on all continents', 11, 'kyr'],
-    //['Age of Agriculture', 8000, 'yr'],
-    ['Age of Civilization', 6000, 'yr'],
-    //['Age of Space Flight', 50, 'yr'],
-    ['Lifespan of Person', 100, 'yr'],
-    //['Energy to switch transistor', 1, 'J'],  // 1/2 C V^2
-    ['Energy of biggest laser pulse @ NIF 1ns (check)', 3e6, 'J'],  // Too close to 
-    ['Energy of a well-hit tennis ball (check)', 1e20, 'eV'],
+    ['Fission of one U-235',200,'MeV', 'nuclear', false],
+    ['Flying mosquito kinetic energy',1.0001,'TeV', 'bio', false],
+    ['LHC p-p collisions',15,'TeV', 'particle', false],
+    ['LHC Pb-Pb collisions',1250,'TeV', 'particle', false],
+    ['GZK limit for energy of a cosmic ray', 5e19, 'eV', 'astro', false],
+    ['Most energetic cosmic ray ever detected',3.0E+20,'eV', 'astro', false],
+    //['Average person using a baseball bat', 80, 'J', 'human', false],  // Too close to most energetic cosmic ray
+    ['Bullet Kinetic Energy (AK74 at 900 m/s)', 14203,'J', 'human', false],
+    ['Energy in 1g of sugar or protein', 3.8e4, 'J', 'human', false],
+    ['Car Kinetic Energy',3.0E+05,'J', 'human', false],
+    //['typical serving of staple food', 1e6, 'J', 'human', false], // Close to GUT Scale
+    ['Food energy a human consumes in a day',8.4E+06,'J', 'human', false],  // 2000 Kcal
+    //['Exploding 1Kg of TNT',4.184e+06,'J', 'human', false],  // To close to Food energy a human consumes and NIF laser
+    ['Lightning bolt energy',1.5E+09,'J', 'planetary', false],
+    ['Exploding 1 ton of TNT',4.184e9,'J', 'tech', false],
+    ['Largest conventional bomb (MOAB)',4.184e9*11,'J', 'tech', false], // http://en.wikipedia.org/wiki/MOAB
+    ['Largest conventional bomb test (600 ton TNT)',4.184e9*600,'J', 'tech', false],  // http://www.washingtonpost.com/wp-dyn/content/article/2006/03/30/AR2006033001735.html
+    ['Hiroshima blast',4.2E+06*1000*13000,'J', 'tech', false], // http://en.wikipedia.org/wiki/MOAB
+    ['Largest nuclear weapon tested energy',2.5E+17,'J', 'tech', false],
+    ['Energy consumed by the world in one year (2001)',4.3E+20,'J', 'human', false],
+    ["Energy in world's fossil fuel reserves (2003)",3.9E+22,'J', 'planetary', false],
+    ['Energy output of the Sun in one second',3.8E+26,'J', 'astro', false],
+    ['Energy output of the Sun in one year',3.8E+26*31556926,'J', 'astro', false],
+    ["Energy in world's U-238 reserves (2003)",3.0E+31,'J', 'planetary', false],
+    ['Earth gravitational binding energy',2.4E+32,'J', 'planetary', false],
+    ['Sun gravitational binding energy',6.9E+41,'J', 'astro', false],
+    ['Energy released in a gamma ray burst',1.0E+47,'J', 'astro', false],
+    
+    ['Gamma Rays',1.001,'pm', 'nuclear', false],
+    ['X-Rays',100,'pm', 'nuclear', false],
+    //['Visible Light',400,'nm', 'nuclear', false],
+    ['Violet Light',400,'nm', 'chem', false],
+    ['Red Light',750,'nm', 'chem', false],
+    //['hc=1240 nm eV',1240,'nm', 'chem', false],  // Just a check to make sure 1240nm lines up with 1eV
+    ['DNA helix diameter',2,'nm', 'bio', false],
+    ['HIV (average size) virus size',90,'nm', 'bio', false],
+    ['Bacteria diameter',3.2,'um', 'bio', false],
+    ['Blood cell / Spider web / Eukaryotic nucleus',7,'um', 'bio', false],
+    ['Human Hair width',80,'um', 'human', false],
+    ['Height of Everest',8.848,'km', 'human', false],
+    //['Mean depth of Ocean', 3.600, 'km', 'planetary', false],
+    //['deepest ocean trench',10.911,'km', 'planetary', false],
+    ['Height of Olympus Mons on Mars', 27.000, 'km', 'planetary', false],
+    ['Weather Balloon max height', 40, 'km', 'planetary', false],
+    ['Low Earth Orbit minimum height', 200, 'km', 'planetary', false],
+    ['Geosynch Orbit Distance', 3.6e7, 'm', 'planetary', false],
+    //['length of the Great Wall of China',6.4e6,'m', 'human', false],  // Same as Earth Radius and not sure if it's right
+    ['Lead-208 atom mass',3.5E-25,'Kg', 'nuclear', false],
+    ['Small virus mass',1.0E-20,'Kg', 'bio', false],
+    ['E. coli bacterium mass',7.0E-16,'Kg', 'bio', false],
+    ['Avg. human cell mass',1.0E-12,'Kg', 'bio', false],
+    ['Mosquito mass',1.5E-03,'g', 'bio', false],
+    ['Blue whale mass',1.0E+05,'Kg', 'bio', false],
+    ['Human mass',100,'Kg', 'human', false],
+    ['Titanic mass',2.6E+07,'Kg', 'human', false],
+    ["Earth's oceans mass",1.4E+21,'Kg', 'planetary', false],
+    ['Virgo Supercluster mass',2.0E+46,'Kg', 'astro', false],
+    //['Time left for Sun',9,'Gyr', 'astro', false],
+    ['WiFi and Microwave ovens', 2.4, 'GHz', 'tech', false],
+    ['FM Radio and TV', 100, 'MHz', 'tech', false],
+    ['AM Radio', 1.0001, 'MHz', 'tech', false],
+    ['Human Hearing upper limit', 20, 'kHz', 'human', false],
+    ['Human Hearing lower limit', 20, 'Hz', 'human', false],
+    ['Density of Water', 1.0001, 'g/cm^3', 'human', false],
+    ['Hydrogen hyperfine splitting of spins', 21, 'cm', 'chem', false],
+    ['Sun surface temp', 5785, 'K', 'astro', false],
+    ['Sun core temp', 13.6, 'MK', 'astro', false],
+    ['Local Disk Density', 1.0001e-23, 'g/cm^3', 'astro', false],
+    ['Local Halo Density', 1.0001e-24, 'g/cm^3', 'astro', false],
+    ['Age of Earth, Sun, and Life', 4.5, 'Gyr', 'astro', false],
+    //['Age of Life on Earth', 4, 'Gyr', 'planetary', false],
+    //['Age of Cells on Earth', 3.5, 'Gyr', 'planetary', false],
+    //['Age of Photosynthesis on Earth', 3, 'Gyr', 'planetary', false],
+    ['Age of Eukaryotic cells on Earth', 2, 'Gyr', 'planetary', false],
+    ['Age of Multicellular life on Earth', 1.00001, 'Gyr', 'planetary', false],
+    ['Age of Life on Land', 500, 'Myr', 'planetary', false],
+    ['Age of Dinosaur Extinction', 65, 'Myr', 'planetary', false],
+    //['Age of genus Homo', 2, 'Myr', 'planetary', false],
+    ['Age of control of fire', 1.0001, 'Myr', 'human', false],
+    ['Age of Homo sapiens', 200, 'kyr', 'human', false],
+    //['Age of Humans living on all continents', 11, 'kyr', 'human', false],
+    //['Age of Agriculture', 8000, 'yr', 'human', false],
+    ['Age of Civilization', 6000, 'yr', 'human', false],
+    //['Age of Space Flight', 50, 'yr', 'human', false],
+    ['Lifespan of Person', 100, 'yr', 'human', false],
+    //['Energy to switch transistor', 999, 'J', 'tech', false],  // 1/2 C V^2
+    ['Energy of biggest laser pulse @ NIF 1ns (check)', 3e6, 'J', 'tech', false],  // Too close to 
+    ['Energy of a well-hit tennis ball (check)', 1e20, 'eV', 'human', false],
     // Energy release in a nova, supernovae, hypernovae
     // Tidal energy delivered to earth in one moon orbit
     // K-T impact that wiped out the dinosaurs
-    ['Transistor channel length (2007)', 45, 'nm'],
-    ['Energy released to the collapse to a neutron star', 1e55, 'erg'],  // SN is collapse to white dwarf
+    ['Transistor channel length (2007)', 45, 'nm', 'tech', false],
+    ['Energy released to the collapse to a neutron star', 1e55, 'erg', 'astro', false],  // SN is collapse to white dwarf
     //['Energy used by a human in a lifetime', // 1-10 kW continuous
     // Energy used by the world in a year
-    ['Supernova 1A temp (lasts seconds)', 1e6, 'K'],
-    ['Supernova 1A energy released', 1e46, 'J'],
+    ['Supernova 1A temp (lasts seconds)', 1e6, 'K', 'astro', false],
+    ['Supernova 1A energy released', 1e46, 'J', 'astro', false],
     // Time for cosmic inflation
-    ['Time for sun to orbit galaxy (cosmic year)', 226e6, 'yr'],
+    ['Time for sun to orbit galaxy (galactic year)', 226e6, 'yr', 'astro', false],
     // Hawking temperature of BH the size of the sun OR Size of BH whose hawking temp is same as sun
     // Kardeschev civilization categories (type 0, type 1, etc.)
-    ['Energy in reactions in sun', 1.0001, 'keV'],
-    ['Energy in reactions in red giants', 100, 'keV'],
-    ['Energy in reactions in Supernovae', 50, 'MeV']
+    ['Energy in reactions in sun', 1.0001, 'keV', 'astro', false],
+    ['Energy in reactions in red giants', 100, 'keV', 'astro', false],
+    ['Energy in reactions in Supernovae', 50, 'MeV', 'astro', false],
+    ['Early Universe (Re)combination temp', .24, 'eV', 'astro', false],
     ]
 
     // TODO: Add all units instead of having them on top.
@@ -423,7 +449,7 @@ var units = function() {
         var unit = data[i][2]
         var pl_units = value*units[unit].planck  // A time, for eg is now in units of planck_time
         var pl_masses = Math.pow(pl_units,1/units[unit].dim)
-        data[i][3] = pl_masses
+        data[i][5] = pl_masses
         var gev = pl_masses / units['GeV'].planck
         if (pl_masses!=0)
             Mpls.push(pl_masses)
@@ -565,28 +591,54 @@ var units = function() {
         }
         
         // Draw Horizontal Lines for the data points and label them
-        p.strokeStyle = 'rgba(0.5,0.5,0.5,0.1)'
+        //p.strokeStyle = 'rgba(0.5,0.5,0.5,0.1)'
         //p.strokeStyle = 'rgba(0.1,0.1,0.1,1.0)'
         p.currentGroup = p.view.element
         p.fontSize = 7
         p.fontWeight = null
         p.textAnchor = null
         //var offset = 0
+        
+        // Draw Lines
         forEach(data, function(item) {
             var name = item[0]
             var value = item[1]
             var unit = item[2]
-            var pl_masses = item[3]
+            var category = item[3]
+            var bold = item[4]
+            var pl_masses = item[5]
             var type = whichType(unit)
             if ( name.search('ass') > -1 && unit.search('eV') > -1 )
                 type = 'Mass'
             var index = displayCategories.indexOf(type)
             if (index > -1) {
+                p.strokeStyle = colors[category]
+                p.globalAlpha = bold ? 0.40 : 0.08
                 p.beginPath()
                 var j = p.view.ytoj(pl_masses)
                 p.moveTo(smallest_location-15, j)
                 p.lineTo(width, j)
                 p.stroke()
+            }
+        })
+        
+        // Draw Text
+        forEach(data, function(item) {
+            var name = item[0]
+            var value = item[1]
+            var unit = item[2]
+            var category = item[3]
+            var bold = item[4]
+            var pl_masses = item[5]
+            var type = whichType(unit)
+            if ( name.search('ass') > -1 && unit.search('eV') > -1 )
+                type = 'Mass'
+            var index = displayCategories.indexOf(type)
+            if (index > -1) {
+                var j = p.view.ytoj(pl_masses)
+                p.fillStyle = colors[category]
+                p.fontWeight = bold ? 'bolder' : 'normal'
+                //p.fontSize = bold ? 9 : 7  // Too noisy and text too big
                 var text
                 if (value == 1)
                     text = name
@@ -596,9 +648,30 @@ var units = function() {
                     text = name + '  (' + value.toPrecision(2) + ' ' + unit + ')'
                 }
                 // Put label 10 pixels away from the nearest axis
+                p.globalAlpha = 1.0
                 p.text(text, 10+index*width/displayCategories.length, j)
             }
         })
+        
+        // Ledgend
+        var j=height/30
+        for(var category in colors) {
+            if (category != 'nuclear') {  // Now color-coded like particle
+                p.globalAlpha = 1.0
+                p.fillStyle = colors[category]
+                p.strokeStyle = colors[category]
+                p.fontWeight = 'bolder'
+                p.fontSize = '12px'
+                p.globalAlpha = 0.40
+                p.beginPath()
+                p.moveTo(width*0.85, j)
+                p.lineTo(width*0.90, j)
+                p.stroke()
+                p.globalAlpha = 1.0
+                p.text(category, width*0.85, j-1)
+                j += 15
+            }
+        }
     }
     
     p.svg.whenReady(doit)
