@@ -15,20 +15,20 @@
 <div id="content">
 <h1>SVGPlot</h1>
 <h2>Introduction</h2>
-<p>SVGPlot will be the combination of three things:
+<p>SVGPlot will be the combination of three things:</p>
 <ul>
   <li>JavaScript API for creating plots/graphs/charts from data (JSON, XML, CSV, SQL query, HTML <code>&lt;table&gt;</code> element) </li>
 <li>XML file format (PlotXML) that is built up by the JavaScript, but can be modified by hand (to edit plot parameters) and re-opened.</li>
 <li>Online web service to graphically create and manipulate plots and save your work as a JavaScript, PlotXML, pure SVG, PDF, PNG, JPEG, etc. </li>
 <li>Plot interactivity so your plots can be manipulated by end users -- zoom in, drill down, get values of points. </li>
 </ul>
-<p> The goal is to make these three as clean as possible
+<p> The goal is to make these three as clean as possible</p>
 <ul>
   <li>Simple things are easy -- good defaults and intelligent assumptions</li>
 <li>It's general enough to allow any complicated plot </li>
 <li>Advanced things are are only as complex as they need to be -- no need to always drop back to low level graphics commands. </li>
 </ul>
-<p>I set out to create a plotting program that:
+<p>I set out to create a plotting program that:</p>
 <ul>
   <li>Server-side command-line rendering through <a href="http://xmlgraphics.apache.org/batik/">Batik</a>, a Java program with an embedded JavaScript interpreter that handles SVG. </li>
 <li>Good features of Matlab, Mathematica, <a href="http://www.gnuplot.info/">GNUPlot</a>, <a href="http://ploticus.sourceforge.net/">Ploticus</a>, <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a>, <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a>. Eventually I'd like to write bridges so people's existing scripts and familiarity can be used to generate interactive web content.</li>
@@ -118,7 +118,7 @@
           <td>36</td>
         </tr>
     </table></td>
-    <td><img src="squares_plot.png" width="200" height="200" /></td>
+    <td><img src="squares_plot.png" alt="y=x^2" width="200" height="200" /></td>
   </tr>
 </table>
 <p>There are two main categories of data, which affect how they are plotted and how ticks and labels are done:</p>
@@ -166,10 +166,10 @@
 <li>values: write the value for each point. How to specify style &amp; relative position? How to add extra space or avoid curve? </li>
 </ul>
 <h2>Hand Crafted SVGs to guide Development </h2>
-<p><a href="plot_info.svg"><img src="plot_info.png" width="300" height="221" border="0" /></a><a href="plot_styles.svg"> <img src="plot_styles.png" width="200" height="192" border="0" /> </a><a href="gradients.svg"><img src="gradients.png" width="150" height="221" border="0" /></a></p>
+<p><a href="plot_info.svg"><img src="plot_info.png" alt="layout" width="300" height="221" border="0" /></a><a href="plot_styles.svg"> <img src="plot_styles.png" alt="markings" width="200" height="192" border="0" /> </a><a href="gradients.svg"><img src="gradients.png" alt="gradients" width="150" height="221" border="0" /></a></p>
 <h2>Inspiration/Other Programs </h2>
 <p><b>Data Plotting </b><a href="http://ploticus.sourceforge.net/">Ploticus</a> / <a href="http://www.gnuplot.info/">GNUPlot</a> / <a href="http://matplotlib.sourceforge.net/">Matplotlib</a> / <a href="http://pyx.sourceforge.net/">PyX</a> / <a href="http://code.enthought.com/chaco/gallery/index.shtml">Chaco</a> / <a href="http://www.gnu.org/software/plotutils/plotutils.html">GNU PlotUtils</a> / <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a> / <a href="http://www.wavemetrics.com/products/igorpro/gallery/user.htm">Igor Pro Galary</a> / <a href="http://www.originlab.com/">Origin (Comm)</a> / <a href="http://www.mathworks.com/access/helpdesk/help/techdoc/learn_matlab/learn_matlab.html">Matlab Tutorial</a> / <a href="http://www.dplot.com/features.htm">Dplot Galery (Win Trial)</a> / <a href="http://www.kylebank.com/">Graphis</a> / <a href="http://www.kde-apps.org/content/show.php?content=9881">LabPlot KDE</a> / <a href="http://www.jfree.org/jfreechart/">JFreeChart</a> / <a href="http://plasma-gate.weizmann.ac.il/Grace/">Grace for X</a> / <a href="http://nces.ed.gov/nceskids/createagraph/">Create A Graph Website</a> / <a href="http://www.gnu.org/software/octave/">Octave (OSS Matlab)</a> / <a href="http://www.liquidx.net/plotkit/">PlotKit</a> / <a href="http://www.dotnetcharting.com/gallery/">.netCharting</a> / <a href="http://swivel.com/">swivel.com</a> /
-  <a href="http://www.chartfx.com/sfxGallery/">ChartFX</a> / <a href="http://www.aditus.nu/jpgraph/features_gallery.php#LinePlots">JpGraph</a> / 
+  <a href="http://www.chartfx.com/sfxGallery/">ChartFX</a> / <a href="http://www.aditus.nu/jpgraph/features_gallery.php#LinePlots">JpGraph</a> /</p>
 <p><b>Function Plotting </b> <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a> / <a href="http://www.nucalc.com/">NuCalc (old Mac)</a> / <a href="http://www.peda.com/grafeq/gallery/rogue.html">GrafEQ Interval</a> / <a href="http://www.mps.mpg.de/dislin/">DLSin</a> / <a href="http://mtac.sourceforge.net/">MTAC Java</a> / <a href="http://gcalc.net/">Java Online</a> / <a href="http://www.graphcalc.com/index.shtml">GraphCalc OSS Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/16712-Graph-Plotter.html">GraphPlotter Win</a> / <a href="http://www.handyarchive.com/Home-Education/Mathematics/15448-Fornux-Calculator-Student-Edition.html">Fornux Win</a> / <a href="http://www.teber.biz/">Math 3D Explorer</a> / <a href="http://www.math.tu-berlin.de/geometrie/lab/curvesnsurfaces.shtml">Virtual Labs</a> / </p>
 <p><b>Complex and Vector Plotting</b> <a href="http://www.usfca.edu/vca/websites.html">Visual Complex Analysis Websites</a> / <a href="http://www.sunsite.ubc.ca/LivingMathematics/V001N01/UBCExamples/Flow/flow.html">Draw Rect Vector Flow</a> / <a href="http://math.la.asu.edu/~kawski/vfa2/index.html">Vector Field Analizer (Applet)</a> / <a href="http://www.math.ttu.edu/~pearce/complex/complexviewer.html">Complex Mapping Viewer</a> / <a href="http://www.cs.berkeley.edu/~flab/complex/gallery.html">Complex Functions</a> / </p>
 <p><strong>Web Charting </strong> <a href="http://flexapps.macromedia.com/flex15/chartexplorer/explorer.mxml?versionChecked=true">Flex Charting</a> &amp; <a href="http://examples.adobe.com/flex2/inproduct/sdk/dashboard/dashboard.html">Dashboard Example</a> / PlotKit / Dojo / <a href="http://www.globfx.com/products/swfchart/samples.php">GlobFX</a> / </p>
