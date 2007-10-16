@@ -191,6 +191,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
     * real-time mouse movement (distance, location, time spent up/down, correlations)
     * Chromaticity diagram
     
+    
     Annotations:
     * Label on plot
     * Pointer with label kinked or curved arrow: horizontal near text, perpendicular to plot)
@@ -409,20 +410,20 @@ Removers remove the object.
 
 // Scale -- Mapping from data to a position between 0.0 and 1.0 and back.
 
-SVGPlot.Scale = function(min /* ='auto' */, 
-                          max /* ='auto' */, 
-                          interpolation /* ='linear' */, 
-                          reversed /* ='false' */, 
-                          required /* =[] */) {
+SVGPlot.ScaleReal = function(min /* ='auto' */, 
+                               max /* ='auto' */, 
+                               interpolation /* ='linear' */, 
+                               reversed /* ='false' */, 
+                               required /* =[] */) {
     /***
         Mapping real values to positions.
     ***/
     this.set(min, max, interpolation, reversed, required);
 }
 
-SVGPlot.Scale.prototype = {
-    type: "Scale",
-    _min: null,  // Calculated if min is 'auto'
+SVGPlot.ScaleReal.prototype = {
+    type: "ScaleReal",
+    _min: null,  // Calculated if min is 'auto', set otherwise
     _max: null,
     set: function(min, max, interpolation, reversed, required) {
         /***
@@ -439,6 +440,9 @@ SVGPlot.Scale.prototype = {
             this._max = this.max
         this.interpolation = SVGKit.firstNonNull(interpolation, this.interpolation, 'linear')  // 'log', 'ln', 'lg', 'sqrt', 'atan'
         this.reversed = SVGKit.firstNonNull(reversed, this.reversed, false)
+        this.includezero = false
+        this.symmetric_around_zero = false
+        //this.overshoot = 0.05
         this.required = SVGKit.firstNonNull(required, this.required, []) // list of values that must be included when min or max are 'auto'
     },
     position: function(value) {
@@ -682,12 +686,12 @@ SVGPlot.ScaleDateTime = function(min, max, interval, reversed, required) {
         elapsed time can be more than 24 hrs.
         Datetime with time windowing for just showing work/day
         
-        ScaleDateTime has burried in it a real Scale object which stores miliseconds since the epoc
+        ScaleDateTime has burried in it a ScaleReal object which stores miliseconds since the epoc
         and is used to do all of the auto-everything.
     ***/
     this.set(min, max, interval, reversed, required)
 }
-//SVGPlot.inherit(SVGPlot.ScaleDateTime, SVGPlot.Scale);
+//SVGPlot.inherit(SVGPlot.ScaleDateTime, SVGPlot.ScaleReal);
 SVGPlot.ScaleDateTime.prototype = {
     type: "ScaleDateTime",
     _min: null,
@@ -731,7 +735,7 @@ SVGPlot.ScaleDateTime.prototype = {
             max_ord = datetime.ordinalDay( datetime.datetime(max) )
         if ( this.required.length != 0 )
             required_ord = map(datetime.ordinalDay, map(datetime.datetime, this.required))
-        this._realScale = new SVGPlot.Scale(min_ord, max_ord, 'linear', reversed, required_ord)
+        this._realScale = new SVGPlot.ScaleReal(min_ord, max_ord, 'linear', reversed, required_ord)
     },
     position: function(value) {
         //log('position', value, value.year, value.month, value.day, value.hour, value.minute, value.second)
@@ -1038,52 +1042,197 @@ SVGPlot.ScaleDiscrete.prototype = {
     set: function(min, max, interval, placement, reversed, required) {
         this.min = SVGKit.firstNonNull(min, 'auto');
         this.max = SVGKit.firstNonNull(max, 'auto');
+        if (this.min != 'auto')
+            this._min = this.min
+        if (this.max != 'auto')
+            this._max = this.max
         this.interval = SVGKit.firstNonNull(interval, 1);  // spacing between discrete values.  Can be any real number.
         this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
         this.reversed = SVGKit.firstNonNull(reversed, false);
         this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
     },
     position: function(value) {
-        if (_min==null || _max==null)
+        if (this._min==null || this._max==null)
             return null;
-        var number = (this._max-this._min)/this.interval;
-        return this.discreteToPosition(value, number);
+        var length = this._max - this._min
+        var count = length/this.interval+1;
+        var index = (value-this._min)/this.interval
+        return this.discreteToPosition(index, count);
     },
-    discreteToPosition: function(value, number) {
-        var ratio;
+    discreteToPosition: function(index, count) {
         if (this.placement == 'on')
-            ratio = i/(length-1);
+            return index/(count-1)
         else
-            ratio = (i+0.5)/length;
-        return ratio;
+            return (index+0.5)/count
     }
 }
+
+/*
+var s = new SVGPlot.ScaleDiscrete(0, 3)
+s.position(0) == 0.0
+s.position(1) == 1.0/3.0
+s.position(3) == 1.0
+s.placement = 'off'
+s.position(0) == 0.125
+s.position(1) == 0.375
+s.position(3) == 0.875
+
+var s = new SVGPlot.ScaleDiscrete(-3, 3)
+s.position(0) == 0.5
+s.placement = 'off'
+s.position(0) == 0.5
+*/
+
+
+SVGPlot.ScaleBoolean = function(placement, reversed) {
+    /***
+        Mapping boolean values to positions.
+    ***/
+    this.set(placement, reversed)
+}
+SVGPlot.ScaleBoolean.prototype = {
+    type: "ScaleBoolean",
+    _categories: [false, true],
+    _min: false,
+    _max: true,
+    dataSets: [],
+    set: function(placement, reversed) {
+        this.placement = SVGKit.firstNonNull(placement, 'betweeen');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+        this.reversed = SVGKit.firstNonNull(reversed, false);
+    },
+    position: function(value) {
+        var top = value && !this.reversed || !value && this.reversed
+        if (this.placement == 'on') {
+            if (top)
+                return 1.0
+            else
+                return 0.0
+        }
+        else {
+            if (top)
+                return 0.75
+            else
+                return 0.25
+        }
+    },
+    setAuto: function() {
+        return {'min':this._min, 'max':this._max}
+    },
+    defaultLocations : function() {
+        return this._categories
+    },
+    defaultLabels : function(locations) {
+        return ['false', 'true']
+    }
+}
+
+
+/*
+var s = new SVGPlot.ScaleBoolean()
+s.position(false) == 0.0
+s.position(true) == 1.0
+s.reversed = true
+s.position(false) == 1.0
+s.position(true) == 0.0
+s.placement = 'off'
+s.position(false) == 0.75
+s.position(true) == 0.25
+s.reversed = false
+s.position(false) == 0.25
+s.position(true) == 0.75
+*/
+
 
 SVGPlot.ScaleCategory = function(categories, placement, reversed, required) {
     /***
         Mapping category values to positions.
+        If you pass categories to the constructor, they have to be unique
     ***/
     this.set(categories, placement, reversed, required)
 }
 SVGPlot.ScaleCategory.prototype = {
     type: "ScaleCategory",
     _categories: [],  // of the form ['bob', 'jim']
+    _min: null,
+    _max: null,
+    dataSets: [],
     set: function(categories, placement, reversed, required) {
         this.categories = SVGKit.firstNonNull(categories, 'auto');
-        this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+        if (this.categories != 'auto') {
+            this._categories = this.categories
+            this._min = this.categories[0]
+            this._max = this.categories[this.categories.length-1]
+        }
+        //this.placement = SVGKit.firstNonNull(placement, 'on');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
+        this.placement = SVGKit.firstNonNull(placement, 'betweeen');  // 'betweeen' Plot on or between grid lines.  (should this be a property of the grid?)
         this.reversed = SVGKit.firstNonNull(reversed, false);
         this.required = SVGKit.firstNonNull(required, []); // list of values that must be included when min or max are 'auto'
     },
+    discreteToPosition: SVGPlot.ScaleDiscrete.prototype.discreteToPosition,
     position: function(value) {
-        var length = this._categories.length;
-        for (var i=0; i<length; i++) {
+        var count = this._categories.length;
+        for (var i=0; i<count; i++) {
             if (this._categories[i] == value)
-                return this.discreteToPosition(value, length);
+                return this.discreteToPosition(i, count);
         }
-        return null;
+        //return null;
+        return 0.5
     },
-    discreteToPosition: SVGPlot.ScaleDiscrete.prototype.discreteToPosition
+    
+    setAuto: function() {
+        /***
+			Take the list of dataSets and accumulate the items.
+			
+            If there are no plots, or the plots are flat,
+			make sure _max and _min have a reasonable value.
+            
+            @returns a dictionary containing {'min', 'max'}
+        ***/
+        
+        if (this.categories != 'auto') {
+			// Bypass
+            this._categories = this.categories
+        }
+		else {
+    		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+            var category_dict = {}
+    		for (var i=0; i<this.dataSets.length; i++) {
+    			var dataSet = this.dataSets[i]
+    			for (var j=0; j<dataSet.length; j++) {
+                    category_dict[dataSet[j]] = true
+                }
+    		}
+            this._categories = keys(category_dict).sort()
+    		this.dataSets.pop()
+		}
+        var len = this._categories.length
+        this._min = this._categories[0]
+        this._max = this._categories[len-1]
+        return {'min':this._min, 'max':this._max}
+    },
+    defaultLocations : function() {
+        return this._categories
+    },
+    defaultLabels : function(locations) {
+        return this._categories
+    }
 }
+
+/*
+var s = new SVGPlot.ScaleCategory(['a','b','c'])
+s.position('a') = 0.0
+s.position('b')
+s.position('c')
+s.placement = 'off'
+s.position('a')
+s.position('b')
+s.position('c')
+
+var s = new SVGPlot.ScaleCategory()
+s.dataSets.push(['a','bb','ccc','dddd','eeeee', 'ccc', 'a'])
+s.setAuto()
+s.position('ccc')
+*/
 
 
 SVGPlot.ScaleSegments = function(segments) {
@@ -1102,7 +1251,9 @@ SVGPlot.newScaleFromType = function(example) {
         return null
     var type = typeof(example)
     if ( type == 'number' )
-        return new SVGPlot.Scale()
+        return new SVGPlot.ScaleReal()
+    if ( type == 'boolean' )
+        return new SVGPlot.ScaleBoolean()
     if ( type == 'string' ) {
         if ( isoTimestamp(example) != null || datetime.parse(example) != null)
             return new SVGPlot.ScaleDateTime()
@@ -1177,13 +1328,15 @@ SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 
 
 // View  -- View eventually defines mapping (x,y) -> (i,j).  What about polar?  What about map projections?
 
+// TODO:  This only makes ScaleReal, not ScaleCateory, etc.
+
 SVGPlot.View = function(svgPlot, parent) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
     parent.views.push(this);
     svgPlot.view = this;
-    this.xScale = new SVGPlot.Scale();
+    this.xScale = new SVGPlot.ScaleReal();
     svgPlot.xScale = this.xScale;
-    this.yScale = new SVGPlot.Scale();
+    this.yScale = new SVGPlot.ScaleReal();
     svgPlot.yScale = this.yScale;
     this.plots = [];  // Plots to be drawn with this coordinate system
     this.xAxes = [];  // X-Axes to be drawn with this coordinate system
@@ -1919,8 +2072,9 @@ SVGPlot.safemap = function(mapped_min, mapped_max, map, location) {
 SVGPlot.inbounds = function(mapped_min, mapped_max, mapped) {
     // Do all of the comparisons in plot-coordinates rather than as raw data (eg. dates)
     // Check if location is within max and min (vertical axis gets mapped backward)
-    return  mapped>mapped_min && mapped<mapped_max ||
-             mapped<mapped_min && mapped>mapped_max
+    // Used both in render() and renderText()
+    return  mapped>=mapped_min && mapped<=mapped_max ||
+             mapped<=mapped_min && mapped>=mapped_max
 }
 
 SVGPlot.Ticks.prototype.render = function(min, max, map) {
@@ -2044,14 +2198,14 @@ SVGPlot.prototype.plot = function() {
         If there is already a plot, should we assume 
         (x2, y3, y4) again, or assume (y3, y4, y5...)?
         
-        Does this take object or lists and list of object formats?
+        Does this take object of lists AND list of objects?
         
         Does it take an optional final parameter that is a mapping to override
         the current settings?
     ***/
     if ( typeof(arguments[0]) == 'string')  // if passed 'sin(x)'
         return this.plotFunction.apply(this, arguments)
-    else if ( typeof(arguments[0].length) == 'number')  // If passed an aray
+    else if ( typeof(arguments[0].length) == 'number')  // If passed an array
         return this.plotLine.apply(this, arguments)
 }
 
@@ -2100,22 +2254,26 @@ SVGPlot.prototype.plotLine = function(data /* ydata1, ydata2, ... */) {
 
 SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.plots.push(this)  // Add this plot to the view
+    var view = parent
+    view.plots.push(this)  // Add this plot to the view
     this.xdata = xdata;
     this.ydata = ydata;
     
 	// Add this data to the x and y scales for autoScaling
     
     var xScaleNew = SVGPlot.newScaleFromType(xdata[0])
-    // TODO: Fix the following... If the default, already created, xScale is wrong, change it.
-    if (parent.xScale.type != xScaleNew.type)
-        parent.xScale = xScaleNew
-	parent.xScale.dataSets.push(xdata)
+    if (view.xScale.type != xScaleNew.type) {
+        view.xScale = xScaleNew
+        svgPlot.xScale = xScaleNew
+    }
+	view.xScale.dataSets.push(xdata)
     
     var yScaleNew = SVGPlot.newScaleFromType(ydata[0])
-    if (parent.yScale.type != yScaleNew.type)
-        parent.yScale = yScaleNew
-	parent.yScale.dataSets.push(ydata)
+    if (view.yScale.type != yScaleNew.type) {
+        view.yScale = yScaleNew
+        svgPlot.yScale = yScaleNew
+    }
+	view.yScale.dataSets.push(ydata)
 }
 
 SVGPlot.LinePlot.prototype.createElements = function () {
@@ -2135,7 +2293,7 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
     //this.translate(rect.x, rect.y);
     //plotDataset.plot();
     
-    // Should really loop through and draw one point off of each side if it exists.
+    // Should really loop through and draw only one point off of each side if it exists?
     // Maybe not becuase you can plot arbitrary loopy xy sets and make 
     // crazy lines which can exit and enter, so SVG should have all points.
     p.translate(left, top);
@@ -2633,7 +2791,64 @@ SVGPlot.prototype.evaluate_item = function(row, key) {
         returns a function that takes the current row, row of mins, row of maxs
     function(row, max, min)
         which returns a number from 0.0 to 1.0 (unless it is out of range of explicit min/max.)
+        
+        
+    
+    Plot Dataset (xoffset, yoffset) -- a checkbox for each of these:
+    * Markers (shape, size, fillStyle, strokeStyle, thickness) (marker only every n'th)
+    * Line (gaps - do you stop and restart the plot?)
+    * Sticks (to another dataset?) (+- different positive/negative colors)
+    * Area/Fill (to another dataset?) (+-) (strokeStyle, fillStyle, fill pattern, option for "same style, but 25% or 50% lighter)
+    * Bars/Cityscape (to another dataset?) (fill options like above)
+    * Error bars for X and Y: None, percent of base, sqrt of base, constant, + & - come from another dataset
+    - box-and-whisker candlesticks
+    - hi-low-open-close
 ***/
+/*
+Trace() // A plotted dataset which caries a pointer to the dataset and a lot of options
+Trace.prototype = {
+
+    rows : dataset,
+    max : max(dataset),
+    min: min(dataset),
+    
+    drawDataset : function() {
+        drawBars()
+        drawArea()
+        drawSticks()
+        drawLine()
+        var n = 1 // Draw every nth marker
+        for (var i=0; i<rows.length; i += n) {
+            drawMarker(row)
+        }
+    },
+
+    drawMarker : function(row) {
+        var group
+        var style // fill, stroke, thickness, etc
+        var size = getParam('size', row)
+        var shape
+        var rotation
+        var plot_coords = mapToXY(row)
+        var svg_copords = mapToIJ(plot_coords)
+        moveTo(coords.x, coords.y)
+    },
+    
+    getParam : function(object, field, row) {
+        var value = object[field]
+        if (value == null)
+            return defaultValue
+        if (typeof(value) == 'number')
+            return value
+        if (typeof(value) == 'string')
+            return value  // Or should we check to see if this is referring to a column name?
+        if (typeof(value) == 'function')
+            return value(row, this.min, this.max)
+        if (typeof(value) == 'object')
+            return some_sort_of_mapping
+    }
+}
+*/
 
 SVGPlot.PointMapper = function() {
 }

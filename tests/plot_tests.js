@@ -24,6 +24,16 @@ for (var i=0; i<POINT_COUNT; i++) {
 
 
 var testFunctions = {
+    'category': function (p) {
+        p.plotLine(['a','bb','ccc','dddd','eeeee', 'ccc', 'a']);
+        p.yScale.placement = 'on'
+        p.render();
+    },
+    
+    'boolean': function (p) {
+        p.plotLine([true, false, true, true, false, false, true]);
+        p.render();
+    },
     
     'simpleLine' : function(p) {
         p.plotLine(squares)
@@ -296,6 +306,32 @@ var testFunctions = {
         var cols = SVGPlot.prototype.transpose(tempfilt)
         p.plot(cols[0], cols[1])
         p.render();
+    },
+    
+    'multi_date' : function(p) {
+        var points = 20
+        var dates_array = [[]]  // Three lists of dates for x-axis
+        var categories = ['a','bb','ccc']
+        var real = []  // One list of reals
+        var category = []  // One list of categories
+        for (var i=0; i<points; i++) {
+            real.push(Math.random()*10)
+            var select = Math.floor(Math.random()*categories.length)
+            category.push( categories[select] )
+            for (var j=0; j<3; j++) {
+                dates_array.push([])
+                var date = datetime.parse('2007-05-01 20:20:30')
+                var period = {
+                    day: Math.floor(Math.random()*10),
+                    hour: Math.floor(Math.random()*24)
+                }
+                date = datetime.addPeriod(date, period)
+                dates_array[j].push(date)
+            }
+        }
+        
+        
+        //p.setupBox(1,3)
     }
     
 };
