@@ -18,16 +18,17 @@
 <p>The goal is to turn LaTeX into SVG. Right now there's a Python CGI script to do this. Here are some issues:</p>
 <ul>
   <li>Conversion must be done on server side through cgi</li>
-<li>Must validate the LaTeX for security reasons to prevent cross-site scripting. This means only a small subset of LaTeX is supported, the same as <a href="http://en.wikipedia.org/wiki/Texvc">Texvc</a>. This also spits back MathML , which is the W3C way to include equations in SVG. </li>
+<li>Must validate the LaTeX for security reasons to prevent cross-site scripting. This means only a small subset of LaTeX is supported, the same as <a href="http://en.wikipedia.org/wiki/Texvc">Texvc</a>, which Wikipedia uses. Texvc also spits back MathML, which is the W3C way to include equations in SVG -- maybe this can be used better in the future. </li>
 <li>Should the SVG be positioned <code>&lt;text&gt;</code> elements with embeded fonts?
   <ul>
-    <li>Eventually because this is the correct way, but not for now.</li>
-  <li>This is hard to do with the tools available</li>
-  <li>For a few equations, it will bloat the SVG with lots of fonts unless we only include the characters we need.</li>
-  <li>Our conversion spits back a bunch of <code>&lt;path&gt;</code> and <code>&lt;polyline&gt;</code> elements.</li>
-  <li>A random equation uses a lot of fonts: cmsy6, cmsy8, cmsy10, cmr6, cmr8, cmr12, cmmi8, cmmi12, cmex10</li>
+    <li>Eventually, because this is the correct way, but not for now.</li>
+  <li>Inkscape and Firefox do not support embeded fonts. </li>
+    <li>This is hard to do with the tools available. dvi2svg is the only one that comes close. </li>
+  <li>A random equation uses a lot of different fonts: cmsy6, cmsy8, cmsy10, cmr6, cmr8, cmr12, cmmi8, cmmi12, cmex10</li>
+  <li>It will bloat the SVG with lots of fonts unless we only include the fonts and characters we need.</li>
   </ul>
 </li>
+<li>Instead of  <code>&lt;text&gt;</code> elements, our conversion spits back a bunch of <code>&lt;path&gt;</code> and <code>&lt;polyline&gt;</code> elements.</li>
 </ul>
 <h2>Live Demos </h2>
 <ul>
@@ -47,7 +48,7 @@
 <li>pstoedit</li>
 </ul>
 <h2>Basic Procedure</h2>
-<p>Inspired by Inkscape's eqtexsvg.py. Say you had a file eqn.tex that looked like </p>
+<p>Inspired by Inkscape's eqtexsvg.py: Say you had a file eqn.tex that looked like </p>
 <pre>
 \\documentclass{article}
 \\usepackage{amsmath}
@@ -82,21 +83,18 @@
 
 
   positioning of letters)</li>
-      <li> [<strong>-E</strong>] makes dvips attempt to generate an EPSF file with a tight bound-ing box. </li>
+      <li> [<strong>-E</strong>] makes dvips attempt to generate an EPSF file with a tight bounding box. </li>
       <li> [<strong>-e num</strong>] Each character is placed at most this many pixels from its `true' resolution-independent position</li>
       <li> [<strong>-R</strong>] Run in secure mode. </li>
-      <li> [<strong>-x</strong>] num Set the magnification ratio to num/1000 no matter what the dvi file says, between 10 and 100000</li>
-      <li> [<strong>-y</strong>] num Set the magnification ratio to num/1000 times the magnification specified in the .dvi file, 
-
-
- between 10 and 100000</li>
+      <li> [<strong>-x</strong>] num Set the magnification ratio to num/1000 no matter what the dvi file says (between 10 and 100000)</li>
+      <li> [<strong>-y</strong>] num Set the magnification ratio to num/1000 times the magnification specified in the .dvi file (between 10 and 100000)</li>
       <li>[<strong>-o</strong>] specifies the output file as eqn.ps</li>
     </ul>
   </li>
   <li><code>pstoedit -f plot-svg -dt -ssp eqn.ps eqn.svg</code>
     <ul>
       <li>This creates the file eqn.svg</li>
-    <li>[<strong>-f</strong>] specifies the format as plot-svg </li>
+    <li>[<strong>-f</strong>] specifies the format as plot-svg (direct svg does not work) </li>
     <li>[<strong>-dt</strong>] Draw text - Text is drawn as polygons.</li>
     <li> [<strong>-adt</strong>] 
 
@@ -111,7 +109,7 @@
     </ul>
   </li>
 </ul>
-<p>Transformations in the svg group:</p>
+<p>In order to get good quality text to pollygon conversion, we had to run dvips with a high magnification, so we have to scale down the resulting SVG. Transformation that we'll stick in the svg group:</p>
 <ul>
   <li>scale(0.0017361) goes from the font's point coordinates to pixel coordinates. 1/0.0017361 = 576 = 8*72 = 8 inches worth of points </li>
 </ul>
