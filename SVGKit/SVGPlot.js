@@ -48,6 +48,19 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
    in the children, but in some sense it doesn't belong there because you should be able to move children around freely.
    In this scheme you'd have to change the layout information explicitly.
    
+   Typical GUI thinking:
+    -- Overall graph layout
+    -- Views and their scales
+    -- Axes, labels, ticks
+    -- Data
+    -- Data style
+
+  Change types (rather than redrawing whole graph):
+   -- Layout Change (includes adding new axes/labels/etc)
+   -- Scale Change
+   -- Data Change
+   -- Style Change
+    
    How to handle click on graphs:
      -- Want to do a trace where (x,y) or (r,th) components show up as float.
      -- Want to drag to manipulate data points (undo?) Need explicit SVG G's rather than Markers?
@@ -248,8 +261,8 @@ if (typeof(SVGPlot) == 'undefined' || SVGCanvas == null) {
 }
 
 // In order for forceRedraw and getBBox to work, you need to have an object type.  TODO: get rid of this when working
-SVGKit._defaultType = 'object';
-//SVGKit._defaultType = 'inline';  // uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMSVGSVGElement.forceRedraw]"
+//SVGKit._defaultType = 'object';
+SVGKit._defaultType = 'inline';  // uncaught exception: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMSVGSVGElement.forceRedraw]"
 
 // Inheritance ala http://www.kevlindev.com/tutorials/javascript/inheritance/
 //SVGPlot.prototype = new SVGCanvas();  // TODO: Fix Inheritance
@@ -313,6 +326,10 @@ SVGPlot.prototype.__init__ = function (widthOrIdOrNode, height, id /*optional*/)
 }
 
 
+// text_width and text_height are used to estimate the bounding boxes since getBBox() doesn't work
+SVGPlot.text_width = 9; 
+SVGPlot.text_height = 9;
+
 SVGPlot.prototype.resetPlot = function() {
     // SVGCanvas already has a reset()
     //log("Constructing SVGPlot in SVGPlot.reset");
@@ -320,8 +337,9 @@ SVGPlot.prototype.resetPlot = function() {
     this.box = null;
     this.element = this.svg.svgElement;
     //this.fontFamily = "Verdana, Arial, Helvetica, Sans";
-    this.fontFamily = "Bitstream Vera Sans";
-    this.fontSize = '7px';
+    //this.fontFamily = "Bitstream Vera Sans";
+    this.fontFamily = "Bitstream Vera Sans, Verdana, Arial, Helvetica, Sans";
+    this.fontSize = this.text_width+'px';  // TODO: This comes from a temporary hack to extimate bounding box
     SVGPlot.defaultStyle = this.getStyle();
 }
 
@@ -1716,7 +1734,7 @@ SVGPlot.Box.prototype.render = function () {
         this.views[i].createElements();
     }
     
-    this.svgPlot.svg.svgElement.forceRedraw();  // So that all of the tickLabels have bounding boxes for the layout.
+    //this.svgPlot.svg.svgElement.forceRedraw();  // So that all of the tickLabels have bounding boxes for the layout.  (doesn't work for inline SVG in firefox)
     
     var totalXSize = {'left':0, 'right':0, 'first_left':true, 'first_right':true};
     var totalYSize = {'top':0, 'bottom':0, 'first_top':true, 'first_bottom':true};
@@ -1930,9 +1948,31 @@ SVGPlot.AxisTitle.prototype.getSize = function(type) {
     return SVGPlot.getTextSize(this.element, type);
 }
 
+SVGPlot.getBBoxWidth = function(element) {
+    // This is a workaround for the fact that getBBox doesn't work
+    // in inline mode on Firefox.  TODO:  Find a better alternative
+    if (element.nodeName == "text" && 
+            (MochiKit.Base.isUndefinedOrNull(element.getAttribute("transform")) || 
+            element.getAttribute("transform").indexOf("rotate")==-1) ) {
+        return element.childNodes[0].length * SVGPlot.text_width;
+    }
+    
+    var width = SVGPlot.text_width;
+    if (element.nodeName == "g") {
+        for (var i=0; i<element.childNodes.length; i++) {
+            var child = element.childNodes[i];
+            width = Math.max(width, SVGPlot.getBBoxWidth(child));
+        }
+        return width;
+    }
+    return width;
+}
+
 SVGPlot.getTextSize = function(element, type) {
     // Add up the space that tickLabels and labels take up, but only if they are not covering the graph.
-    var bbox = element.getBBox();
+    window.blah = element
+    //var bbox = element.getBBox();  // Doesn't work for inline SVG in Firefox
+    var bbox = {height:SVGPlot.text_height, width:SVGPlot.getBBoxWidth(element)};
     if (type=='x')
         return bbox.height;
     else if (type=='y')
@@ -2110,8 +2150,10 @@ SVGPlot.Ticks.prototype.render = function(min, max, map) {
 SVGPlot.TickLabels.prototype.render = function(min, max, map) {
     SVGPlot.translateBottomText(this)
     for (var i=0; i<this._texts.length; i++) {
+        //var bbox = this._texts[i].getBBox();  // Doesn't work for inline SVG in Firefox
+        var bbox = {height:SVGPlot.text_height, width:SVGPlot.getBBoxWidth(this._texts[i])};
         SVGPlot.renderText(this._texts[i], this._locations[i], 
-                             this._texts[i].getBBox(), 
+                             bbox, 
                              this.position, min, max, map)
     }
 }
@@ -2120,15 +2162,19 @@ SVGPlot.AxisTitle.prototype.render = function(min, max, map) {
     SVGPlot.translateBottomText(this)
     // When rotation is applied to a <text>, the bounding box doens't change.
     // It does, however, change for any group that contains it.
+    //var bbox = this._text.parentNode.getBBox();  // Doesn't work for inline SVG in Firefox
+    bbox = {height:SVGPlot.text_height, width:SVGPlot.getBBoxWidth(this._text.parentNode)};
     SVGPlot.renderText(this._text, this.location, 
-                             this._text.parentNode.getBBox(), 
+                             bbox, 
                              this.position, min, max, map)
 }
 
 SVGPlot.translateBottomText = function(component) {
     if (component.position=='bottom') {
+        //var bbox = component.element.getBBox();  // Doesn't work for inline SVG in Firefox
+        var bbox = {height:SVGPlot.text_height, width:SVGPlot.getBBoxWidth(component.element)};
         var transform = component.element.getAttribute('transform');
-        transform += 'translate(0,'+(component.element.getBBox().height-1)+')'
+        transform += 'translate(0,'+(bbox.height-1)+')'
         component.element.setAttribute('transform', transform);
     }
 }
@@ -2321,14 +2367,15 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
 }
 
 SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
-    var POINT_COUNT = 200;
+    var POINT_COUNT = 40;
     var xdata = Array(POINT_COUNT);
     var ydata = Array(POINT_COUNT);
-    var temp = {}; // a new object context to set a variable inside and have a function run. 
+    var begin_eval_str = "var "+name+" = ";
+    var end_eval_str = "; "+func;
     for (var i=0; i<POINT_COUNT; i++) {
-        temp[name] = xmin + (xmax-xmin)*i/POINT_COUNT;
-        xdata[i] = temp[name];
-        ydata[i] = eval.call(temp, func);
+        x = xmin + (xmax-xmin)*i/POINT_COUNT;
+        xdata[i] = x;
+        ydata[i] = eval(begin_eval_str + x + end_eval_str);  // This is slow, but eval.call(context, func) gives error in FF3 
     }
     //log("Calling plotLine with data");
     return this.plotLine(xdata, ydata);
