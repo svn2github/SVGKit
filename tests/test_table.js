@@ -14,7 +14,7 @@ function setupTopBar() {
             ' starting at ', 
             INPUT({name:"start", id:"start", type:"text", value:0, 'class':"text", size:5}),
             ' going to ',
-            INPUT({name:"end", id:"end", type:"text", value:0, 'class':"text", size:5}), 
+            INPUT({name:"end", id:"end", type:"text", value:max, 'class':"text", size:5}), 
             ' / ',
             SPAN({id:"count"},max),
             ' ',
@@ -133,4 +133,4 @@ function convert(name, type) {
 */
 
 addLoadEvent(setupTopBar)
-addLoadEvent(partial(addTests, 0, 0))
+addLoadEvent(partial(addTests, 0, 9999))
