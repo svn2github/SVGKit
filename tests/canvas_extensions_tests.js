@@ -23,7 +23,10 @@ var testFunctions = {
                              Math.floor(255-42.5*j) + ')';
             c.save();
             c.translate(i*200/6,j*200/6);
-            c.star(i+3, 10+10/(j+1), (10+10/j)/(i+1), Math.PI/6/(i+3)*j);
+            var outer_radius = 10+10/(j+2);
+            var inner_radius = outer_radius/(i+1);
+            var rotate = Math.PI/6/(i+3)*j;
+            c.star(i+3, outer_radius, inner_radius, rotate);
             c.stroke();
             c.restore();
           }
@@ -38,7 +41,10 @@ var testFunctions = {
                              Math.floor(255-42.5*j) + ')';
             c.save();
             c.translate(i*200/6,j*200/6);
-            c.asterisk(i+3, 10+10/(j+1), (5+5/j)/(i+1), Math.PI/6/(i+3)*j);
+            var outer_radius = 10+10/(j+2);
+            var inner_radius = outer_radius/2/(i+1);
+            var rotate = Math.PI/6/(i+3)*j;
+            c.asterisk(i+3, outer_radius, inner_radius, rotate);
             c.stroke();
             c.restore();
           }
