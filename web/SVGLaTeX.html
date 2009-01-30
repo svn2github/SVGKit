@@ -50,17 +50,17 @@
 <h2>Basic Procedure</h2>
 <p>Inspired by Inkscape's eqtexsvg.py: Say you had a file eqn.tex that looked like </p>
 <pre>
-\\documentclass{article}
-\\usepackage{amsmath}
-\\usepackage{amssymb}
-\\usepackage{amsfonts}
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
 
-\\thispagestyle{empty}
-\\begin{document}
+\thispagestyle{empty}
+\begin{document}
 \[
 2 \pi f t
 \]
-\\end{document}
+\end{document}
 </pre>
 <p>Here are the commands you would run: </p>
 <ul>
@@ -69,7 +69,7 @@
       <li>This creates the file eqn.dvi</li>
     </ul>
   </li>
-  <li><code>dvips -q -f -e 0 -E -D 10000 -x 100000 -o  eqn.ps eqn.dvi </code>
+  <li><code>dvips -q -f -e 0 -E -D 10000 -x 10000 -o  eqn.ps eqn.dvi </code>
     <ul>
       <li>the <a href="http://www.ma.utexas.edu/cgi-bin/man-cgi?dvips+1">dvips man page</a> </li>
     <li> [<strong>-q</strong>] Run in quiet mode.</li>
