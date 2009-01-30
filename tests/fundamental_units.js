@@ -52,14 +52,23 @@ Observations:
     they go up with the cube of the length
  *  To get Schwarzschild radius, lookup Planck masses and
     go to same number in Planck lengths.
+ * v_max of Black Body is 2.82144 kT/h
+   l_max is 0.201405 hc/kT (different)
     
 Please email any corrections, additions, or ideas
-TODO: TeX font, subscripts and superscripts, 
+TODO: Check factors of 2pi: 2.4GHz = 12cm
+      Log scales
+      Indicate that the numbers are powers of 10
+      Ranges (IR/UV)
+      TeX font, subscripts and superscripts, 
+      colors as background boxes
       ledgend for colors
-      human blob
+      human-scale blob
       background pictures
       small number at every axis intersection
       Similar things avoid each other horizontally
+      Add Hz, W, erg/s, g/cm^3...
+      Deal with the hbar issue -- show w and k in addition to f and x.
 ------------------------------------------
 ***/
 
@@ -71,37 +80,41 @@ var units = function() {
     var Gn = 6.6742e-11 // N m^2 / Kg^2
     var kb = 1.3806505e-23 // J/K
 
+    var sq2pi = Math.sqrt(2.0 * Math.PI)
+    
     // Where do the 2pi's go?
     // E= h f   (= hbar w)
     // (h c / Gn)^1/2 * c * c = h c (h Gn / c^3 )^1/2
     // f = c/l 
     // Standard definitions involve hbar, but that means that E_pl = hbar / t_pl which is dumb
+    var hpl = h  // Do we use h or hbar for the plank calculations
     
     // http://en.wikipedia.org/wiki/Planck_units
-    var planck_length = Math.sqrt(hbar * Gn / (c*c*c) )  // 1.61624e-35 m
-    //var planck_length = Math.sqrt(h * Gn / (c*c*c) )  // 4.05e-35 m
+    var planck_length = Math.sqrt(hbar * Gn / (c*c*c) )  // hbar: 1.61624e-35 m    h: 4.05e-35 m
     var planck_time = planck_length / c                   // 5.39121e-44 s
     
-    var planck_mass = Math.sqrt(hbar * c / Gn)           // 2.17645e-8 kg
-    //var planck_mass = Math.sqrt(h * c / Gn)           // 5.4555e-8 kg
-    var planck_energy = planck_mass * c * c              //    1.9561e9 J
-    var planck_temp = planck_mass * c * c / kb           // 1.41679e32 K
+    var planck_mass = Math.sqrt(hbar * c / Gn)           // hbar: 2.17645e-8 kg    h: 5.4555e-8 kg
+    var planck_energy = planck_mass * c * c              //    hbar: 1.9561e9 J
+    var planck_temp = planck_mass * c * c / kb           // hbar: 1.41679e32 K
     
-    var planck_momentum = hbar / planck_length           //     6.52485 kg m/s
+    var planck_momentum = hbar / planck_length           //     hbar: 6.52485 kg m/s
     
-    var planck_force = planck_energy / planck_length    // 1.21027e44 N
-    var planck_power = planck_energy / planck_time     //     3.62831e52 W
+    var planck_force = planck_energy / planck_length    // hbar: 1.21027e44 N
+    var planck_power = planck_energy / planck_time     //     hbar: 3.62831e52 W
     var planck_area = planck_length * planck_length
     var planck_volume = planck_area*planck_length
-    var planck_density = planck_mass / planck_volume  // 5.15500e96 kg/m3
-    var planck_angular_freq = 1.0 / planck_time      // 1.85487e43 s-1
-    var planck_pressure = planck_force / planck_area // 4.63309e113 Pa
+    var planck_density = planck_mass / planck_volume  // hbar: 5.15500e96 kg/m3
+    //var planck_angular_freq = 1.0 / planck_time      // hbar: 1.85487e43 s-1
+    var planck_pressure = planck_force / planck_area // hbar: 4.63309e113 Pa
 
     
     var units = {}   // Dict of units {'s': {dim:-1, planck: 1/planck_time }, 'm': {}...  }
     var unit_types = {}   // Ends up being a dict of arrays like { 'Time': ['s','yr'], 'Distance': ['m', 'km'] ]
     
     var addUnits = function(new_type) {
+        // New units have been added to unit dict.  
+        // Add these to the unit_types[new_type] array
+        
         unit_types[new_type] = []  // Add another unit type to the end
         // Look through all the units and see if they've been categorized already
         for (unit in units) {
@@ -119,7 +132,7 @@ var units = function() {
     
     // 'planck' category says how many planck units are there in the given unit
     // Time
-    units['s'] = {dim:-1, planck: 1/planck_time/(2.0 * Math.PI) }
+    units['s'] = {dim:-1, planck: 1/(planck_time*sq2pi) }
     units['ms'] = {dim:-1, planck: units['s']['planck']/1e3 }
     units['us'] = {dim:-1, planck: units['s']['planck']/1e6 }
     units['ns'] = {dim:-1, planck: units['s']['planck']/1e9 }
@@ -132,14 +145,15 @@ var units = function() {
     units['Myr'] = {dim:-1, planck: units['yr']['planck']*1e6 }
     units['Gyr'] = {dim:-1, planck: units['yr']['planck']*1e9 }
     // Frequency
-    units['Hz'] = {dim:1, planck: planck_time*(2.0 * Math.PI) }
-    units['kHz'] = {dim:1, planck: planck_time*1e3 }
-    units['MHz'] = {dim:1, planck: planck_time*1e6 }
-    units['GHz'] = {dim:1, planck: planck_time*1e9 }
+    units['Hz'] = {dim:1, planck: planck_time*sq2pi }
+    units['kHz'] = {dim:1, planck: units['Hz']['planck']*1e3 }
+    units['MHz'] = {dim:1, planck: units['Hz']['planck']*1e6 }
+    units['GHz'] = {dim:1, planck: units['Hz']['planck']*1e9 }
+    units['THz'] = {dim:1, planck: units['Hz']['planck']*1e12 }
     addUnits('Time')
     // Distance
     units['L_pl'] = {dim:-1, planck: 1 }
-    units['m'] = {dim:-1, planck: 1/planck_length/(2.0 * Math.PI) }
+    units['m'] = {dim:-1, planck: 1/(planck_length*sq2pi) }
     units['cm'] = {dim:-1, planck:  units['m']['planck']/1e2 }
     units['mm'] = {dim:-1, planck:  units['m']['planck']/1e3 }
     units['um'] = {dim:-1, planck:  units['m']['planck']/1e6 }
@@ -153,15 +167,15 @@ var units = function() {
     units['Mpc'] = {dim:-1, planck:  units['pc']['planck']*1e6 }
     addUnits('Distance')
     // Mass
-    units['Kg'] = {dim:1, planck: 1/planck_mass }
+    units['Kg'] = {dim:1, planck: 1/(planck_mass*sq2pi) }
     units['g'] = {dim:1, planck: units['Kg']['planck'] / 1000 }
     units['M_sun'] = {dim:1, planck: units['Kg']['planck'] * 1.98844E+30 }
     units['M_pl'] = {dim:1, planck: 1 }
     addUnits('Mass')
     // Energy
-    units['J'] = {dim:1, planck: 1/planck_energy }
+    units['J'] = {dim:1, planck: 1/(planck_energy*sq2pi) }
     units['erg'] = {dim:1, planck: units['J']['planck']*1e-7 }
-    units['eV'] = {dim:1, planck: 1/planck_energy * eV }
+    units['eV'] = {dim:1, planck: 1/(planck_energy*sq2pi) * eV }
     units['meV'] = {dim:1, planck: units['eV']['planck']*1e-3 }
     units['keV'] = {dim:1, planck: units['eV']['planck']*1e3 }
     units['MeV'] = {dim:1, planck: units['eV']['planck']*1e6 }
@@ -172,15 +186,26 @@ var units = function() {
     units['W'] = {dim:2, planck: 1/planck_power }
     addUnits('Power')
     // Temperature
-    units['K'] = {dim:1, planck: 1/planck_temp }
+    units['K'] = {dim:1, planck: 1/(planck_temp*sq2pi) }
     units['MK'] = {dim:1, planck: units['K']['planck']*1e6 }
     addUnits('Temperature')
     // Density
     units['g/cm^3'] = {dim:4, planck: units['g']['planck'] / 
                                         Math.pow(units['cm']['planck'],3)}
+    units['Kg/m^3'] = {dim:4, planck: units['Kg']['planck'] / 
+                                        Math.pow(units['m']['planck'],3)}
+    units['J/m^3'] = {dim:4, planck: units['J']['planck'] / 
+                                        Math.pow(units['m']['planck'],3)}
+    units['erg/cm^3'] = {dim:4, planck: units['erg']['planck'] / 
+                                        Math.pow(units['cm']['planck'],3)}
     units['GeV/m^3'] = {dim:4, planck: units['GeV']['planck'] / 
                                         Math.pow(units['m']['planck'],3)}
+    units['M_sun/pc^3'] = {dim:4, planck: units['M_sun']['planck'] / 
+                                        Math.pow(units['pc']['planck'],3)}
     addUnits('Density')
+    
+    log("Test J/Hz=h ?  "+1/(units['J'].planck/units['Hz'].planck)+"  "+h)
+    log("Test m/s=c ?  "+1/(units['m'].planck/units['s'].planck)+"  "+c)
     
     // In order of 
     var displayUnits = [ 'yr','s', 'm', 'K', 'eV', 'GeV', 'J', 'M_pl', 'Kg']
@@ -226,6 +251,8 @@ var units = function() {
     ['1 g',1,'g', 'unit', false],
     ['1 K',1,'K', 'unit', true],
     ['1 eV',1,'eV', 'unit', true],
+    ['1 amu',931,'MeV', 'unit', false],
+    ['1 kWh (power plant unit)',60*60,'J', 'unit', false],
     //['1u',1.66054021E-027,'Kg', 'unit', false],
     ['Gravitational Constant (Plank Mass)',1.22090e+19,'GeV', 'particle', true],
     ['Reduced Planck Mass',2.44e+18,'GeV', 'particle', false],
@@ -235,17 +262,23 @@ var units = function() {
     //['W Boson Mass',80.425,'GeV', 'particle', false],
     ['Z Boson Mass',91.1876,'GeV', 'particle', true],
     ['Higgs vev (electroweak scale)',246.2,'GeV', 'particle', false],
-    ['GUT Scale',1.00E+016,'GeV', 'particle', true],
+    ['Grand Unification Scale',1.00E+016,'GeV', 'particle', true],
+    ['Chaotic Inflaton Mass',1.8e13,'GeV', 'particle', false],  // arXiv:0704.3201
     ['Electron Radius',2.82E-15,'m', 'particle', false],
     ['Compton Wavelength',3.86E-13,'m', 'particle', false],
     ['Bohr Radius',5.29E-11,'m', 'particle', false],
+    //['Lyman-Alpha Line (1st excited state of H to gnd)',121.6,'nm', 'particle', false],  // Too close to HIV virus size
     //['parsec',3.09E+16,'m', 'astro', true],  // Too close to distance to nearest star
     //['Year',3.16E+07,'s', 'unit', false],
     //['sidereal year (fixed star)',31558149.8,'s', 'unit', false],
     ['Hubble Length',1.20E+26,'m', 'astro', false],
     ['Solar Mass',1.99E+30,'Kg', 'astro', true],
+    ['Upper mass of brown Dwarf (no H ignition)',0.1,'M_sun', 'astro', false],
+    ['Upper mass of stars observed',100,'M_sun', 'astro', false],
+    ['Lower limit of star mass that will end up as BH',8,'M_sun', 'astro', false],
     ['Solar Radius',6.961E+08,'m', 'astro', false],
     //['Solar Luminosity',3.85E+26,'W', 'astro', false],
+    //['Galaxy Luminosity (thin disk)',1.8e10,'L_sun', 'astro', false],
     ['Sun Schwarzschild radius',2.95325008,'km', 'astro', false],
     ['Earth Mass',5.9723E+24,'Kg', 'planetary', false],
     ['Earth Radius',6378.140,'km', 'planetary', false],
@@ -257,23 +290,42 @@ var units = function() {
     ['Moon Mass',7.35E+22,'Kg', 'planetary', false],  // earth = 81.3 moons
     ['Jupiter Mass',1.90E+27,'Kg', 'planetary', false],
     ['Jupiter Distance',7.79E+11,'m', 'astro', false],
+    ['Jupiter Radius',71492 ,'km', 'astro', false],  // wikipedia Jupiter
+    //['Saturn Ring Radius', 483000, 'km', 'astro', false],  // Too close to solar radius and earth-moon dist // wikipedia Rings_of_Saturn
     ['Nearest star (Proxima Centauri) Distance',4,'ly', 'astro', true],
-    ['Galactic Center to Sun',8.0,'kpc', 'astro', false],
+    ['Galactic Center to Sun',8.5,'kpc', 'astro', false], // Schneider
     ['Galactic disk of Milky Way Diameter',100000,'ly', 'astro', false],  // 33.3 kpc
+    //['Radius of Active Galactic Nuclei (maximum)',1,'pc', 'astro', false],  // Too close to nearest star
+    //['Length of Active Galactic Nuclei Jet',1,'Mpc', 'astro', false],  // Too close to Andromeda distance
+    ['Scale-height of Galaxy',300,'pc', 'astro', false],
+    ['Thickness of Galaxy',1000,'pc', 'astro', false],
     //['SN 1987A and LMC Distance',50,'kpc', 'astro', false],  // Too close to Galaxy Diameter
     ['Andromeda (nearest) Galaxy Distance',725,'kpc', 'astro', false],
     ['Local Group of galaxies Diameter',1.6,'Mpc', 'astro', false],
-    ['Virgo cluster of galaxies Distance',14,'Mpc', 'astro', false],
-    ['Local Supercluster Diameter',60,'Mpc', 'astro', false],
+    ['Virgo cluster of galaxies Distance',18,'Mpc', 'astro', false],  // from Schneider. Used to be 14
+    //['Coma cluster of galaxies Distance',90,'Mpc', 'astro', false],  // Too close to Largest Structures // from Schneider. Used to be 14
+    //['Distance to nearest quasar',?,'Mpc', 'astro', false],  // z=6.5
+    //['Local Supercluster Diameter',60,'Mpc', 'astro', false],  // Too close to Largest Void & Structures
+    ['Largest Void Diameter',30/.7,'Mpc', 'astro', false],
+    //['Cluster Diameter',2/.7,'Mpc', 'astro', false],  // Is this right?  Why is it 
+    ['Largest Structures',100,'Mpc', 'astro', false],
     //['Distance to certain quasars',1.0E+26,'m', 'astro', false],  // Too close to Hubble length
-    //['Chandrasakhar (white dwarf limit)',1.5,'M_sun', 'astro', false],
+    //['Chandrasekhar (white dwarf limit)',1.44,'M_sun', 'astro', false],
     //['Oppenheimer-Volkov (neutron star limit)',2.0,'M_sun', 'astro', false],
+    ['Density of gas in Solar neighborhood', 0.04,'M_sun/pc^3', 'astro', false],
+    //['Mass in Galaxy atomic Hydrogen gas', 4e9,'M_sun', 'astro', false],
+    //['Mass in Galaxy molecular H_2 gas', 1e9,'M_sun', 'astro', false],
+    //['Mass in Galaxy thin disk', 6e10,'M_sun', 'astro', false],
+    //['Mass in Galaxy thick disk', 0.5e10,'M_sun', 'astro', false],
     ['Visible Mass in Galaxy',2.00E+11,'M_sun', 'astro', false],
     ['All Mass in Galaxy',6.00E+11,'M_sun', 'astro', false],
-    ['Black hole at center of our galaxy', 5.2e36, 'Kg', 'astro', false], // Taylor & Wheeler
-    ['Black hole in center of Virgo cluster', 6e39, 'Kg', 'astro', false], // Taylor & Wheeler
+    ['Mass of galaxy M87 (lower limit)',3e12,'M_sun', 'astro', false],  // Schneider
+    ['Black hole in M87', 3e9, 'M_sun', 'astro', false], // Schneider
+    //['Black hole in center of Virgo cluster', 6e39, 'Kg', 'astro', false], // Taylor & Wheeler
+    ['Black hole at center of our galaxy', 5.2e36, 'Kg', 'astro', false], // Taylor & Wheeler,  but 3e6, 'M_sun' says Schneider
     ['Mass in Universe',2.06E+55,'g', 'astro', true],
     ['Age of Universe',13.7,'Gyr', 'astro', true],
+    //['Dynamical Time of cluster of galaxies', 2e9,'Gyr', 'astro', true],  // Too long
     //['Critical Density per cm^3',9.5E-30,'g', 'astro', false],  // These are all too close to Cosmological Constant
     //['Critical Density',9.5E-30,'g/cm^3', 'astro', false],
     ['Critical Density',1.05369e-5*(.71)*(.71)*1e6,'GeV/m^3', 'astro', false],  // 5.3  http://pdg.lbl.gov/2004/reviews/astrorpp.pdf
@@ -281,7 +333,10 @@ var units = function() {
     ['Cosmological Constant (Vac Energy Density)',Math.pow(.73,0.25)*2.55,'meV', 'particle', false],  // 3meV from http://arxiv.org/PS_cache/arxiv/pdf/0706/0706.2186v2.pdf
     //['Density of Dark Matter',Math.pow(0.22,0.25)*2.55,'meV', 'particle', false],  // 3meV from http://arxiv.org/PS_cache/arxiv/pdf/0706/0706.2186v2.pdf
 
+    ['Time from Big Bang to CMB', 380000, 'yr', 'astro', false],
     ['CMB Temperature',2.7,'K', 'astro', true],
+    ['CMB Spectrum Peak Frequency', 160.2, 'GHz', 'astro', false],  // Wikipedia
+    ['Coherent Detection/Transmission Achieved', 1.001, 'THz', 'tech', false],  //cooled InP High Electron Mobility Transistor (HEMT) and Superconductor-Insulator-Superconductor (SIS) mixers
     //['Sky Brightness Temp (Synchrotron)',200,'K', 'astro', false],
     ['Room Temperature',300,'K', 'human', false],
     //['Earth Highest Temperature',58+273.15,'K', 'planetary', false],
@@ -289,6 +344,7 @@ var units = function() {
     //['Boiling',373.15,'K', 'human', false],   // Boiling and freezing are too close
     //['Freezing Water',273.15,'K', 'human', false],
     //['Neutrino Temp',1.9,'K', 'astro', false],
+    ['Neutrino freezout temp',1.6e10,'K', 'astro', false],
     ['Tallest Building height',508.0,'m', 'human', false],
     ['Tallest Building mass',700000000,'Kg', 'human', false],
     
@@ -304,23 +360,40 @@ var units = function() {
     ['Temperature on Venus', 737, 'K', 'astro', false],
     //['Melting point of aluminum', 933.47, 'K', 'tech', false],  // Too close to temp of Venus
     
+    ['Lifetime of neutron', 887, 's', 'particle', false],
+    ['Lifetime of Muon', 2.19703, 'us', 'particle', false],
+    ['Lifetime of Tau', 290.0e-15, 's', 'particle', false],
+    ['Lifetime of Charged Pion', 2.6033e-8, 's', 'particle', false],
+    ['Mass of Charged Pion', 139.57018, 'MeV', 'particle', false],
+    ['Lifetime of Neutral Pion', 8.4e-17, 's', 'particle', false],
+    //['Mass of Neutral Pion', 134.9766, 'MeV', 'particle', false],
+    //['Mass of Charged Kaon', 493.7, 'MeV', 'particle', false],
+    ['Mass of Neutral Kaon', 497.6, 'MeV', 'particle', false],
+    //['Lifetime of Charged Kaon', 1.2385e-8, 's', 'particle', false],  // Too close to FM Broadcast
+    ['Lifetime of K-Short', 0.895e-10, 's', 'particle', false],
+    ['Lifetime of K-Long', 5.116e-8, 's', 'particle', false],
     
     ['Neutrino mass upper bound',2,'eV', 'particle', false],  // http://pdglive.lbl.gov/Rsummary.brl?nodein=S066&fsizein=1
     ['Neutrino mass cosmology upper bound',0.4,'eV', 'particle', false],  // http://pdg.lbl.gov/2007/reviews/numixrpp.pdf
     ['Neutrino mass difference solar delta m_21', Math.sqrt(8e-5) *1000, 'meV', 'particle', false],
     ['Neutrino mass difference atmosphere delta m_32', Math.sqrt(2.5e-3) *1000, 'meV', 'particle', false],  // 1.9-3.0 is the range http://pdg.lbl.gov/2007/reviews/numixrpp.pdf
     
-    ['Fission of one U-235',200,'MeV', 'nuclear', false],
+    ['Energy released in fission of one U-235',200,'MeV', 'nuclear', false],
+    //['Energy released in fusion of H-D to He', ,'MeV', 'nuclear', false],
+    //['Binding Energy per nucleon', ,'MeV', 'nuclear', false],
+    //['n-n or p-p just missing being bound', 60,'keV', 'nuclear', false],
     ['Flying mosquito kinetic energy',1.0001,'TeV', 'bio', false],
     ['LHC p-p collisions',15,'TeV', 'particle', false],
     ['LHC Pb-Pb collisions',1250,'TeV', 'particle', false],
-    ['GZK limit for energy of a cosmic ray', 5e19, 'eV', 'astro', false],
-    ['Most energetic cosmic ray ever detected',3.0E+20,'eV', 'astro', false],
+    //['Cosmic ray lower kink in energy spectrum', 1e15, 'eV', 'astro', false],  // Too close to LHC Pb Pb collision
+    //['Cosmic ray upper kink in energy spectrum', 1e18, 'eV', 'astro', false],  // Why have this when you don't have lower?
+    ['GZK (CMB) limit for energy of a cosmic ray', 5e19, 'eV', 'astro', false],
+    ['Most energetic cosmic ray ever detected',3.0E+20,'eV', 'astro', false],  // Air fluorescense in 1994
     //['Average person using a baseball bat', 80, 'J', 'human', false],  // Too close to most energetic cosmic ray
     ['Bullet Kinetic Energy (AK74 at 900 m/s)', 14203,'J', 'human', false],
     ['Energy in 1g of sugar or protein', 3.8e4, 'J', 'human', false],
     ['Car Kinetic Energy',3.0E+05,'J', 'human', false],
-    //['typical serving of staple food', 1e6, 'J', 'human', false], // Close to GUT Scale
+    //['typical serving of staple food', 1e6, 'J', 'human', false], // Close to Grand Unification Scale
     ['Food energy a human consumes in a day',8.4E+06,'J', 'human', false],  // 2000 Kcal
     //['Exploding 1Kg of TNT',4.184e+06,'J', 'human', false],  // To close to Food energy a human consumes and NIF laser
     ['Lightning bolt energy',1.5E+09,'J', 'planetary', false],
@@ -345,11 +418,11 @@ var units = function() {
     ['Red Light',750,'nm', 'chem', false],
     //['hc=1240 nm eV',1240,'nm', 'chem', false],  // Just a check to make sure 1240nm lines up with 1eV
     ['DNA helix diameter',2,'nm', 'bio', false],
-    ['HIV (average size) virus size',90,'nm', 'bio', false],
+    ['HIV (typical size) virus size',90,'nm', 'bio', false],
     ['Bacteria diameter',3.2,'um', 'bio', false],
     ['Blood cell / Spider web / Eukaryotic nucleus',7,'um', 'bio', false],
     ['Human Hair width',80,'um', 'human', false],
-    ['Height of Everest',8.848,'km', 'human', false],
+    ['Height of Everest',8.848,'km', 'human', false],  // 29,035 from NYTimes
     //['Mean depth of Ocean', 3.600, 'km', 'planetary', false],
     //['deepest ocean trench',10.911,'km', 'planetary', false],
     ['Height of Olympus Mons on Mars', 27.000, 'km', 'planetary', false],
@@ -377,8 +450,10 @@ var units = function() {
     ['Hydrogen hyperfine splitting of spins', 21, 'cm', 'chem', false],
     ['Sun surface temp', 5785, 'K', 'astro', false],
     ['Sun core temp', 13.6, 'MK', 'astro', false],
+    ['Xray Cluster gas temp', 5e7, 'K', 'astro', false],  // 10^7 - 10^8 from Schneider
     ['Local Disk Density', 1.0001e-23, 'g/cm^3', 'astro', false],
     ['Local Halo Density', 1.0001e-24, 'g/cm^3', 'astro', false],
+    //['Age of Solar System', 4.6, 'Gyr', 'astro', false],
     ['Age of Earth, Sun, and Life', 4.5, 'Gyr', 'astro', false],
     //['Age of Life on Earth', 4, 'Gyr', 'planetary', false],
     //['Age of Cells on Earth', 3.5, 'Gyr', 'planetary', false],
@@ -403,10 +478,12 @@ var units = function() {
     // K-T impact that wiped out the dinosaurs
     ['Transistor channel length (2007)', 45, 'nm', 'tech', false],
     ['Energy released to the collapse to a neutron star', 1e55, 'erg', 'astro', false],  // SN is collapse to white dwarf
+    //['Seperation of neutron stars in a pulsar', 1e11, 'cm', 'astro', false],  // Too close to Solar Radius
     //['Energy used by a human in a lifetime', // 1-10 kW continuous
     // Energy used by the world in a year
     ['Supernova 1A temp (lasts seconds)', 1e6, 'K', 'astro', false],
     ['Supernova 1A energy released', 1e46, 'J', 'astro', false],
+    ['Core collapse SN energy released in neutrinos 1% is photons', 3e53, 'erg', 'astro', false],
     // Time for cosmic inflation
     ['Time for sun to orbit galaxy (galactic year)', 226e6, 'yr', 'astro', false],
     // Hawking temperature of BH the size of the sun OR Size of BH whose hawking temp is same as sun
@@ -415,8 +492,20 @@ var units = function() {
     ['Energy in reactions in red giants', 100, 'keV', 'astro', false],
     ['Energy in reactions in Supernovae', 50, 'MeV', 'astro', false],
     ['Early Universe (Re)combination temp', .24, 'eV', 'astro', false],
+    ['Lifetime of massive stars', 2e7, 'yr', 'astro', false],
+    ['Time cosmic rays in galactic magnetic fields', 1e7, 'yr', 'astro', false],
+    ['Mass boundary between Cold & Hot Dark Matter', 6*.3*.7*.7, 'eV', 'astro', false],  // 6 O_m h^2
+    //['Proton Lifetime Lower Limit', 1e35, 'yr', 'particle', false],  // Too Long
+    //['Time until only our Local Group is visible due to cc', 100, 'Gyr', 'cosmo', false],  // Too long (ref?)
+    //['Shortest Pulsar Period', 1000/716, 'ms', 'cosmo', false],  //  http://en.wikipedia.org/wiki/Pulsar  PSR J1748-2446ad, at 716 Hz, the pulsar with the highest rotation speed.
+    //['Longest Pulsar Period', 8.5, 's', 'cosmo', false],  //  http://en.wikipedia.org/wiki/Pulsar
+    //['Superfluid He4', 2.17, 'K', 'particle', false],  //  ref?
+    //['Superfluid He3', 2.491, 'mK', 'particle', false],  //  ref?
+    //['Lamb shift btw Hydrogen 2p and 2s', 1057, 'MHz', 'particle', false],
+    
+    // All Biomass, mass of everest, of atmosphere, of CO2
     ]
-
+    
     // TODO: Add all units instead of having them on top.
     
     var numbers = [
@@ -424,11 +513,30 @@ var units = function() {
     ['Greek Civilization bits', 1e9],
     ['Human Genome', 6.4e9],
     ['Library Of Congres bits (20 Tb)', 1.5e14],
+    ['Star formation M_sun/year in our galaxy', 2],
+    //['Star formation M_sun/year in a starburst galaxy', 10-300],
     ]
     
     var velocities = [
-    ['Earth Orbit', 29.8, 'km/s']
+    ['Earth Orbit', 29.8, 'km/s'],
+    ['Supernova Shock Front', 10000, 'km/s'],
+    ['Sun wrt CMB', 368, 'km/s'],  // +- 2
+    ['Local Group wrt CMB', 600, 'km/s'],  // +- 2
     // Speed of sun around mikly way
+    ]
+    
+    var luminoscity = [
+    ['Quasars / AGN', 1000, 'L_galaxy']
+    ]
+    
+    var densities = [
+    ['Sun', 1, 'g/cm^3'],
+    ['Earth', 5, 'g/cm^3'],
+    ['Galaxy', 1e-24, 'g/cm^3'],
+    ['Clusters of Galaxies', 1e-27, 'g/cm^3'],
+    ['Critical Density', 1e-30, 'g/cm^3'],
+    // water, earth, sun, neutron star, universe
+    // Energy density:  chemicals (explosives, gasoline), nuclear
     ]
     
     var tbody = $('fundamental_units_body')
@@ -599,7 +707,7 @@ var units = function() {
         p.textAnchor = null
         //var offset = 0
         
-        // Draw Lines
+        // Draw Horizontal Lines
         forEach(data, function(item) {
             var name = item[0]
             var value = item[1]
@@ -622,7 +730,7 @@ var units = function() {
             }
         })
         
-        // Draw Text
+        // Draw Text Labels on Horizontal Lines
         forEach(data, function(item) {
             var name = item[0]
             var value = item[1]
