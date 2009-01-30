@@ -162,8 +162,8 @@ SVGKit._namespaces = {
 SVGKit._svgMIME = 'image/svg+xml';
 SVGKit._svgEmptyName = 'empty.svg';
 SVGKit._SVGiKitBaseURI = '';
-SVGKit._errorText = "You can't display SVG. Download Firefox 1.5." ;
-SVGKit._convert_url = 'http://brainflux.org/cgi-bin/convert_svg.py'  // Should be customized to your own server
+SVGKit._errorText = "You can't display SVG. Download the latest Firefox!" ;
+SVGKit._convert_url = 'http://svgkit.sourceforge.net/cgi-bin/convert_svg.py'  // Should be customized to your own server
 
 
 ////////////////////////////
