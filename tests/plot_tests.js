@@ -25,7 +25,7 @@ for (var i=0; i<POINT_COUNT; i++) {
 
 var testFunctions = {
     'category': function (p) {
-        p.plotLine(['a','bb','ccc','dddd','eeeee', 'ccc', 'a']);
+        p.plotLine(['A','BB','CCC','DDDD','MMMMM', 'CCC', 'A']);
         p.yScale.placement = 'on'
         p.render();
     },
