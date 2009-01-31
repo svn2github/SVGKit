@@ -16,12 +16,9 @@
 <div id="content">
 <h1>SVGKit</h1>
 <h2>Introduction</h2>
-<p>Lowest level. Create a new SVG at runtime.
- Load SVG data from a URL. Conveniently handle quirks of three
-  ways SVG can be included in browsers: object, embed, and inline. Handle
-  differnet browsers and different SVG engines.  Has convenience
-  functions for DOM manipulation ala MochiKit. It manages the objects:
-  HTMLElement, SVGDocument, SVGElement.<br />
+<p>
+ All you need to work with SVGs at the basic, browser-independent level. Create a new SVG at runtime. Load SVG data from a URL. Conveniently handle quirks of three ways SVG can be included in browsers: object, embed, and inline. Handle different browsers and different SVG engines. Has convenience functions for DOM manipulation ala <a href="http://mochikit.com/">MochiKit</a>. It manages the internal SVG DOM objects: HTMLElement, SVGDocument, SVGElement 
+  <br />
   <br />
   Once you have an SVGKit object, adding content is simple.  Inspired by MochiKit DOM, there is an all-caps function for every
   tag defined in the SVG spec.<br />
@@ -46,7 +43,7 @@
 <ul>
   <li><a href="http://svgkit.svn.sourceforge.net/viewvc/svgkit/trunk/SVGKit/SVGKit.js?view=markup">SVGKit.js</a></li>
 </ul>
-<h2>JavaScript access to SVG (not SVGKit specific)</h2>
+<h2>JavaScript access to SVG (not SVGKit specific, but a reference for everybody)</h2>
 There are several different ways for JavaScript to access SVG content.
 The there are three major DOM elements you need to worry about, each of which has a corresponding member in a SVGKit object.<br />
 <ul>
@@ -114,7 +111,7 @@ impliment different methods to varying degrees:</p>
 </table>
 <h2>Constructors</h2>
 <ul>
-  <li><code>SVGKit()</code> -- For JavaScript included in an SVG</li>
+  <li><code>SVGKit()</code> -- For JavaScript included inside an SVG</li>
   <li><code>SVGKit(node)</code> -- Already have an HTML element that contains an SVG like <code>&lt;object&gt;</code>, <code>&lt;embed&gt;</code>, <code>&lt;iframe&gt;</code>, or <code>&lt;svg&gt;</code></li>
   <li><code>SVGKit(id)</code> -- Have the id for an HTML element (if your id ends in
 &quot;.svg&quot;, pass in the node instead because strings ending in .svg will be

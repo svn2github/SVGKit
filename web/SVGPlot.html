@@ -15,7 +15,7 @@
 <div id="content">
 <h1>SVGPlot</h1>
 <h2>Introduction</h2>
-<p>SVGPlot will be the combination of three things:</p>
+<p>SVGPlot will be the combination of several things:</p>
 <ul>
   <li>JavaScript API for creating plots/graphs/charts from data (JSON, XML, CSV, SQL query, HTML <code>&lt;table&gt;</code> element) </li>
 <li>XML file format (PlotXML) that is built up by the JavaScript, but can be modified by hand (to edit plot parameters) and re-opened.</li>
@@ -30,14 +30,14 @@
 </ul>
 <p>I set out to create a plotting program that:</p>
 <ul>
-  <li>Server-side command-line rendering through <a href="http://xmlgraphics.apache.org/batik/">Batik</a>, a Java program with an embedded JavaScript interpreter that handles SVG. </li>
-<li>Good features of Matlab, Mathematica, <a href="http://www.gnuplot.info/">GNUPlot</a>, <a href="http://ploticus.sourceforge.net/">Ploticus</a>, <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a>, <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a>. Eventually I'd like to write bridges so people's existing scripts and familiarity can be used to generate interactive web content.</li>
+  <li>Allows server-side command-line rendering through <a href="http://xmlgraphics.apache.org/batik/">Batik</a>, a Java program with an embedded JavaScript interpreter that handles SVG. </li>
+<li>Has the good features of Matlab, Mathematica, <a href="http://www.gnuplot.info/">GNUPlot</a>, <a href="http://ploticus.sourceforge.net/">Ploticus</a>, <a href="http://www.astro.princeton.edu/%7Erhl/sm/">Super Mongo</a>, <a href="http://asymptote.sourceforge.net/index.html">Asymptote</a>. Eventually I'd like to write bridges so people's existing scripts and familiarity can be used to generate interactive web content.</li>
 <li>Can reproduce any plot in journals like Science and Nature as straightforwardly as possible. These tend to convey large amounts of data in a small space. </li>
 <li>Can reproduce any plot in Physics and Math textbooks as straightforwardly as possible. These tend to be more instructive with thick lines, simple axes, and lots of explanation arrows. </li>
 <li>Can reproduce all of the eye catching business graphics of other online charting tools, but this is not the initial focus. </li>
 <li>Client-side features of panning, zooming, and exploring the data.</li>
 <li>Allows raw data to optionally be published inside of PlotXML file along with the &quot;suggested way&quot; of viewing it, but the GUI allows viewer to painlessly explore data (e.g. change scale to log)</li>
-<li>Can produce maps, coordinate projections, and GIS data </li>
+<li>Can produce maps, coordinate projections, and GIS data (TODO)</li>
 </ul>
 <h2>Live Demos </h2>
 <ul>

@@ -17,12 +17,13 @@
 <div id="content">
 <h1>Welcome to SVGKit</h1>
 <p>SVGKit is a collection of JavaScript libraries for painless client-side SVG
-  manipulation: SVGKit provides browser-independent access and
-  interaction, SVGCanvas implements Canvas API with SVG-specific
-  additions, and SVGPlot plots/graphs data and functions.</p>
+  manipulation: SVGKit provides browser-independent access, 
+  SVGCanvas implements Canvas API, and SVGPlot plots/graphs data and functions.
+  The API is inpired by and uses <a href="http://mochikit.com/">MochiKit</a>
+</p>
 <table>
   <tr>
-    <td><a href="SVGKit.html"><strong>SVGKit</strong></a> (<a href="../tests/svg_tests.html">live demo</a>, <a href="../tests/svg_type_tests.xhtml">type tests</a>) -- A low-level JavaScript SVG library. Create a new SVG at runtime. Load SVG data from a URL. Conveniently handle quirks of three ways SVG can be included in browsers: object, embed, and inline. Handle different browsers and different SVG engines. Has convenience functions for DOM manipulation ala MochiKit. It manages the objects: HTMLElement, SVGDocument, SVGElement </td>
+    <td><a href="SVGKit.html"><strong>SVGKit</strong></a> (<a href="../tests/svg_tests.html">live demo</a>, <a href="../tests/svg_type_tests.xhtml">type tests</a>) -- All you need to work with SVGs at the basic, browser-independent level. Create a new SVG at runtime. Load SVG data from a URL. Conveniently handle quirks of three ways SVG can be included in browsers: object, embed, and inline. Handle different browsers and different SVG engines. Has convenience functions for DOM manipulation ala <a href="http://mochikit.com/">MochiKit</a>. It manages the internal SVG DOM objects: HTMLElement, SVGDocument, SVGElement </td>
     <td><img src="svgkit.png" alt="SVGKit" width="200" height="200" /></td>
   </tr>
   <tr>
@@ -30,15 +31,15 @@
     <td><img src="gears.png" alt="" width="200" height="193" /></td>
   </tr>
   <tr>
-    <td><a href="SVGCanvas.html"><strong>SVGCanvas</strong></a> (<a href="../tests/canvas_tests.html">live demo</a>, <a href="../tests/canvas_tests2.html">live demo 2</a>, <a href="../tests/canvas_extensions_tests.html">canvas extensions</a>) -- Implements most of the Canvas API along with some SVG-specific additions. Allows you to create an SVG more prodecurally rather than building it up with DOM manipulation (one of the disadvantages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vuki&#263;evi&#263;</a>) The unimplimented parts of the Canvas API are things like &quot;take what you've drawn so far, treat it like a bitmap, and run the following filter on it.&quot; Some of these are impossible in SVG, but will get better with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2</a>. </td>
+    <td><a href="SVGCanvas.html"><strong>SVGCanvas</strong></a> (<a href="../tests/canvas_tests.html">live demo</a>, <a href="../tests/canvas_tests2.html">live demo 2</a>, <a href="../tests/canvas_extensions_tests.html">canvas extensions</a>) -- Implements most of the Canvas API. Some SVG-specific additions can be added if you also include CanvasExtensions.js. Allows you to create an SVG more prodecurally rather than building it up with DOM manipulation (one of the disadvantages sighted by <a href="http://people.mozilla.com/%7Evladimir/xtech2006/">Vladimir Vuki&#263;evi&#263;</a>) The unimplimented parts of the Canvas API are things like &quot;take what you've drawn so far, treat it like a bitmap, and run the following filter on it.&quot; Some of these are impossible in SVG as it stands, but will get better with <a href="http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html">SVG1.2</a>. </td>
     <td><img src="bowtie.png" alt="SVGCanvas" width="200" height="200" /></td>
   </tr>
   <tr>
-    <td><a href="SVGPlot.html"><strong>SVGPlot</strong></a> (<a href="../tests/plot_tests.html">live demo</a>, <a href="../tests/plot_csv.html">csv demo</a>) -- A full plotting suite to eventually rival Excel, Matlab, etc. It generates clean SVG in the browser that can be saved, sent back to server for conversion to PDF, PS, PNG, etc. Live updates via AJAX for real-time data like stocks or web stats. Allows multiple plots arranged on an SVG, multiple related or unrelated axes per plot, and control of styles. Originally I was going to write it in pure Canvas code so you could have either underneath, but things like text made it too frustrating. For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more production quality release. </td>
+    <td><a href="SVGPlot.html"><strong>SVGPlot</strong></a> (<a href="../tests/plot_tests.html">live demo</a>, <a href="../tests/plot_csv.html">csv demo</a>) -- A full plotting suite. It generates clean SVG in the browser that can be saved, sent back to server for conversion to PDF, PS, PNG, etc. Live updates via AJAX for real-time data like stocks or web stats. Allows multiple plots arranged on an SVG, multiple related or unrelated axes per plot, and control of styles. Originally I was going to write it in pure Canvas code so you could have either underneath, but things like text made it too frustrating. For a related but independent project, see <a href="http://www.liquidx.net/plotkit/">PlotKit</a>. We seem to have started around the same time, but he has a more production quality release. </td>
     <td><img src="plot.png" alt="SVGPlot" width="200" height="196" /></td>
   </tr>
   <tr>
-    <td><a href="SVGLaTeX.html"><strong>SVGLaTeX</strong></a> (<a href="../tests/latex_tests.html">live demo</a>) -- Generate SVGs from LaTeX equations with a servers-side CGI script. This script can be called from JavaScript to stick the result in a client-side SVG. </td>
+    <td><a href="SVGLaTeX.html"><strong>SVGLaTeX</strong></a> (<a href="../tests/latex_tests.html">live demo</a>) -- Generate SVGs from LaTeX equations with a server-side CGI script. This script can be called from JavaScript to stick the result in a client-side SVG. </td>
     <td><img src="latexsvg.png" alt="SVGLaTeX" width="200" height="200" /></td>
   </tr>
   <tr>
@@ -81,10 +82,9 @@ type interface for stars. I started  working on this in January
   <li>
      SVG-supporting Browser: <a href="http://www.mozilla.com/firefox/">Firefox</a> 1.5+, <a href="http://www.opera.com/">Opera</a> 9+,  Internet Explorer 6+ with <a href="http://www.adobe.com/svg/viewer/install/">Adobe SVG plugin</a>.</li>
 </ul>
-<h2> License</h2>
+<h2> Open Source License</h2>
 <ul>
-  <li> SVGKit is copyright (c) 2006-2007 Jason Gallicchio.
-Licensed under the MIT license (least restrictive of the BSD-style
+  <li> SVGKit is licensed under the MIT license (least restrictive of the BSD-style
 licenses). It is <a href="http://www.fsf.org/licensing/licenses/">GPL-compatible</a>.</li>
 </ul>
 <h2>Projects that Use SVGKit</h2>

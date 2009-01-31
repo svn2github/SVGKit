@@ -25,20 +25,20 @@
   <li>Inkscape and Firefox do not support embeded fonts. </li>
     <li>This is hard to do with the tools available. dvi2svg is the only one that comes close. </li>
   <li>A random equation uses a lot of different fonts: cmsy6, cmsy8, cmsy10, cmr6, cmr8, cmr12, cmmi8, cmmi12, cmex10</li>
-  <li>It will bloat the SVG with lots of fonts unless we only include the fonts and characters we need.</li>
+  <li>It will bloat the SVG with lots of fonts unless we only include the fonts and characters we need, but then it's not very editable.</li>
   </ul>
 </li>
 <li>Instead of  <code>&lt;text&gt;</code> elements, our conversion spits back a bunch of <code>&lt;path&gt;</code> and <code>&lt;polyline&gt;</code> elements.</li>
 </ul>
 <h2>Live Demos </h2>
 <ul>
-  <li><a href="../tests/latex_tests.html">latex_live demo</a> - Table of tests that you can modify and re-run client side.</li>
+  <li><a href="../tests/latex_tests.html">latex_live demo</a> - Table of tests that you can modify and re-run client side.  Unfortunately a round-trip to a server is required, which is currently broken.</li>
 </ul>
 <h2>Browse Code in SVN Repository</h2>
 <ul>
+  <li><a href="http://svgkit.svn.sourceforge.net/viewvc/svgkit/trunk/cgi-bin/latex2svg.py?view=markup">latex2svg.py</a></li>
   <li><a href="http://svgkit.svn.sourceforge.net/viewvc/svgkit/trunk/SVGKit/SVGLaTeX.js?view=markup">SVGLaTeX.js</a></li>
   <li><a href="http://svgkit.svn.sourceforge.net/viewvc/svgkit/trunk/SVGKit/SVGKit.js?view=markup">SVGKit.js</a></li>
-<li><a href="http://svgkit.svn.sourceforge.net/viewvc/svgkit/trunk/cgi-bin/latex2svg.py?view=markup">latex2svg.py</a></li>
 </ul>
 <h2>Server-Side Software Requirements</h2>
 <ul>
@@ -109,7 +109,7 @@
     </ul>
   </li>
 </ul>
-<p>In order to get good quality text to pollygon conversion, we had to run dvips with a high magnification, so we have to scale down the resulting SVG. Transformation that we'll stick in the svg group:</p>
+<p>In order to get good quality text to pollygon conversion, we had to run dvips with a high magnification, so we have to scale down the resulting SVG. The transformation that we'll stick in the svg group:</p>
 <ul>
   <li>scale(0.0017361) goes from the font's point coordinates to pixel coordinates. 1/0.0017361 = 576 = 8*72 = 8 inches worth of points </li>
 </ul>
