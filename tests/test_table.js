@@ -97,8 +97,10 @@ function addTests(start, end) {
             
             var doit = partial(doTest, canvasTD, svgTD, srcTD)
             
+            // Do the test on startup here
             doit(testFunction)
             
+            // Create the code and Do It button for future executions
             replaceChildNodes(codeTD, SVGKit.codeContainer(code, doit) )
             
             var tr = TR(null, 
