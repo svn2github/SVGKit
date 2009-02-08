@@ -1210,7 +1210,8 @@ SVGKit.codeContainer = function(initial_code, doit, rows /*14*/, cols /*60*/) {
              )
     
     var doit_button_hit = function() {
-        var func = eval(codeArea.value)
+        // Need parens for weird ECMA Script conformance in FF3 https://bugzilla.mozilla.org/show_bug.cgi?id=378244
+        var func = eval('('+codeArea.value+')')
         doit(func)
     }
     
