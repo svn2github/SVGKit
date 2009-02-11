@@ -1,5 +1,4 @@
-#!/usr/bin/python2
-#!/home/jason/local/bin/python
+#!/usr/bin/python
 
 """
 convert_svg.py  0.1
@@ -27,8 +26,11 @@ import md5
 sys.stderr = sys.stdout
 cgi.maxlen = 1024*1024
 
-java = '/home/jason/local/bin/java'
-batik = '/scratch/jason/local/src/batik-1.6/batik-rasterizer.jar'
+java = '/nfs/home/g/a/gallicch/jre/bin/java'
+batik = '/nfs/home/g/a/gallicch/batik-1.7/batik-rasterizer.jar'
+results_dir = '/nfs/home/g/a/gallicch/public_html/svg_results'
+results_url = '../svg_results'
+pdf2ps = '/nfs/home/g/a/gallicch/pdf2ps'
 
 mediatypes={
   'pdf':'application/pdf',
@@ -45,21 +47,6 @@ redirect = True
 if debug:
     print 'Content-type: text/plain\n\n'
 
-form = cgi.FieldStorage()
-time.sleep(0.1) # Throttle requests
-if debug:
-    print 'Debug mode of convert_svg.py\n'
-    print 'form.keys(): ' + form.keys().__str__()+'\n'
-    for key in form.keys():
-        print 'form['+key+'] = '+form[key].value+'\n'
-source = form['source'].value
-type = form['type'].value
-mime = mediatypes[type]
-
-md5hex = md5.new(source).hexdigest()
-svgname = 'files/'+md5hex+'.svg'
-outname = 'files/'+md5hex+'.'+type
-
 def execute_cmd(cmd):
     (child_stdin, child_stdout, child_stderr) = os.popen3(cmd)
     str_stdout = child_stdout.read() # Read until the process quits.
@@ -71,6 +58,27 @@ def execute_cmd(cmd):
         
 #execute_cmd('chown jason users files/*.*')  # Redhat disables chown
         
+form = cgi.FieldStorage()
+time.sleep(0.1) # Throttle requests
+if debug:
+    print 'Debug mode of convert_svg.py\n'
+    #execute_cmd('which java')
+    #execute_cmd('locate javac')
+    #execute_cmd('locate java')
+    #execute_cmd('ls /usr/bin/')
+    #execute_cmd('ls /etc/alternatives/')
+    print 'form.keys(): ' + form.keys().__str__()+'\n'
+    for key in form.keys():
+        print 'form['+key+'] = '+form[key].value+'\n'
+source = form['source'].value
+type = form['type'].value
+mime = mediatypes[type]
+
+md5hex = md5.new(source).hexdigest()
+svgname = results_dir+'/'+md5hex+'.svg'
+outname = results_dir+'/'+md5hex+'.'+type
+out_url = results_url+'/'+md5hex+'.'+type
+
 # If the result doesn't already exist in cached form, create it
 if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     svgfile = open(svgname, 'w')
@@ -79,16 +87,16 @@ if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
     if type == 'svg':
         outname = svgname
     else:
-        cmd = java+' -jar ' + batik + ' -d files -m '+mime+' '+svgname # -dpi <resolution>  -q <quality>
+        cmd = java+' -jar ' + batik + ' -d ' + results_dir + ' -m '+mime+' '+svgname # -dpi <resolution>  -q <quality>
         execute_cmd(cmd)
         
         if type=='ps':
-            inname = 'files/'+md5hex+'.pdf'
-            cmd = 'pdf2ps '+inname+' '+outname
+            inname = results_dir+'/'+md5hex+'.pdf'
+            cmd = pdf2ps+' '+inname+' '+outname
             execute_cmd(cmd)
 
 if redirect:
-    print 'Location: '+outname+'\r\n\r\n'
+    print 'Location: '+out_url+'\r\n\r\n'
 else:
     outfile = open( outname, 'rb')
     image = outfile.read()
