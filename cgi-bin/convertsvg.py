@@ -26,11 +26,11 @@ import md5
 sys.stderr = sys.stdout
 cgi.maxlen = 1024*1024
 
-java = '/nfs/home/g/a/gallicch/jre/bin/java'
-batik = '/nfs/home/g/a/gallicch/batik-1.7/batik-rasterizer.jar'
-results_dir = '/nfs/home/g/a/gallicch/public_html/svg_results'
-results_url = '../svg_results'
-pdf2ps = '/nfs/home/g/a/gallicch/pdf2ps'
+java = '/home/groups/s/sv/svgkit/jre1.6.0_12/bin/java'
+batik = '/home/groups/s/sv/svgkit/batik-1.7/batik-rasterizer.jar'
+results_dir = '/home/persistent/s/sv/svgkit/svgresults'
+results_url = '../svgresults'
+pdf2ps = '/usr/bin/pdf2ps'
 
 mediatypes={
   'pdf':'application/pdf',
@@ -46,6 +46,7 @@ redirect = True
 
 if debug:
     print 'Content-type: text/plain\n\n'
+    print 'Debugging convert_svg.py'
 
 def execute_cmd(cmd):
     (child_stdin, child_stdout, child_stderr) = os.popen3(cmd)
@@ -67,6 +68,8 @@ if debug:
     #execute_cmd('locate java')
     #execute_cmd('ls /usr/bin/')
     #execute_cmd('ls /etc/alternatives/')
+    execute_cmd('df')
+    execute_cmd('mount')
     print 'form.keys(): ' + form.keys().__str__()+'\n'
     for key in form.keys():
         print 'form['+key+'] = '+form[key].value+'\n'

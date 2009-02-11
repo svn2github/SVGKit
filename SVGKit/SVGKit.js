@@ -163,7 +163,7 @@ SVGKit._svgMIME = 'image/svg+xml';
 SVGKit._svgEmptyName = 'empty.svg';
 SVGKit._SVGiKitBaseURI = '';
 SVGKit._errorText = "You can't display SVG. Download the latest Firefox!" ;
-SVGKit._convert_url = 'http://www.people.fas.harvard.edu/%7egallicch/cgi-bin/convert_svg.py'  // Should be customized to your own server
+SVGKit._convert_url = '/cgi-bin/convertsvg.py'  // Should be customized to your own server
 
 
 ////////////////////////////
