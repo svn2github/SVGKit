@@ -63,11 +63,11 @@ sys.stderr = sys.stdout
 cgi.maxlen = 10*1024
 
 bin_dir = '/usr/bin/'
-latex = bin_dir+'latex'
+latex_program = bin_dir+'latex'
 dvips = bin_dir+'dvips'
 bin_dir = '/home/groups/s/sv/svgkit/local/bin/'
 pstoedit = bin_dir+'pstoedit'
-pstoedit = '/home/groups/s/sv/svgkit/local/src/texvc/texvc'
+texvc = '/home/groups/s/sv/svgkit/local/src/texvc/texvc'
 results_dir = '/home/persistent/s/sv/svgkit/svgresults/'
 results_url = '../svgresults/'
 
@@ -179,7 +179,7 @@ if True or not os.path.isfile(results_dir+svg_name):
         sys.exit()
         
     #print ('latex -output-directory=' + results_dir + ' -halt-on-error ' + tex_name  + ' > ' + out_name)
-    execute_cmd('cd '+results_dir+'; '+latex+' ' + tex_name  + ' > ' + out_name)
+    execute_cmd('cd '+results_dir+'; '+latex_program+' ' + tex_name  + ' > ' + out_name)
     execute_cmd('cd '+results_dir+'; '+dvips+' -q -f -e 0 -E -D 10000 -x ' + str(1000*zoom) +' -o '+ps_name +' '+dvi_name)
     #execute_cmd('pstoedit -f plot-svg -dt -ssp '+ps_name+' '+svg_name)
     execute_cmd('cd '+results_dir+'; '+pstoedit+' -f plot-svg -dt -ssp ' + ps_name + ' ' + svg_name + '> ' + out_name)
@@ -192,11 +192,13 @@ if True or not os.path.isfile(results_dir+svg_name):
     zoom_file.close()
 
 outname = results_dir+svg_name
-outname = results_dir+zoom_name
+#outname = results_dir+zoom_name
+out_url = results_url+svg_name
+#out_url = results_url+zoom_name
 mime = 'image/svg+xml'
     
 if redirect:
-    print 'Location: '+outname+'\r\n\r\n'
+    print 'Location: '+out_url+'\r\n\r\n'
 else:
     outfile = open( outname, 'rb')
     image = outfile.read()
