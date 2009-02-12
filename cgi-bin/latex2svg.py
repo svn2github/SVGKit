@@ -62,7 +62,16 @@ import re
 sys.stderr = sys.stdout
 cgi.maxlen = 10*1024
 
-bin_dir = '/home/jason/local/bin/'
+bin_dir = '/usr/bin/'
+latex = bin_dir+'latex'
+dvips = bin_dir+'dvips'
+bin_dir = '/home/groups/s/sv/svgkit/local/bin/'
+pstoedit = bin_dir+'pstoedit'
+pstoedit = '/home/groups/s/sv/svgkit/local/src/texvc/texvc'
+results_dir = '/home/persistent/s/sv/svgkit/svgresults/'
+results_url = '../svgresults/'
+
+
 os.environ['PATH'] += os.pathsep+bin_dir
 
 debug = False
@@ -106,11 +115,10 @@ latex = form['latex'].value
 
 md5hex = md5.new(latex).hexdigest()
 
-base_dir = 'files/'
 
 def extensionToFile(ext):
-    #return os.path.join(base_dir, 'files/'+md5hex+'.'+ext)
-    #return os.path.abspath(base_dir+md5hex+'.'+ext)
+    #return os.path.join(results_dir, 'files/'+md5hex+'.'+ext)
+    #return os.path.abspath(results_dir+md5hex+'.'+ext)
     return md5hex+'.'+ext
 
 tex_name = extensionToFile("tex")
@@ -151,8 +159,8 @@ footer = """
 zoom = 10
 
 # If the result doesn't already exist in cached form, create it
-if True or not os.path.isfile(base_dir+svg_name):
-    tex_file = open(base_dir+tex_name, 'w')
+if True or not os.path.isfile(results_dir+svg_name):
+    tex_file = open(results_dir+tex_name, 'w')
     tex_file.write(header)
     tex_file.write(latex)
     tex_file.write(footer)
@@ -162,7 +170,7 @@ if True or not os.path.isfile(base_dir+svg_name):
         #return code.replace('"', '\\"')
         return code.replace('\n',' ').replace('\r',' ')  # This seems to do the right thing
      
-    stdout = execute_cmd('cd '+base_dir+'; texvc . . "'+escapeshell(latex)+'" iso-8859-1')
+    stdout = execute_cmd('cd '+results_dir+'; '+texvc+' . . "'+escapeshell(latex)+'" iso-8859-1')
     # First character must be an indication of success
     if verify_code and '+cmlCMLX'.find(stdout[0]) == -1:
         print 'Content-type: text/plain\n\n'
@@ -170,21 +178,21 @@ if True or not os.path.isfile(base_dir+svg_name):
         print stdout
         sys.exit()
         
-    #print ('latex -output-directory=' + base_dir + ' -halt-on-error ' + tex_name  + ' > ' + out_name)
-    execute_cmd('cd '+base_dir+'; latex ' + tex_name  + ' > ' + out_name)
-    execute_cmd('cd '+base_dir+'; dvips -q -f -e 0 -E -D 10000 -x ' + str(1000*zoom) +' -o '+ps_name +' '+dvi_name)
+    #print ('latex -output-directory=' + results_dir + ' -halt-on-error ' + tex_name  + ' > ' + out_name)
+    execute_cmd('cd '+results_dir+'; '+latex+' ' + tex_name  + ' > ' + out_name)
+    execute_cmd('cd '+results_dir+'; '+dvips+' -q -f -e 0 -E -D 10000 -x ' + str(1000*zoom) +' -o '+ps_name +' '+dvi_name)
     #execute_cmd('pstoedit -f plot-svg -dt -ssp '+ps_name+' '+svg_name)
-    execute_cmd('cd '+base_dir+'; pstoedit -f plot-svg -dt -ssp ' + ps_name + ' ' + svg_name + '> ' + out_name)
+    execute_cmd('cd '+results_dir+'; '+pstoedit+' -f plot-svg -dt -ssp ' + ps_name + ' ' + svg_name + '> ' + out_name)
 
-    svg_file = open(base_dir+svg_name)
-    zoom_file = open(base_dir+zoom_name, 'w')
+    svg_file = open(results_dir+svg_name)
+    zoom_file = open(results_dir+zoom_name, 'w')
     for line in svg_file:
         zoom_file.write( re.sub('translate\(.*\) scale\(1,-1\) scale\(0.0017361\)',  'scale(1,-1) scale('+str(0.0017361/zoom)+')',  line) )
     svg_file.close()
     zoom_file.close()
 
-outname = base_dir+svg_name
-outname = base_dir+zoom_name
+outname = results_dir+svg_name
+outname = results_dir+zoom_name
 mime = 'image/svg+xml'
     
 if redirect:

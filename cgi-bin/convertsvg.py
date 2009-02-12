@@ -26,10 +26,10 @@ import md5
 sys.stderr = sys.stdout
 cgi.maxlen = 1024*1024
 
-java = '/home/groups/s/sv/svgkit/jre1.6.0_12/bin/java'
-batik = '/home/groups/s/sv/svgkit/batik-1.7/batik-rasterizer.jar'
-results_dir = '/home/persistent/s/sv/svgkit/svgresults'
-results_url = '../svgresults'
+java = '/home/groups/s/sv/svgkit/local/src/jre1.6.0_12/bin/java'
+batik = '/home/groups/s/sv/svgkit/local/src/batik-1.7/batik-rasterizer.jar'
+results_dir = '/home/persistent/s/sv/svgkit/svgresults/'
+results_url = '../svgresults/'
 pdf2ps = '/usr/bin/pdf2ps'
 
 mediatypes={
@@ -78,9 +78,9 @@ type = form['type'].value
 mime = mediatypes[type]
 
 md5hex = md5.new(source).hexdigest()
-svgname = results_dir+'/'+md5hex+'.svg'
-outname = results_dir+'/'+md5hex+'.'+type
-out_url = results_url+'/'+md5hex+'.'+type
+svgname = results_dir+md5hex+'.svg'
+outname = results_dir+md5hex+'.'+type
+out_url = results_url+md5hex+'.'+type
 
 # If the result doesn't already exist in cached form, create it
 if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
@@ -94,7 +94,7 @@ if not os.path.isfile(outname) or source!=open(svgname, 'r' ).read():
         execute_cmd(cmd)
         
         if type=='ps':
-            inname = results_dir+'/'+md5hex+'.pdf'
+            inname = results_dir+md5hex+'.pdf'
             cmd = pdf2ps+' '+inname+' '+outname
             execute_cmd(cmd)
 
