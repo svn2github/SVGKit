@@ -11,7 +11,7 @@ See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
 SVGLaTeX = {}
 
-SVGLaTeX.base_url = '/cgi-bin/latex2svg.py'
+SVGLaTeX.base_url = SVGKit._cgi_dir+'latex2svg.py'
 
 SVGLaTeX.getDefferedFromLaTeX = function(latex) {
     var url = SVGLaTeX.base_url + '?' + queryString({latex:latex})
