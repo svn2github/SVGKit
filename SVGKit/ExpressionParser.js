@@ -1,6 +1,9 @@
 /***
 Parser / Function Evaluator
 
+(c) 2006 Jason Gallicchio.
+Licensed under the open source (GNU compatible) MIT License
+
 Construct a Parse tree from "A sin(x)"
 
 Data types at the base:

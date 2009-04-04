@@ -4,7 +4,8 @@ SVGCanvas.js 0.1
 
 See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
-(c) 2006 Jason Gallicchio.  All rights Reserved.
+(c) 2006 Jason Gallicchio.
+Licensed under the open source (GNU compatible) MIT License
 
 
 
