@@ -347,7 +347,7 @@ SVGKit.prototype.setSize = function(element, width, height) {
 }
 
 SVGKit.prototype.conversionHTML = function(divElement) {
-    var cgi = 'http://frank.harvard.edu/~jason/cgi-bin/svgconvert'
+    var cgi = 'http://svgkit.sourceforge.net/cgi-bin/convertsvg.py'
     var types = ['svg','pdf','png','jpg','ps','xfig'];
     for (var i=0; i<types.length; i++) {
         appendChildNodes(divElement,
