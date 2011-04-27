@@ -16,6 +16,7 @@ TODO:
 - Distinguish agrogate versus invividual particles
 - Uncertainties without making things complicated
 - LaTeX formula(s) for each item relating it to other items.
+http://en.wikipedia.org/wiki/Orders_of_magnitude_(energy)#1024_and_above
 
 Books:
 Picture book 'orders of magnitude' by Phil Morrison
@@ -69,6 +70,41 @@ TODO: Check factors of 2pi: 2.4GHz = 12cm
       Similar things avoid each other horizontally
       Add Hz, W, erg/s, g/cm^3...
       Deal with the hbar issue -- show w and k in addition to f and x.
+      
+      
+200k years african womam (eve) split gave all mitocondria
+60k years for african adam gave all Y chrosmosomes
+70k yers ago 2000 individuals height of ice age
+1M to 60k years ago, cultural statis (same tools, no art, no compete language)
+50k reach australia
+35k europe
+
+numbers:
+   grains of sand 10^20
+   Entropy of star-sized black hole
+   Entropy of supermassive galactic black hole
+   Entropy of current visible universe
+   Total possible entropy if all visible universe was in BH
+   
+   
+info:
+   human genome
+   sloan digital
+   lhc
+   google database
+   library of congress
+   all text messgaes sent
+   gps data for everybody evey minute
+   
+times:
+   proton decay
+   stelar black hole evaporation
+   galactic black hole evaporation
+
+http://www.informationisbeautiful.net/visualizations/snake-oil-supplements/
+http://www.informationisbeautiful.net/visualizations/caffeine-and-calories/
+http://www.informationisbeautiful.net/visualizations/the-billion-dollar-gram/
+
 ------------------------------------------
 ***/
 
@@ -325,6 +361,7 @@ var units = function() {
     ['Black hole at center of our galaxy', 5.2e36, 'Kg', 'astro', false], // Taylor & Wheeler,  but 3e6, 'M_sun' says Schneider
     ['Mass in Universe',2.06E+55,'g', 'astro', true],
     ['Age of Universe',13.7,'Gyr', 'astro', true],
+    ['Lifetime of a Star',10.0,'Gyr', 'astro', true],
     //['Dynamical Time of cluster of galaxies', 2e9,'Gyr', 'astro', true],  // Too long
     //['Critical Density per cm^3',9.5E-30,'g', 'astro', false],  // These are all too close to Cosmological Constant
     //['Critical Density',9.5E-30,'g/cm^3', 'astro', false],
@@ -345,8 +382,12 @@ var units = function() {
     //['Freezing Water',273.15,'K', 'human', false],
     //['Neutrino Temp',1.9,'K', 'astro', false],
     ['Neutrino freezout temp',1.6e10,'K', 'astro', false],
-    ['Tallest Building height',508.0,'m', 'human', false],
+    ['Tallest Building height',828.0,'m', 'human', false],
     ['Tallest Building mass',700000000,'Kg', 'human', false],
+    ['Largest Ship mass',260941000,'Kg', 'human', false],  // http://en.wikipedia.org/wiki/Seawise_Giant
+    // ['ribosome mass e. coli',1.34e+6,'Da', 'bio', false],
+    // ['ribosome mass non-bacteria',4.2e+6,'Da', 'bio', false],
+    ['Buckyball C60 Diameter',0.71,'nm', 'chem', false],
     
     //['Lowest temp reached',2.17e-8,'K'], //3.0E-31,'J', 'tech', false], 
     //['Lowest temp for nuclear magnetic ordering', 100e-12,'K', 'tech', false], //3.0E-31,'J'],  //  at Helsinki
@@ -359,6 +400,17 @@ var units = function() {
     ['Temp in supernova explosions', 10e9, 'K', 'astro', false],
     ['Temperature on Venus', 737, 'K', 'astro', false],
     //['Melting point of aluminum', 933.47, 'K', 'tech', false],  // Too close to temp of Venus
+    
+    
+    ['Synthesis of protein (~200 amino acids)', 10, 's', 'bio', false], 
+    // DNA Polymerase I 	[10 bases/sec]
+    // DNA Polymerase II 	[1000 bases/sec]
+    // RNA Polymerase 	[50 bases/sec]
+    // Ribosomes 	[20 a.a.'s/sec]
+    // ['Generation of a bacterium', 1000, 's', 'bio', false],  // Too close to life of neutron
+    //['Unwinding of DNA Helix', 2, 'us', 'bio', false],  //  ? 2-5 ?
+    
+    ['Mean time btw collisions for electron in metal', 1e-14, 's', 'chem', false],
     
     ['Lifetime of neutron', 887, 's', 'particle', false],
     ['Lifetime of Muon', 2.19703, 'us', 'particle', false],
@@ -398,12 +450,17 @@ var units = function() {
     //['Exploding 1Kg of TNT',4.184e+06,'J', 'human', false],  // To close to Food energy a human consumes and NIF laser
     ['Lightning bolt energy',1.5E+09,'J', 'planetary', false],
     ['Exploding 1 ton of TNT',4.184e9,'J', 'tech', false],
+    //['Exploding 1 Kiloton of TNT',4.184e12,'J', 'tech', false],  // Close to 'Largest conventional bomb test'
+    ['Exploding 1 Megaton of TNT',4.184e15,'J', 'tech', false],
     ['Largest conventional bomb (MOAB)',4.184e9*11,'J', 'tech', false], // http://en.wikipedia.org/wiki/MOAB
     ['Largest conventional bomb test (600 ton TNT)',4.184e9*600,'J', 'tech', false],  // http://www.washingtonpost.com/wp-dyn/content/article/2006/03/30/AR2006033001735.html
-    ['Hiroshima blast',4.2E+06*1000*13000,'J', 'tech', false], // http://en.wikipedia.org/wiki/MOAB
-    ['Largest nuclear weapon tested energy',2.5E+17,'J', 'tech', false],
+    ['Hiroshima blast',4.2E+06*1000*13000,'J', 'tech', false], // Little Boy (13-18 kilotons) and Fat Man (21 kilotons) http://en.wikipedia.org/wiki/MOAB
+    ['Largest nuclear weapon tested, Tsar Bomba',2.5E+17,'J', 'tech', false],  // 50 MegaTons
     ['Energy consumed by the world in one year (2001)',4.3E+20,'J', 'human', false],
     ["Energy in world's fossil fuel reserves (2003)",3.9E+22,'J', 'planetary', false],
+    ["Dinosaur killing Chicxulub impact",4e+23,'J', 'planetary', false],
+    ["Largest Volcano: La Garita Caldera",1e+21,'J', 'planetary', false],
+    ["Solar Flare Energy",6e+25,'J', 'astro', false],
     ['Energy output of the Sun in one second',3.8E+26,'J', 'astro', false],
     ['Energy output of the Sun in one year',3.8E+26*31556926,'J', 'astro', false],
     ["Energy in world's U-238 reserves (2003)",3.0E+31,'J', 'planetary', false],
@@ -417,7 +474,10 @@ var units = function() {
     ['Violet Light',400,'nm', 'chem', false],
     ['Red Light',750,'nm', 'chem', false],
     //['hc=1240 nm eV',1240,'nm', 'chem', false],  // Just a check to make sure 1240nm lines up with 1eV
+    ['C--C bons',0.154,'nm', 'bio', false],
+    ['Glucose',0.9,'nm', 'bio', false],
     ['DNA helix diameter',2,'nm', 'bio', false],
+    ['Hemoglobin',6.5,'nm', 'bio', false],
     ['HIV (typical size) virus size',90,'nm', 'bio', false],
     ['Bacteria diameter',3.2,'um', 'bio', false],
     ['Blood cell / Spider web / Eukaryotic nucleus',7,'um', 'bio', false],
@@ -509,8 +569,15 @@ var units = function() {
     // TODO: Add all units instead of having them on top.
     
     var numbers = [
+    //['atoms in a person', 0.0],
+    ['number in mole', 6.02214179e23],
     ['stars in visible univ', 7e22],
+    ['stars in galaxy', 1e12],
+    ['galaxies in universe', 1e12],
     ['Greek Civilization bits', 1e9],
+    //['Human DNA bits', 0.0],
+    //['Computing in Human Brain', 0.0],
+    //['Computing in Mouse Brain', 0.0],
     ['Human Genome', 6.4e9],
     ['Library Of Congres bits (20 Tb)', 1.5e14],
     ['Star formation M_sun/year in our galaxy', 2],
