@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
-"""
+'''
 latex2svg.py  0.1
 
 See <http://svgkit.sourceforge.net/> for documentation, downloads, license, etc.
 
 (c) 2006-2007 Jason Gallicchio.
 Licensed under the open source (GNU compatible) MIT License
-"""
+'''
 # Outline of code:
 # Read the LaTeX Code
 # Read the type of equation: inline, text, or stand alone equation
@@ -25,7 +25,7 @@ Licensed under the open source (GNU compatible) MIT License
 # TODO: Redo zoom -- figure out the viewBox 8in thing and zoom/center appropriately.
 # TODO: Get rid of zoom_ file.
 # TODO: Delete the files when finished.
-"""
+'''
 === Texvc Output format ===
 
 Status codes and HTML/MathML transformations are returned on stdout.
@@ -51,7 +51,7 @@ texvc output format is like this:
  %h - html code, without \0 characters
  %m - mathml code, without \0 characters
 
-"""
+'''
 import cgi
 import cgitb; cgitb.enable() # Show errors to browser.
 import sys
@@ -62,24 +62,35 @@ import re
 sys.stderr = sys.stdout
 cgi.maxlen = 10*1024
 
-bin_dir = '/usr/bin/'
-latex_program = bin_dir+'latex'
-dvips = bin_dir+'dvips'
-bin_dir = '/home/groups/s/sv/svgkit/local/bin/'
-pstoedit = bin_dir+'pstoedit'
-texvc = '/home/groups/s/sv/svgkit/local/src/texvc/texvc'
-results_dir = '/home/persistent/s/sv/svgkit/svgresults/'
-results_url = '../svgresults/'
-
-
-os.environ['PATH'] += os.pathsep+bin_dir
 
 debug = False
-redirect = True
+strict_parsing = True  # Of cgi form
+redirect = True  # send a redirect to a real file, as opposed to returning the SVG data directly
 verify_code = True  # Verifies the LaTeX code with Texvc for security
+
+
+# Shared programs
+bin_dir = '/usr/bin/'
+latex_program  = os.path.join(bin_dir, 'latex')
+dvips          = os.path.join(bin_dir, 'dvips')
+
+# Local programs
+local_dir ='/home/project-web/svgkit/local'
+lib_dir   = os.path.join(local_dir, 'lib')
+bin_dir   = os.path.join(local_dir, 'bin')
+src_dir   = os.path.join(local_dir, 'src')
+pstoedit  = os.path.join(bin_dir, 'pstoedit')
+texvc     = os.path.join(src_dir, 'texvc', 'texvc')
+results_dir = '/home/project-web/svgkit/persistent/svgresults/'
+results_url = '../svgresults/'
+
+os.environ['PATH'] += os.pathsep+bin_dir
+os.environ['LD_LIBRARY_PATH'] = os.pathsep+lib_dir
 
 if debug:
     print 'Content-type: text/html\n\n'
+    
+    print 'os.environ:', cgi.escape(repr(os.environ).replace(',', ',<br>\n'))
 
 # For some reason (apache?) this comes pre unquoted, which makes pluses 
 # not work because even though they started as '%2B', now that they're '+' they are treated as ' '
@@ -87,26 +98,26 @@ if debug:
 #os.environ['QUERY_STRING'] = os.environ['QUERY_STRING'].replace('+', '%2B')
 if os.environ.has_key('QUERY_STRING') and \
         os.environ.has_key('REQUEST_URI') and \
-        len(os.environ['REQUEST_URI'].split('?')) >= 2: # Only for GET, not POST
+        len(os.environ['REQUEST_URI'].split('?')) >= 2: # Only for GET, not default POST method
     os.environ['QUERY_STRING'] = os.environ['REQUEST_URI'].split('?')[1]
 
-form = cgi.FieldStorage(strict_parsing=True)
+form = cgi.FieldStorage(strict_parsing=strict_parsing)
 time.sleep(0.1) # Throttle requests
 if debug:
     print 'Debug mode of ltaex2svg.py\n'
-    form = cgi.FieldStorage()
+    #form = cgi.FieldStorage(strict_parsing=strict_parsing)
     if not form:
-        print "<h1>No Form Keys</h1>"
+        print '<h1>No Form Keys</h1>'
     else:
-        print "<h2>Environ</h2><ul>"
+        print '<h2>Environ</h2><ul>'
         for key in os.environ.keys():
             value = os.environ[key]
-            print "<li>", cgi.escape(key), ":", cgi.escape(value), '</li>'
+            print '<li>', cgi.escape(key), ':', cgi.escape(value), '</li>'
         print '</ul>'
-        print "<h2>Form Keys</h2><ul>"
+        print '<h2>Form Keys</h2><ul>'
         for key in form.keys():
             value = form[key].value
-            print "<li>", cgi.escape(key), ":", cgi.escape(value), '</li>'
+            print '<li>', cgi.escape(key), ':', cgi.escape(value), '</li>'
         print '</ul>'
     print '<pre>'
 latex = form['latex'].value
@@ -121,13 +132,13 @@ def extensionToFile(ext):
     #return os.path.abspath(results_dir+md5hex+'.'+ext)
     return md5hex+'.'+ext
 
-tex_name = extensionToFile("tex")
-aux_name = extensionToFile("aux")
-log_name = extensionToFile("log")
-ps_name = extensionToFile("ps")
-dvi_name = extensionToFile("dvi")
-svg_name = extensionToFile("svg")
-out_name = extensionToFile("out")
+tex_name = extensionToFile('tex')
+aux_name = extensionToFile('aux')
+log_name = extensionToFile('log')
+ps_name  = extensionToFile('ps')
+dvi_name = extensionToFile('dvi')
+svg_name = extensionToFile('svg')
+out_name = extensionToFile('out')
 zoom_name = 'zoom_'+svg_name
 
 def execute_cmd(cmd):
@@ -140,7 +151,7 @@ def execute_cmd(cmd):
         print 'stderr:'+str_stderr+'\n'
     return str_stdout
 
-header = """
+header = '''
 \\nonstopmode
 \\documentclass[12pt]{article}
 \\pagestyle{empty}
@@ -149,17 +160,19 @@ header = """
 \\usepackage[latin1]{inputenc}
 \\begin{document}
 \\[
-"""
+'''
 
-footer = """
+footer = '''
 \\]
 \\end{document}
-"""
+'''
 
-zoom = 10
+zoom = 10  # error in eps bounding box
+zoom = 2   # equation gets cut off
+zoom = 1   # maybe not the best quality
 
-# If the result doesn't already exist in cached form, create it
-if True or not os.path.isfile(results_dir+svg_name):
+# If the result doesn't already exist in cached form, create it (override for now)
+if not os.path.isfile(results_dir+svg_name) or True:
     tex_file = open(results_dir+tex_name, 'w')
     tex_file.write(header)
     tex_file.write(latex)

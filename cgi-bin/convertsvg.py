@@ -27,19 +27,34 @@ import md5
 sys.stderr = sys.stdout
 cgi.maxlen = 1024*1024
 
-java = '/home/groups/s/sv/svgkit/local/src/jre1.6.0_12/bin/java'
-batik = '/home/groups/s/sv/svgkit/local/src/batik-1.7/batik-rasterizer.jar'
-results_dir = '/home/persistent/s/sv/svgkit/svgresults/'
-results_url = '../svgresults/'
+
+# Shared programs
 pdf2ps = '/usr/bin/pdf2ps'
 
+# Local programs
+local_dir ='/home/project-web/svgkit/local'
+lib_dir   = os.path.join(local_dir, 'lib')
+bin_dir   = os.path.join(local_dir, 'bin')
+src_dir   = os.path.join(local_dir, 'src')
+pstoedit  = os.path.join(bin_dir, 'pstoedit')
+texvc     = os.path.join(src_dir, 'texvc')
+
+java  = os.path.join(src_dir, 'jre1.6.0_12/bin/java')
+batik = os.path.join(src_dir, 'batik-1.7/batik-rasterizer.jar')
+results_dir = '/home/project-web/svgkit/persistent/svgresults/'
+results_url = '../svgresults/'
+
+os.environ['PATH'] += os.pathsep+bin_dir
+os.environ['LD_LIBRARY_PATH'] = os.pathsep+lib_dir
+
+
 mediatypes={
-  'pdf':'application/pdf',
-  'ps':'application/pdf',  # Gets converted after
-  'jpg':'image/jpeg',
-  'png':'image/png',
+  'pdf':  'application/pdf',
+  'ps':   'application/pdf',  # Gets converted after
+  'jpg':  'image/jpeg',
+  'png':  'image/png',
   'tiff': 'image/tiff',
-  'svg':'image/svg+xml'
+  'svg':  'image/svg+xml'
 }
 
 debug = False
@@ -64,7 +79,7 @@ form = cgi.FieldStorage()
 time.sleep(0.1) # Throttle requests
 if debug:
     print 'Debug mode of convert_svg.py\n'
-    #execute_cmd('which java')
+    execute_cmd('which java')
     #execute_cmd('locate javac')
     #execute_cmd('locate java')
     #execute_cmd('ls /usr/bin/')
