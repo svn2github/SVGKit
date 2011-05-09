@@ -13,18 +13,17 @@ Licensed under the open source (GNU compatible) MIT License
    You can always access the objects through the scene-tree.
 
    This is all represented in the XML structure of the SVG with custom namespace to 
-   completly reconstruct these objects uppon load like Inkscape
+   completly reconstruct these objects uppon load like Inkscape.  Would like to have:
     * API & script commands common across languages: JS, Java, Python, C++
-    * Data format just Plain XML, Plain SVG, or Combined
-    * Write quickly with small script, but have ability to modify tree later. (Does origional script get stored and added to?)
+    * Data format just Plain XML (plot data), Plain SVG, or Combined
+    * Write quickly with small script, but have ability to modify tree later by graphical manipulation. 
+         (Does origional script get stored and added to?)
    Select plot or layer by color (or some other characteristic) rather than reference.
-   in a histogram, you want steps and not column plot.
    
    Another concept.  Rather than heirarchial, since single plots are the common case, maybe
    there should just be links to things like Axes rather than beging continaed.
    In a long array of plots, they could all be linked to the same axis rather than be
    contained in it.  This way when the axis changes, the plots do too.
-   
    
    When you call something, it sets up reasonable defaults for everything else.
 
@@ -34,7 +33,7 @@ Licensed under the open source (GNU compatible) MIT License
    ledgend and/or labeling of plots is automatic, alpha blended, unobtrusive, and auto-positioned.
    
    Programming interface concept:  Too many objects and layers, so expose each one's functionality
-   to it's children and it's parents.  When you call a high-layer method on a child, it works.
+   to its children and its parents.  When you call a high-layer method on a child, it works.
    When you call a child method on a parent, it picks either the "" one or the default (first) one.
    
    The key to adoption is good defaults.
@@ -160,16 +159,16 @@ Licensed under the open source (GNU compatible) MIT License
             when text is rotated (up to 90 deg) have it non-centered
     -- Data Rectangle smaller than plot rectangle by thee methods: 2%, 5px, fixed offset of data
         (so zero doesn't lie in corner, there is padding around glyphs, and zero label fits)
-	-- Have the GUI teach about the plotting API by having a running script that you add to.
-	
-	-- horizontalLine(value, color)
-	-- horizontalLines(data, colors)
+    -- Have the GUI teach about the plotting API by having a running script that you add to.
+    
+    -- horizontalLine(value, color)
+    -- horizontalLines(data, colors)
     -- horizontalStrip(start, end, color?)  // Draws a rect with given stroke and fill settings  What about stroking ends?
-	-- horizontalStrips([[1,2], [2,3]], ['red', 'green'])  
-	
+    -- horizontalStrips([[1,2], [2,3]], ['red', 'green'])  
+    
     -- Filter out invalid data at some point.  Can't pass invalid data to newScaleFromType!
     
-	-- SQL Injection attacts, strip out
+    -- SQL Injection attacts, strip out
         [";", "--", "xp_", "select", "update", "drop", "insert", "delete", "create", "alter", "truncate"]
 
     Things to get done with dates
@@ -334,7 +333,7 @@ SVGPlot.text_height = 9;
 SVGPlot.prototype.resetPlot = function() {
     // SVGCanvas already has a reset()
     //log("Constructing SVGPlot in SVGPlot.reset");
-    this.boxes = []
+    this.boxes = [];
     this.box = null;
     this.element = this.svg.svgElement;
     //this.fontFamily = "Verdana, Arial, Helvetica, Sans";
@@ -376,14 +375,15 @@ SVGPlot.Box = {}     // box
 
 SVGPlot.Layout = {}
 SVGPlot.Box = {}     // box
-    SVGPlot.Graphic = {}  // Random shapes tied to (i,j) not (x,y) coordinates.  When plot is zoomed/moved, do these go too?
+    SVGPlot.PlotTitle = {}  // either outside of plot area or overlaid
     SVGPlot.Ledgend = {} // List of the names of the plots.  Auto or manual.
-    SVGPlot.View = {}   // view  Is this Heirarchy too deep with this?  You need it for xtoi()
-        SVGPlot.LinePlot = {}   // plot
+    SVGPlot.Graphic = {}  // Random shapes tied to (i,j) not (x,y) coordinates.  When plot is zoomed/moved, do these go too?
+    SVGPlot.View = {}   // view  manages xtoi(), the mapping from plot coordinates to pixel coordinates (can be log)
+        SVGPlot.LinePlot = {}   // plot: line or step
         SVGPlot.ScatterPlot = {}   // plot
         SVGPlot.Decoration = {}  // like arrows pointing to specific places on the plot.  tied to (x,y) not (i,j).  When plot is zoomed/moved, these move around.
         SVGPlot.Scale = {}      // xScale, yScale
-            SVGPlot.Axis = {}   // xAxis, yAxis
+            SVGPlot.Axis = {}   // xAxis, yAxis -- refers to the line itself and its decorations
                 SVGPlot.AxisTitle = {}  // xAxisTitle, yAxisTitle
                 SVGPlot.Ticks = {}  // xTicks, yTicks
                 SVGPlot.TickLabels = {}  // xTickLabels, yTickLabels
@@ -393,10 +393,13 @@ SVGPlot.Box = {}     // box
 
 
 SVGPlot.Box.prototype = {}
-    SVGPlot.Graphic.prototype = {}
+    SVGPlot.PlotTitle.prototype = {}
     SVGPlot.Ledgend.prototype = {}
+    SVGPlot.Graphic.prototype = {}
     SVGPlot.View.prototype = {}
         SVGPlot.LinePlot.prototype = {}
+        SVGPlot.ScatterPlot.prototype = {}
+        SVGPlot.Decoration.prototype = {}
         SVGPlot.Scale.prototype = {}
             SVGPlot.Axis.prototype = {}
                 SVGPlot.AxisTitle.prototype = {}
@@ -435,7 +438,7 @@ SVGPlot.ScaleReal = function(min /* ='auto' */,
                                reversed /* ='false' */, 
                                required /* =[] */) {
     /***
-        Mapping real values to positions.
+        Constructor for ScaleReal: Mapping real values to positions.
     ***/
     this.set(min, max, interpolation, reversed, required);
 }
@@ -450,7 +453,7 @@ SVGPlot.ScaleReal.prototype = {
             If a parameter is not specified, AND it's not already set, 
             set it to a default
         ***/
-		this.dataSets = []  // Lists of data, each in form [1,7,4,6]
+          this.dataSets = []  // Lists of data, each in form [1,7,4,6]
         this.min = SVGKit.firstNonNull(min, this.min, 'auto')
         this.max = SVGKit.firstNonNull(max, this.max, 'auto')
         if (this.min != 'auto')
@@ -466,15 +469,15 @@ SVGPlot.ScaleReal.prototype = {
     },
     position: function(value) {
         /*** 
-            @returns a float from 0->1 if value is between _max and _min, 
-              but can return a number outside 0->1 if input is outside rnage.
+            @returns a float from 0.0->1.0 if value is between _max and _min, 
+              but can return a number outside this range if input is outside range.
               If _max or _min have not yet been set or set illegally, this returns null.
         ***/
         if (this._min==null || this._max==null || this._min > this._max)
             return null
         var interpolation_function = this.interpolation_functions[this.interpolation]
-        var position = interpolation_function.call(this, value)
-        return position
+        var pos = interpolation_function.call(this, value)
+        return pos
     },
     interpolation_functions: {
         linear: function(value) {
@@ -496,40 +499,40 @@ SVGPlot.ScaleReal.prototype = {
     },
     setAuto: function() {
         /***
-			Set _max and _min.
-			If either max or min are 'auto',
-			Take the list of dataSets and find their overall max and min
-			
+            Set _max and _min.
+            If either max or min are 'auto',
+            Take the list of dataSets and find their overall max and min
+            
             If there are no plots, or the plots are flat,
-			make sure _max and _min have a reasonable value.
+            make sure _max and _min have a reasonable value.
             
             @returns a dictionary containing {'min', 'max'}
         ***/
         
         if (this.min != 'auto' && this.max != 'auto') {
-			// Bypass calculating the min and max
+            // Bypass calculating the min and max
             this._min = this.min
             this._max = this.max
-			return {'min':this.min, 'max':this.max}
+            return {'min':this.min, 'max':this.max}
         }
-		var extents = {'min':Number.MAX_VALUE,
-                    'max':-Number.MAX_VALUE }
-		
-		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
-		// TODO:  Remove duplicates so we only to expensive calculation of min/max once.
-		for (var i=0; i<this.dataSets.length; i++) {
-			var data = this.dataSets[i]
-			if (data.length > 0) {
-				var notNaN = function(number) {
-					return !isNaN(number)
-				}
-				var filtered = filter(notNaN, data)
-			    extents.min = Math.min(extents.min, listMin(filtered))
-			    extents.max = Math.max(extents.max, listMax(filtered))
-			}
-		}
-		this.dataSets.pop()
-		
+        var extents = {'min':Number.MAX_VALUE,
+                       'max':-Number.MAX_VALUE }
+        
+        this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+        // TODO:  Remove duplicates so we only to expensive calculation of min/max once.
+        for (var i=0; i<this.dataSets.length; i++) {
+            var data = this.dataSets[i]
+            if (data.length > 0) {
+                var notNaN = function(number) {
+                    return !isNaN(number)
+                }
+                var filtered = filter(notNaN, data)
+                extents.min = Math.min(extents.min, listMin(filtered))
+                extents.max = Math.max(extents.max, listMax(filtered))
+            }
+        }
+        this.dataSets.pop()
+        
         /*
         var total = extents.max - extents.min;
         
@@ -558,7 +561,7 @@ SVGPlot.ScaleReal.prototype = {
         
         this._min = (this.min!='auto') ? this.min : extents.min
         this._max = (this.max!='auto') ? this.max : extents.max
-		return extents
+        return extents
     },
     defaultLocations : function(/* arguments to be passed on to location_function */) {
         var location_function = this.location_functions[this.interpolation]
@@ -567,10 +570,10 @@ SVGPlot.ScaleReal.prototype = {
     },
     location_functions: {
         linear: function(type, 
-                            interval /* defaultInterval */, 
-                            number /* =7 */, 
-                            avoid /* = [min, max] */, 
-                            offset /* = 0*/) {
+                         interval /* defaultInterval */, 
+                         number /* =7 */, 
+                         avoid /* = [min, max] */, 
+                         offset /* = 0*/) {
             /***
                 Come up with locations for the ticks/grids/tickLabels, etc.
                 @param type -- 'ticks' or 'tickLabels' can be used to decide 'between' or 'on'
@@ -685,7 +688,7 @@ SVGPlot.ScaleReal.prototype = {
             return best_value;
         }
         // Finally find the round multiple to get closest.
-        var increment = power_of_ten * log_closest_to(increment_multiple, [1, 2, 3, 5, 10]);
+        var increment = power_of_ten * log_closest_to(increment_multiple, [1, 2, 5, 10]);
         return increment;
     },
     defaultLabels : function(locations) {
@@ -729,7 +732,7 @@ SVGPlot.ScaleDateTime.prototype = {
     */
     set: function(min, max, interval, reversed, required) {
         /*** Sets defaults ***/
-		this.dataSets = [];
+        this.dataSets = [];
         this.min = SVGKit.firstNonNull(min, this.min, 'auto');
         this.max = SVGKit.firstNonNull(max, this.max, 'auto');
         if (this.min != 'auto')
@@ -773,8 +776,8 @@ SVGPlot.ScaleDateTime.prototype = {
         extents = null
         
         if (this.min != 'auto' && this.max != 'auto') {
-			// Bypass calculating the min and max
-			extents = {'min':this.min, 'max':this.max};
+            // Bypass calculating the min and max
+            extents = {'min':this.min, 'max':this.max};
             extents.min_ord = datetime.ordinalDay(extents.min)
             extents.max_ord = datetime.ordinalDay(extents.max)
         }
@@ -783,7 +786,7 @@ SVGPlot.ScaleDateTime.prototype = {
                 return map(datetime.datetime, str_array)
             }
             
-    		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+            this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
             var datetimes = map(datetime_array_map, this.dataSets)
             this.dataSets.pop()
             
@@ -813,7 +816,7 @@ SVGPlot.ScaleDateTime.prototype = {
         
         this._min = (this.min!='auto') ? this.min : extents.min;
         this._max = (this.max!='auto') ? this.max : extents.max;
-		return extents
+        return extents
     },
     intervals: {
         year: [1, 2, 4, 5, 10, 20, 40, 50, 100, 200, 400, 500, 1000],  // No 3s because 1995,1998,2001,2004 looks dumb
@@ -1011,16 +1014,17 @@ SVGPlot.ScaleDateTime.prototype = {
 }
 
 test = function() {
-var s = new SVGPlot.ScaleDateTime()
-var start = isoTimestamp('2007-01-27 10:17')
-var end = isoTimestamp('2007-01-27 10:23')
-log('s.firstDifferent(start,end) == 4 ?', s.firstDifferent(start,end) == 4)
-log('s.commonPart(start,end) == "2007-00-27 10:00" ?', s.commonPart(start,end) == "2007-00-27 10:00")
-for (var i=0; i<s.fields.length; i++) {
-    log('s.roundDate down to', s.fields[i], toISOTimestamp(s.roundDate(start, i, false)) )
-    log('s.roundDate up to', s.fields[i], toISOTimestamp(s.roundDate(start, i, true)) )
-}
-return s.oneRow(start, end)
+   // test datetime stuff
+   var s = new SVGPlot.ScaleDateTime()
+   var start = isoTimestamp('2007-01-27 10:17')
+   var end = isoTimestamp('2007-01-27 10:23')
+   log('s.firstDifferent(start,end) == 4 ?', s.firstDifferent(start,end) == 4)
+   log('s.commonPart(start,end) == "2007-00-27 10:00" ?', s.commonPart(start,end) == "2007-00-27 10:00")
+   for (var i=0; i<s.fields.length; i++) {
+       log('s.roundDate down to', s.fields[i], toISOTimestamp(s.roundDate(start, i, false)) )
+       log('s.roundDate up to', s.fields[i], toISOTimestamp(s.roundDate(start, i, true)) )
+   }
+   return s.oneRow(start, end)
 }
 
 /*
@@ -1200,30 +1204,30 @@ SVGPlot.ScaleCategory.prototype = {
     
     setAuto: function() {
         /***
-			Take the list of dataSets and accumulate the items.
-			
+            Take the list of dataSets and accumulate the items.
+            
             If there are no plots, or the plots are flat,
-			make sure _max and _min have a reasonable value.
+            make sure _max and _min have a reasonable value.
             
             @returns a dictionary containing {'min', 'max'}
         ***/
         
         if (this.categories != 'auto') {
-			// Bypass
+            // Bypass
             this._categories = this.categories
         }
-		else {
-    		this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
+        else {
+            this.dataSets.push(this.required)  // Add this list of required vals to be poped at end
             var category_dict = {}
-    		for (var i=0; i<this.dataSets.length; i++) {
-    			var dataSet = this.dataSets[i]
-    			for (var j=0; j<dataSet.length; j++) {
+            for (var i=0; i<this.dataSets.length; i++) {
+                var dataSet = this.dataSets[i]
+                for (var j=0; j<dataSet.length; j++) {
                     category_dict[dataSet[j]] = true
                 }
-    		}
+            }
             this._categories = keys(category_dict).sort()
-    		this.dataSets.pop()
-		}
+            this.dataSets.pop()
+        }
         var len = this._categories.length
         this._min = this._categories[0]
         this._max = this._categories[len-1]
@@ -1319,14 +1323,14 @@ SVGPlot.Box = function(svgPlot, parent,
 SVGPlot.Box.prototype.set = function(layout /* ='float' */, x /* =0 */, y /* =0 */, width /* =svgWidth */, height /* =svgHeight */) {
     this.x = SVGPlot.firstNonNull(x, this.x, 0);
     this.y = SVGPlot.firstNonNull(y, this.y, 0);
-    var svg_width = parseFloat(this.svgPlot.svg.htmlElement.getAttribute('width'));
-    var svg_height =  parseFloat(this.svgPlot.svg.htmlElement.getAttribute('height'));
-    this.width  = SVGPlot.firstNonNull(width,  this.width, svg_width);
-    this.height = SVGPlot.firstNonNull(height, this.height,svg_height);
+    var svg_width  = parseFloat(this.svgPlot.svg.htmlElement.getAttribute('width'));
+    var svg_height = parseFloat(this.svgPlot.svg.htmlElement.getAttribute('height'));
+    this.width  = SVGPlot.firstNonNull(width,  this.width,  svg_width);
+    this.height = SVGPlot.firstNonNull(height, this.height, svg_height);
 }
 
 SVGPlot.Box.prototype.addDefaults = function() {
-    // TODO: Don't rely on svgPlot to add view.
+    // TODO:  Don't rely on svgPlot to do this
     var p = this.svgPlot;
     p.save();
     p.setStyle(SVGPlot.defaultStyle);
@@ -1346,12 +1350,11 @@ SVGPlot.prototype.addBox  = function(layout /* ='float' */, x /* =0 */, y /* =0 
 }
 
 // View  -- View eventually defines mapping (x,y) -> (i,j).  What about polar?  What about map projections?
-
 // TODO:  This only makes ScaleReal, not ScaleCateory, etc.
 
 SVGPlot.View = function(svgPlot, parent) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
-    parent.views.push(this);
+    parent.views.push(this);  // add ourselves to our parent Box's list of views
     svgPlot.view = this;
     this.xScale = new SVGPlot.ScaleReal();
     svgPlot.xScale = this.xScale;
@@ -1664,7 +1667,7 @@ SVGPlot.prototype.removeYTickLabels = function() {
 
 
 ////////////////////////////
-//  createElements(), layout() and render()
+//  createElements(), layout(), and render()  functions for all graphic objects
 ////////////////////////////
 
 SVGPlot.prototype.render = function () {
@@ -1838,8 +1841,8 @@ SVGPlot.AxisTitle.prototype.createElements = function() {
 SVGPlot.autoViewMarginFactor = 0.05;
 
 SVGPlot.View.prototype.setAutoView = function() {
-	this.xScale.setAuto();
-	this.yScale.setAuto();
+    this.xScale.setAuto();
+    this.yScale.setAuto();
 }
 
 SVGPlot.View.prototype.bankTo45deg = function(/*[ { xextents:[xmin, xmax], 
@@ -1867,9 +1870,8 @@ SVGPlot.View.prototype.layout = function (totalXSize, totalYSize) {
         this.yAxes[i].layout(totalXSize, totalYSize);
 }
 
-// TODO: 
 SVGPlot.axisMargin = 1;  // between one axis and a second
-SVGPlot.componentMargin = 1;  // between ticks, tickLabels, and labels
+SVGPlot.componentMargin = 1;  // between ticks, tickLabels, and axisLabels
 
 SVGPlot.Axis.prototype.layout = function(totalXSize, totalYSize) {
     var offsets = {'above':0.5, 'below':0.5};  // TODO actually find line-width
@@ -2287,53 +2289,90 @@ SVGPlot.prototype.plotLine = function(data /* ydata1, ydata2, ... */) {
         this.plotLine(xdata, data);  // Call myself again with two arguments this time.
     }
     
-	var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
-	
+    var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
+    
     if ( isUndefinedOrNull(this.box) || isUndefinedOrNull(this.view) ) {
         this.addBox();
         this.box.addDefaults();
     }
     
     for (var i=1; i<arguments.length; i++)
-        this.plot = new SVGPlot.LinePlot(this, this.view, data, arguments[i]);
+        this.plot = new SVGPlot.LinePlot(this, this.view, data, arguments[i], 'linear');
     return this.plot;  // Return the last line plot.  Not of much use, really.
 }
 
-SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata) {
+
+SVGPlot.prototype.plotSteps = function(data /* ydata1, ydata2, ... */) {
+    /*** Like plotLine, but this creates new LinePlot with 'steps' as an argument ***/
+    if (arguments.length==1) {
+        // If only one argument given, treat it as a y array and plot it against the integers.
+        var xdata = new Array(data.length);  // ydata = data;
+        for (var i=0; i<data.length; i++)
+            xdata[i] = i;
+        this.plotSteps(xdata, data);  // Call myself again with two arguments this time.
+    }
+    
+   var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
+   
+    if ( isUndefinedOrNull(this.box) || isUndefinedOrNull(this.view) ) {
+        this.addBox();
+        this.box.addDefaults();
+    }
+    
+    for (var i=1; i<arguments.length; i++)
+        this.plot = new SVGPlot.LinePlot(this, this.view, data, arguments[i], 'steps');
+    return this.plot;  // Return the last line plot.  Not of much use, really.
+}
+
+SVGPlot.LinePlot = function(svgPlot, parent, xdata, ydata, style /* = 'linear' */) {
+    if ( MochiKit.Base.isUndefinedOrNull(style) ) {
+       style = 'linear';
+    }
+    this.lineStyle = style;
+    //log('LinePlot constructor: '+this.lineStyle)
+    
     SVGPlot.genericConstructor(this, svgPlot, parent);
     var view = parent
     view.plots.push(this)  // Add this plot to the view
     this.xdata = xdata;
     this.ydata = ydata;
     
-	// Add this data to the x and y scales for autoScaling
+    // Add this data to the x and y scales for autoScaling
     
     var xScaleNew = SVGPlot.newScaleFromType(xdata[0])
     if (view.xScale.type != xScaleNew.type) {
         view.xScale = xScaleNew
         svgPlot.xScale = xScaleNew
     }
-	view.xScale.dataSets.push(xdata)
+    view.xScale.dataSets.push(xdata)
     
     var yScaleNew = SVGPlot.newScaleFromType(ydata[0])
     if (view.yScale.type != yScaleNew.type) {
         view.yScale = yScaleNew
         svgPlot.yScale = yScaleNew
     }
-	view.yScale.dataSets.push(ydata)
+    view.yScale.dataSets.push(ydata)
 }
 
 SVGPlot.LinePlot.prototype.createElements = function () {
-    SVGPlot.createGroupIfNeeded(this, 'line-plot', 'stroke');
+    var p = this.svgPlot;
+    var type = 'both';
+    //if (p.strokeStyle!=null && p.fillStyle!=null)
+    if (p.fillStyle==null)
+       type = 'stroke'
+    if (p.strokeStyle==null)
+       type = 'fill'
+    //SVGPlot.createGroupIfNeeded(this, 'line-plot', 'stroke');
+    SVGPlot.createGroupIfNeeded(this, 'line-plot', type);
 }
 
 SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
-	MochiKit.DOM.replaceChildNodes(this.element);
+    MochiKit.DOM.replaceChildNodes(this.element);
     
     var p = this.svgPlot;
     
     p.save();
-    p.applyStyles = false;
+    p.applyStyles = false;  // Let the group styles inherit
     p.setGroup(this.element);
     //var rect = this.getDatasetRect();
     p.clipRect(left, top, right-left, bottom-top);
@@ -2348,16 +2387,35 @@ SVGPlot.LinePlot.prototype.render = function(left, right, top, bottom) {
     // Handle infinite and NaN properly.
     var drawingFunction = p.moveTo;
     // TODO Handle cases where the plot goes WAY off the  scales.
+    var legal = function(s) {
+       return (!isNaN(s) && s!=Number.MAX_VALUE && s!=Number.MIN_VALUE &&
+                s!=Number.NEGATIVE_INFINITY && s!=Number.POSITIVE_INFINITY)
+    }
     for (i=0; i<this.ydata.length; i++) {
         var sx = this.parent.xtoi(this.xdata[i]);
         var sy = this.parent.ytoj(this.ydata[i]);
-        if (!isNaN(sx) && sx!=Number.MAX_VALUE && sx!=Number.MIN_VALUE &&
-            sx!=Number.NEGATIVE_INFINITY && sx!=Number.POSITIVE_INFINITY &&
-            !isNaN(sy) && sy!=Number.MAX_VALUE && sy!=Number.MIN_VALUE &&
-            sy!=Number.NEGATIVE_INFINITY && sy!=Number.POSITIVE_INFINITY ) {
-                //log("Plotting point ("+sx+","+sy+")");
-                drawingFunction.call(p, sx, sy);
+        if  ( legal(sx) && legal(sy) ) {
+            //log("Plotting point ("+sx+","+sy+")  "+this.lineStyle);
+            if (this.lineStyle=='steps' && i==0) {
+                // very first step need to start at the horizontal axis
+                drawingFunction.call(p, sx, this.parent.ytoj(0.0));
                 drawingFunction = p.lineTo;
+            }
+            drawingFunction.call(p, sx, sy);
+            drawingFunction = p.lineTo;
+            if (this.lineStyle=='steps') {
+                // extra call to drawingFunction to march right to next data point
+                var last_point = (i == this.xdata.length-1);
+                var dxnext =  last_point ? 
+                     this.xdata[i]+(this.xdata[i]-this.xdata[i-1]) :  // last point needs a box of some non-zero width
+                     this.xdata[i+1]; // normal case; 
+                var sxnext = this.parent.xtoi(dxnext);
+                //log("Plotting steps ("+sxnext+","+sy+")");
+                drawingFunction.call(p, sxnext, sy);
+                if (last_point) {
+                  drawingFunction.call(p, sxnext, this.parent.ytoj(0.0));  // End last box at the horizontal axis
+                }
+            }
         }
     }
     var plot = p.stroke();
@@ -2385,14 +2443,14 @@ SVGPlot.prototype.plotFunction = function(func, name, xmin, xmax) {
 
 
 // ScatterPlot
- 
+
 SVGPlot.prototype.plotScatter1D = function(data) {
-	var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
-	
+    var isUndefinedOrNull = MochiKit.Base.isUndefinedOrNull
+    
     if ( isUndefinedOrNull(this.box) || isUndefinedOrNull(this.view) ) {
         this.addBox();
         this.box.addDefaults();
-		this.box.view.removeYAxis();
+        this.box.view.removeYAxis();
     }
     
     this.plot = new SVGPlot.ScatterPlot1D(this, this.view, data);
@@ -2402,9 +2460,9 @@ SVGPlot.ScatterPlot1D = function(svgPlot, parent, data) {
     SVGPlot.genericConstructor(this, svgPlot, parent);
     parent.plots.push(this)  // Add this plot to the view
     this.data = data;
-	// Add this data to the x and y scales for autoScaling
-	parent.xScale.dataSets.push(data)
-	parent.yScale.dataSets.push([0]*data.length)
+    // Add this data to the x and y scales for autoScaling
+    parent.xScale.dataSets.push(data)
+    parent.yScale.dataSets.push([0]*data.length)
 }
 
 SVGPlot.ScatterPlot1D.prototype.createElements = function () {
@@ -2412,10 +2470,10 @@ SVGPlot.ScatterPlot1D.prototype.createElements = function () {
 }
 
 SVGPlot.ScatterPlot1D.prototype.render = function(left, right, top, bottom) {
-	// Should this be treated exactly like 2D scatter plot with all y-values zero?
-	
-	// Deal with degeneracies (bigger symbol, stacked symbols?)
-	// Plot points on axis
+    // Should this be treated exactly like 2D scatter plot with all y-values zero?
+    
+    // Deal with degeneracies (bigger symbol, stacked symbols?)
+    // Plot points on axis
 }
 
 
@@ -2475,28 +2533,28 @@ SVGPlot.prototype.markerColor = function() {
 // Drawing functions need to be stroked and/or filled and can affect the style.
 
 SVGPlot.prototype.shapeFunctions = {
-	circle : function() {
-	},
-	square : function() {
-		// Same as SVGCanvas.prototype.pollygon(4, 1)
-		this.beginPath()
-		this.moveTo( 0.5,  0.5)
-		this.lineTo( 0,5, -0.5)
-		this.lineTo(-0,5, -0.5)
-		this.lineTo(-0,5,  0.5)
-	    this.closePath();
-	},
-	triangle : function() {
-	},
-	diamond : function() {
-		this.save()
-		this.rotate(45)
-		this.square()
-		this.restore()
-	}
-	// Should have polygons up to n=3, 4, 5, 6, 8
-	// Stars n=4, 5, 6, 8
-	// Asterisks, pluses, and crosses? Can only be stroked, unless thickened.
+    circle : function() {
+    },
+    square : function() {
+        // Same as SVGCanvas.prototype.pollygon(4, 1)
+        this.beginPath()
+        this.moveTo( 0.5,  0.5)
+        this.lineTo( 0,5, -0.5)
+        this.lineTo(-0,5, -0.5)
+        this.lineTo(-0,5,  0.5)
+        this.closePath();
+    },
+    triangle : function() {
+    },
+    diamond : function() {
+        this.save()
+        this.rotate(45)
+        this.square()
+        this.restore()
+    }
+    // Should have polygons up to n=3, 4, 5, 6, 8
+    // Stars n=4, 5, 6, 8
+    // Asterisks, pluses, and crosses? Can only be stroked, unless thickened.
 }
 
 SVGPlot.prototype.strokeFunctions = {}
@@ -2504,6 +2562,9 @@ SVGPlot.prototype.fillFunctions = {}
 SVGPlot.prototype.drawFunctions = {}
 // Add wrappers arond the shape functions to stroke and/or fill
 // Can add half-filled, diagonally-filled, plused, and crossed shapes
+
+
+
 
 ////////////////////////////
 // Utility Functions
@@ -2554,6 +2615,7 @@ SVGPlot.firstNonNull = function() {
 
 SVGPlot.prettyNumber = function(number) {
     /***
+        tests:
         p.prettyNumber(3.000000000000001)
         p.prettyNumber(0.39999999999999997)
         p.prettyNumber(3.9999999999999997)
@@ -2585,10 +2647,10 @@ SVGPlot.prettyNumber = function(number) {
 }
 
 SVGPlot.arrayToString = function(array, seperator /* =' '*/) {
-	/***
-	Turns [1,2,3] into '1 2 3' if the seperator is kept a space.
-	***/
-	seperator = this.firstNonNull(seperator, ' ')
+    /***
+    Turns [1,2,3] into '1 2 3' for the seperator being a space (the default)
+    ***/
+    seperator = this.firstNonNull(seperator, ' ')
     var str = '';
     for (var i=0; i<array.length; i++) {
         if (typeof(array[i]) == 'number' || typeof(array[i]) == 'string') {
@@ -2600,7 +2662,7 @@ SVGPlot.arrayToString = function(array, seperator /* =' '*/) {
     return str;
 }
 
-SVGPlot.createGroupIfNeeded = function(self, cmd, style_type /* 'stroke' 'fill' or 'text' */) {
+SVGPlot.createGroupIfNeeded = function(self, cmd, style_type /* 'stroke' 'fill' 'both' or 'text' */) {
     if (self.element == null) {
         self.element = self.svgPlot.svg.G();
     }
@@ -2609,7 +2671,7 @@ SVGPlot.createGroupIfNeeded = function(self, cmd, style_type /* 'stroke' 'fill' 
     SVGPlot.setPlotAttributes(self, cmd);
     
     if (typeof(style_type)=='string')
-        SVGPlot.setStyleAttributes(self, style_type);
+        SVGPlot.setStyleAttributes(self, style_type);  // 'stroke' 'fill' or 'text
 }
 
 
@@ -2638,7 +2700,7 @@ SVGPlot.setPlotAttributes = function(self, cmd) {
     }
 }
 
-SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' or 'text' */) {
+SVGPlot.setStyleAttributes = function(self, style_type /* 'stroke' 'fill' 'both' or 'text' */) {
     var p = self.svgPlot
     var backupStyle = p.getStyle();
     p.setStyle(self.style);
@@ -2780,7 +2842,7 @@ SVGPlot.prototype.evaluate_item = function(row, key) {
 ////////////////////////////
 
 /***
-    The concept behnid the mapper is that sometimes you want to write a
+    The concept behind the mapper is that sometimes you want to write a
     funcion that takes a row of data {x:1, y:2, a:3, b:4, c:'bob'} and draws
     a point on the graph -- you want complete control of the color, shape, and size
     as some complicated function of each row's elements.
