@@ -171,41 +171,41 @@ SVGCanvas.EXPORT_OK = [
 //  Defaults
 ////////////////////////////
 
-SVGCanvas.startingState = 
-    { 'fillStyle': "#000000",  // Can be: "#RRGGBB", "rgba(r, g, b, alpha)" where rgb in (0-255) and alpha (0-1), or from a gradient
-      'strokeStyle': "#000000", // Same as above.  Affects SVG's 'stroke', 'stroke-opacity', gradient and marker
-      'globalAlpha': 1.0, // Float between 0.0 and 1.0
-      'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
-      'lineCap': "butt", // also "round" and "square"
-      'lineJoin': "miter", // also "round" and "bevel"
-      'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
-      'miterLimit': null, // The canvas divides the length of the miter by the line width. If the result is greater than the miter limit, the style is converted to a bevel.
-      'shadowBlur': 0, // width, in coordinate space units, that a shadow should cover. Never negative. 
-      'shadowColor': null, // color the canvas applies when displaying a shadow (same as two color methods above)
-      'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
-      'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
-      // SVG Only extensions:
-      'dasharray' : null,  // a string list "1,2" to make strokes dashed
-      'dashoffset' : null, // a number like 3 which specifies how to start the dashing
-      'markerStart' : null,  // marker group object
-      'markerMid' : null,
-      'markerEnd' : null,
-      // 'font' : null, // SVG's font, which is shorthand for all of the below:
-      'fontFamily' : null,  // SVG's font-family="Verdana" 
-      'fontSize' : null,    // SVG's font-size="45"
-      'fontWeight' : null,  // SVG's font-weight= 	normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit
-      'fontStyle' : null,    // SVG's font-style = normal | italic | oblique |  inherit
-      'fontVariant' : null,    // SVG's font-variant= normal | small-caps |  inherit
-      'fontStretch' : null,  // SVT's font-stretch = normal | wider | narrower | ultra-condensed | extra-condensed | condensed | semi-condensed | semi-expanded | expanded | extra-expanded | ultra-expanded | inherit
-      'textAnchor' : null, // 'text-anchor' {start | middle | end | inherit} defaults to start.  null implicitly means inherit
-      
-      'applyStyles' : true,  // Apply all of these styles to a given SVG element or let them be inherited.
-      
-      // Internal State (not copied when you do getStyle or setStyle):
-      'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
-      'transformations' : "",  // Applys to all subpaths.
-      'currentGroup' : null // When you start, there is no clipping and you're not in a marker.
-    };
+SVGCanvas.startingState =  { 
+   'fillStyle': "#000000",  // Can be: "#RRGGBB", "rgba(r, g, b, alpha)" where rgb in (0-255) and alpha (0-1), or from a gradient
+   'strokeStyle': "#000000", // Same as above.  Affects SVG's 'stroke', 'stroke-opacity', gradient and marker
+   'globalAlpha': 1.0, // Float between 0.0 and 1.0
+   'globalCompositeOperation': 'source-over', // How canvas is displayed relative to background NOT SUPPORTED
+   'lineCap': "butt", // also "round" and "square"
+   'lineJoin': "miter", // also "round" and "bevel"
+   'lineWidth': 1.0, // surrounds the center of the path, with half of the total width on either side in units of the user space
+   'miterLimit': null, // The canvas divides the length of the miter by the line width. If the result is greater than the miter limit, the style is converted to a bevel.
+   'shadowBlur': 0, // width, in coordinate space units, that a shadow should cover. Never negative. 
+   'shadowColor': null, // color the canvas applies when displaying a shadow (same as two color methods above)
+   'shadowOffsetX': 0, // distance, in coordinate space units, that a shadow should be offset horizontally
+   'shadowOffsetY': 0, // distance, in coordinate space units, that a shadow should be offset vertically
+   // SVG Only extensions:
+   'dasharray' : null,  // a string list "1,2" to make strokes dashed
+   'dashoffset' : null, // a number like 3 which specifies how to start the dashing
+   'markerStart' : null,  // marker group object
+   'markerMid' : null,
+   'markerEnd' : null,
+   // 'font' : null,     // SVG's font, which is shorthand for all of the below:
+   'fontFamily' : null,  // SVG's font-family="Verdana" 
+   'fontSize' : null,    // SVG's font-size="45"
+   'fontWeight' : null,  // SVG's font-weight  = normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit
+   'fontStyle' : null,   // SVG's font-style   = normal | italic | oblique |  inherit
+   'fontVariant' : null, // SVG's font-variant = normal | small-caps |  inherit
+   'fontStretch' : null, // SVT's font-stretch = normal | wider | narrower | ultra-condensed | extra-condensed | condensed | semi-condensed | semi-expanded | expanded | extra-expanded | ultra-expanded | inherit
+   'textAnchor' : null,  // 'text-anchor' {start | middle | end | inherit} defaults to start.  null implicitly means inherit
+   
+   'applyStyles' : true,  // Apply all of these styles to a given SVG element or let them be inherited.
+   
+   // Internal State (not copied when you do getStyle or setStyle):
+   'currentTransformationMatrix': null,  // Only gets uses for transformation inside of path.
+   'transformations' : "",  // Applys to all subpaths.
+   'currentGroup' : null // When you start, there is no clipping and you're not in a marker.
+};
 
 
 ////////////////////////////
@@ -656,7 +656,7 @@ SVGCanvas.prototype.arcTo = function (x1, y1, x2, y2, radius) {
      current point to (x1, y1) and to the line from (x1, y1) to (x2, y2). 
      The start and end points of the arc are located on the first and second 
      tangent lines, respectively. The start and end points of the arc are 
-     also the “tangent points” of the lines.
+     also the 'tangent points' of the lines.
      If the current point and the first tangent point of the arc 
      (the starting point) are not equal, the canvas appends a straight 
      line segment from the current point to the first tangent point. 
@@ -887,7 +887,10 @@ SVGCanvas.prototype._emitPaths = function () {
 SVGCanvas.prototype._setGraphicsStyle = function(node, type, style) {
     if (this.globalAlpha < 1)
         setNodeAttribute(node, 'opacity', this.globalAlpha);
-    if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'
+    if (style == null) {
+        // TODO:  should this be an error, or just nothing drawn?
+    }
+    else if (typeof(style) == 'string') {      // like '#FF00FF' or 'rgba(200,200,100,0.5)'
         var c = Color.fromString(style);
         setNodeAttribute(node, type, c.toHexString());
         var alpha = c.asRGB()['a'];
@@ -1077,7 +1080,7 @@ SVGCanvas.prototype.outputShape = function(shape, style) {
     */
     this._setShapeTransform(shape);
     this._setGraphicsAttributes(shape, style);
-    this.append(shape);
+    this.append(shape);  // custom SVGCanvas.prototype.append function to add to DOM
     return shape;
 }
 
@@ -1124,6 +1127,7 @@ SVGCanvas.prototype.clearRect = function (x, y, w, h) {
 
 
 SVGCanvas.prototype.path = function (data) {
+    // @param data is a string with the path information
     var path = this.svg.PATH({'d':data});
     return path;
 }
@@ -1222,13 +1226,21 @@ SVGCanvas.prototype.line = function (x1, y1, x2, y2) {
                               'y1':y1,
                               'x2':x2,
                               'y2':y2});
+    return line;
+}
+
+
+SVGCanvas.prototype.strokeLine = function (x1, y1, x2, y2) {
+    var shape = this.line(x1, y1, x2, y2)
     return this.outputShape(shape, 'stroke');
 }
+
+// Note, there is no reason to fill or draw a line, so these functions are left out
+// on the other hand, a polyline may be closed, and can be filled or drawn.
 
 SVGCanvas.prototype.polyline = function(points) {
     var polyline = this.svg.POLYLINE({'points':points});
     return polyline
-    return this.outputShape(shape, 'stroke');
 }
 
 SVGCanvas.prototype.strokePolyline = function (points) {
@@ -1249,7 +1261,6 @@ SVGCanvas.prototype.drawPolyline = function (points) {
 SVGCanvas.prototype.polygon = function(points) {
     var polygon = this.svg.POLYGON({'points':points});
     return polygon
-    return this.outputShape(shape, 'stroke');
 }
 
 SVGCanvas.prototype.strokePolygon = function (points) {
